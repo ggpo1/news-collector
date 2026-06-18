@@ -4,10 +4,17 @@ import { AppNav, type AppSection } from '../components/app-nav/app-nav';
 import { NewsDetail } from '../components/news-detail/news-detail';
 import { NewsLinksView } from '../components/news-links-view/news-links-view';
 import { NewsList } from '../components/news-list/news-list';
+import { NewsRewritesView } from '../components/news-rewrites-view/news-rewrites-view';
 import { Pagination } from '../components/pagination/pagination';
 import { SourceSelect } from '../components/source-select/source-select';
 import { useNews } from '../hooks/use-news/use-news';
 import { useSources } from '../hooks/use-sources/use-sources';
+
+const SECTION_SUBTITLES: Record<AppSection, string> = {
+  news: 'Новости по выбранному источнику',
+  links: 'Связи между новостями на одну тему',
+  rewrites: 'Сохранённые переписанные версии новостей',
+};
 
 export default function App() {
   const [section, setSection] = useState<AppSection>('news');
@@ -33,9 +40,7 @@ export default function App() {
       <S.Header>
         <div>
           <S.Title>News Collector</S.Title>
-          <S.Subtitle>
-            {section === 'news' ? 'Новости по выбранному источнику' : 'Связи между новостями на одну тему'}
-          </S.Subtitle>
+          <S.Subtitle>{SECTION_SUBTITLES[section]}</S.Subtitle>
         </div>
         <S.HeaderActions>
           <AppNav value={section} onChange={setSection} />
@@ -52,7 +57,7 @@ export default function App() {
 
       {sourcesError && section === 'news' && <S.ErrorBanner>{sourcesError}</S.ErrorBanner>}
 
-      {section === 'news' ? (
+      {section === 'news' && (
         <S.Grid>
           <S.ListColumn>
             <NewsList
@@ -72,9 +77,11 @@ export default function App() {
 
           <NewsDetail newsId={selectedNewsId} onContentLoaded={() => void reload()} />
         </S.Grid>
-      ) : (
-        <NewsLinksView />
       )}
+
+      {section === 'links' && <NewsLinksView />}
+
+      {section === 'rewrites' && <NewsRewritesView />}
     </S.Layout>
   );
 }

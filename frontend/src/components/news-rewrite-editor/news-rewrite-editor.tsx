@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createNewsRewrite, getNewsRewrites, updateNewsRewrite } from '../../api/client';
-import type { NewsItemDetail } from '../../api/types';
+import type { NewsItemDetail, NewsRewrite } from '../../api/types';
 import * as S from './news-rewrite-editor.styles';
 
 interface NewsRewriteEditorProps {
   sourceNews: NewsItemDetail;
+  initialRewrite?: NewsRewrite | null;
   onClose: () => void;
   onSaved?: () => void;
 }
@@ -23,6 +24,14 @@ function buildInitialForm(sourceNews: NewsItemDetail): EditorForm {
   };
 }
 
+function buildFormFromRewrite(rewrite: NewsRewrite): EditorForm {
+  return {
+    title: rewrite.title,
+    summary: rewrite.summary ?? '',
+    content: rewrite.content ?? '',
+  };
+}
+
 function toPayload(form: EditorForm) {
   return {
     title: form.title.trim(),
@@ -31,7 +40,12 @@ function toPayload(form: EditorForm) {
   };
 }
 
-export function NewsRewriteEditor({ sourceNews, onClose, onSaved }: NewsRewriteEditorProps) {
+export function NewsRewriteEditor({
+  sourceNews,
+  initialRewrite = null,
+  onClose,
+  onSaved,
+}: NewsRewriteEditorProps) {
   const [rewriteId, setRewriteId] = useState<string | null>(null);
   const [form, setForm] = useState<EditorForm>(() => buildInitialForm(sourceNews));
   const [loading, setLoading] = useState(true);
@@ -43,6 +57,13 @@ export function NewsRewriteEditor({ sourceNews, onClose, onSaved }: NewsRewriteE
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
+
+    if (initialRewrite) {
+      setRewriteId(initialRewrite.id);
+      setForm(buildFormFromRewrite(initialRewrite));
+      setLoading(false);
+      return;
+    }
 
     try {
       const result = await getNewsRewrites({
@@ -70,7 +91,7 @@ export function NewsRewriteEditor({ sourceNews, onClose, onSaved }: NewsRewriteE
     } finally {
       setLoading(false);
     }
-  }, [sourceNews]);
+  }, [initialRewrite, sourceNews]);
 
   useEffect(() => {
     void loadExistingRewrite();

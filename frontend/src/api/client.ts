@@ -120,3 +120,17 @@ export function updateNewsRewrite(id: string, payload: UpdateNewsRewritePayload)
     body: JSON.stringify(payload),
   });
 }
+
+export async function deleteNewsRewrite(id: string): Promise<void> {
+  const headers = new Headers();
+  headers.set('X-Visitor-Id', getVisitorId());
+
+  const response = await fetch(`${API_BASE}/api/news-rewrites/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error ${response.status}: ${response.statusText}`);
+  }
+}

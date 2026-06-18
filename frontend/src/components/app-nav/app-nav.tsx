@@ -1,6 +1,6 @@
 import * as S from './app-nav.styles';
 
-export type AppSection = 'news' | 'links';
+export type AppSection = 'news' | 'links' | 'rewrites';
 
 interface AppNavProps {
   value: AppSection;
@@ -15,6 +15,9 @@ export function AppNav({ value, onChange }: AppNavProps) {
       </S.NavButton>
       <S.NavButton type="button" $active={value === 'links'} onClick={() => onChange('links')}>
         Связи
+      </S.NavButton>
+      <S.NavButton type="button" $active={value === 'rewrites'} onClick={() => onChange('rewrites')}>
+        Переписи
       </S.NavButton>
     </S.Nav>
   );
