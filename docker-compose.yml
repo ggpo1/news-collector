@@ -27,6 +27,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      ollama:
+        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       RunMigrations: ${RUN_MIGRATIONS:-false}
@@ -36,9 +38,9 @@ services:
         Database=${POSTGRES_DB:-news_collector};
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
-      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
       Ollama__Model: ${OLLAMA_MODEL:-llama3.2}
-      Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-120}
+      Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-600}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     logging:
@@ -108,5 +110,19 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres_data:
+  ollama_data:

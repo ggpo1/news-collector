@@ -8,5 +8,5 @@ public sealed class OllamaOptions
 
     public string Model { get; set; } = "deepseek-r1:14b";
 
-    public int TimeoutSeconds { get; set; } = 120;
+    public int TimeoutSeconds { get; set; } = 600;
 }

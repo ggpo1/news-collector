@@ -53,7 +53,7 @@ public sealed class ApiVisitTrackingMiddleware
                     (int)stopwatch.ElapsedMilliseconds,
                     VisitorFingerprintBuilder.Build(context),
                     VisitorFingerprintBuilder.GetTruncatedUserAgent(context)),
-                context.RequestAborted);
+                CancellationToken.None);
         }
         catch (Exception ex)
         {

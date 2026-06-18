@@ -56,7 +56,7 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         }
 
         var prompt = BuildPrompt(news, sourceText);
-        var rawResponse = await GenerateAsync(prompt, cancellationToken);
+        var rawResponse = await GenerateAsync(prompt);
 
         try
         {
@@ -69,7 +69,7 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         }
     }
 
-    private async Task<string> GenerateAsync(string prompt, CancellationToken cancellationToken)
+    private async Task<string> GenerateAsync(string prompt)
     {
         var client = _httpClientFactory.CreateClient("Ollama");
 
@@ -79,22 +79,39 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
             Stream: false,
             Format: "json");
 
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.TimeoutSeconds));
+
         HttpResponseMessage response;
         try
         {
-            response = await client.PostAsJsonAsync("/api/generate", request, cancellationToken);
+            response = await client.PostAsJsonAsync("/api/generate", request, timeoutCts.Token);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (TaskCanceledException ex) when (!timeoutCts.IsCancellationRequested)
+        {
+            _logger.LogError(ex, "Ollama request was canceled before completion at {BaseUrl}", _options.BaseUrl);
+            throw new InvalidOperationException(
+                "Запрос к Ollama был прерван. Проверьте таймауты nginx и OLLAMA_TIMEOUT_SECONDS.",
+                ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Ollama request timed out after {TimeoutSeconds}s at {BaseUrl}", _options.TimeoutSeconds, _options.BaseUrl);
+            throw new InvalidOperationException(
+                $"Ollama не ответила за {_options.TimeoutSeconds} секунд. Увеличьте OLLAMA_TIMEOUT_SECONDS или выберите модель полегче.",
+                ex);
+        }
+        catch (Exception ex) when (ex is HttpRequestException)
         {
             _logger.LogError(ex, "Ollama request failed at {BaseUrl}", _options.BaseUrl);
             throw new InvalidOperationException(
-                $"Не удалось подключиться к Ollama ({_options.BaseUrl}). Убедитесь, что сервис запущен.",
+                $"Не удалось подключиться к Ollama ({_options.BaseUrl}). " +
+                "В Docker используйте OLLAMA_BASE_URL=http://ollama:11434 или запустите Ollama на хосте с OLLAMA_HOST=0.0.0.0:11434.",
                 ex);
         }
 
         if (!response.IsSuccessStatusCode)
         {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(timeoutCts.Token);
             _logger.LogWarning(
                 "Ollama returned {StatusCode}: {Body}",
                 (int)response.StatusCode,
@@ -104,7 +121,7 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
                 $"Ollama вернула ошибку {(int)response.StatusCode}. Проверьте, что модель '{_options.Model}' установлена.");
         }
 
-        var payload = await response.Content.ReadFromJsonAsync<OllamaGenerateResponse>(cancellationToken);
+        var payload = await response.Content.ReadFromJsonAsync<OllamaGenerateResponse>(timeoutCts.Token);
         if (string.IsNullOrWhiteSpace(payload?.Response))
         {
             throw new InvalidOperationException("Ollama вернула пустой ответ.");
