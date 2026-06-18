@@ -124,7 +124,11 @@ public sealed class NewsRewriteService : INewsRewriteService
         r => new NewsRewriteDto(
             r.Id,
             r.SourceNewsId,
+            r.SourceNews.SourceId,
+            r.SourceNews.Source.Name,
             r.SourceNews.Title,
+            r.SourceNews.Url,
+            r.SourceNews.PublishedAt,
             r.Title,
             r.Summary,
             r.Content,

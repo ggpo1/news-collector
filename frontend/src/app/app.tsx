@@ -35,6 +35,12 @@ export default function App() {
     setSelectedNewsId(null);
   }, [selectedSourceId, page]);
 
+  const handleOpenSourceNews = (sourceNewsId: string, sourceId: string) => {
+    setSelectedSourceId(sourceId);
+    setSelectedNewsId(sourceNewsId);
+    setSection('news');
+  };
+
   return (
     <S.Layout>
       <S.Header>
@@ -81,7 +87,9 @@ export default function App() {
 
       {section === 'links' && <NewsLinksView />}
 
-      {section === 'rewrites' && <NewsRewritesView />}
+      {section === 'rewrites' && (
+        <NewsRewritesView onOpenSourceNews={handleOpenSourceNews} />
+      )}
     </S.Layout>
   );
 }

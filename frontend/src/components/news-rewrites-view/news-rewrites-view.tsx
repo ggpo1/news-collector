@@ -8,7 +8,11 @@ import { Pagination } from '../pagination/pagination';
 import { RewrittenNewsDetail } from '../rewritten-news-detail/rewritten-news-detail';
 import * as S from './news-rewrites-view.styles';
 
-export function NewsRewritesView() {
+interface NewsRewritesViewProps {
+  onOpenSourceNews?: (sourceNewsId: string, sourceId: string) => void;
+}
+
+export function NewsRewritesView({ onOpenSourceNews }: NewsRewritesViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorSourceNews, setEditorSourceNews] = useState<NewsItemDetail | null>(null);
@@ -62,6 +66,7 @@ export function NewsRewritesView() {
             error={error}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            onOpenSourceNews={onOpenSourceNews}
           />
           <Pagination
             page={page}
@@ -75,6 +80,7 @@ export function NewsRewritesView() {
           rewrite={selectedRewrite}
           onEdit={(rewrite) => void openEditor(rewrite)}
           onDelete={handleDelete}
+          onOpenSourceNews={onOpenSourceNews}
         />
       </S.Grid>
 

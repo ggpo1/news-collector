@@ -1,4 +1,5 @@
 import type { NewsRewrite } from '../../api/types';
+import { SourceTaskCard } from '../source-task-card/source-task-card';
 import * as S from './news-rewrites-list.styles';
 
 interface NewsRewritesListProps {
@@ -7,6 +8,7 @@ interface NewsRewritesListProps {
   error: string | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onOpenSourceNews?: (sourceNewsId: string, sourceId: string) => void;
 }
 
 function formatDate(value: string): string {
@@ -26,6 +28,7 @@ export function NewsRewritesList({
   error,
   selectedId,
   onSelect,
+  onOpenSourceNews,
 }: NewsRewritesListProps) {
   if (loading) {
     return <S.State>Загрузка переписанных новостей…</S.State>;
@@ -56,9 +59,11 @@ export function NewsRewritesList({
                 <time dateTime={item.updatedAt}>изменено {formatDate(item.updatedAt)}</time>
               </S.Meta>
               <S.Title>{item.title}</S.Title>
-              <S.Source>Источник: {item.sourceNewsTitle}</S.Source>
               {preview && <S.Preview>{preview}</S.Preview>}
             </S.Card>
+            <S.TaskWrap>
+              <SourceTaskCard rewrite={item} onOpenSourceNews={onOpenSourceNews} compact />
+            </S.TaskWrap>
           </li>
         );
       })}

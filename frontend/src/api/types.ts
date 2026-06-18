@@ -81,7 +81,11 @@ export interface NewsLink {
 export interface NewsRewrite {
   id: string;
   sourceNewsId: string;
+  sourceNewsSourceId: string;
+  sourceNewsSourceName: string;
   sourceNewsTitle: string;
+  sourceNewsUrl: string;
+  sourceNewsPublishedAt: string | null;
   title: string;
   summary: string | null;
   content: string | null;

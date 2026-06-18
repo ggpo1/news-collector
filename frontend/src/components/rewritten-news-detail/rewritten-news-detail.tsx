@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import type { NewsRewrite } from '../../api/types';
+import { SourceTaskCard } from '../source-task-card/source-task-card';
 import * as S from './rewritten-news-detail.styles';
 
 interface RewrittenNewsDetailProps {
   rewrite: NewsRewrite | null;
   onEdit: (rewrite: NewsRewrite) => void;
   onDelete: (rewrite: NewsRewrite) => Promise<void>;
+  onOpenSourceNews?: (sourceNewsId: string, sourceId: string) => void;
 }
 
 function formatDate(value: string): string {
@@ -15,7 +17,12 @@ function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
-export function RewrittenNewsDetail({ rewrite, onEdit, onDelete }: RewrittenNewsDetailProps) {
+export function RewrittenNewsDetail({
+  rewrite,
+  onEdit,
+  onDelete,
+  onOpenSourceNews,
+}: RewrittenNewsDetailProps) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,10 +62,7 @@ export function RewrittenNewsDetail({ rewrite, onEdit, onDelete }: RewrittenNews
         <S.Title>{rewrite.title}</S.Title>
       </S.Header>
 
-      <S.SourceBlock>
-        <S.SourceLabel>Исходная новость</S.SourceLabel>
-        <S.SourceTitle>{rewrite.sourceNewsTitle}</S.SourceTitle>
-      </S.SourceBlock>
+      <SourceTaskCard rewrite={rewrite} onOpenSourceNews={onOpenSourceNews} />
 
       {rewrite.summary && <S.Summary>{rewrite.summary}</S.Summary>}
 

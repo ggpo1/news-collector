@@ -7,6 +7,12 @@ export const List = styled.ul`
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+
+  & > li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
 `;
 
 export const State = styled.div<{ $error?: boolean }>`
@@ -68,13 +74,6 @@ export const Title = styled.h2`
   color: ${({ theme }) => theme.colors.text};
 `;
 
-export const Source = styled.p`
-  margin: 0.45rem 0 0;
-  font-size: 0.82rem;
-  color: ${({ theme }) => theme.colors.textMuted};
-  line-height: 1.4;
-`;
-
 export const Preview = styled.p`
   margin: 0.5rem 0 0;
   font-size: 0.88rem;
@@ -84,4 +83,8 @@ export const Preview = styled.p`
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+`;
+
+export const TaskWrap = styled.div`
+  padding-left: 0.15rem;
 `;
