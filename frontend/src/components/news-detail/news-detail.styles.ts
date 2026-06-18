@@ -48,6 +48,12 @@ export const Content = styled.div`
 
 export const ExternalLink = styled.a`
   font-size: 0.9rem;
+  color: ${({ theme }) => theme.colors.accent};
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 export const State = styled.div<{ $error?: boolean }>`
@@ -88,4 +94,67 @@ export const FetchError = styled.p`
   margin: 0.75rem 0 0;
   font-size: 0.85rem;
   color: ${({ theme }) => theme.colors.danger};
+`;
+
+export const RelatedSection = styled.section`
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+export const RelatedTitle = styled.h3`
+  margin: 0 0 0.85rem;
+  font-size: 0.95rem;
+`;
+
+export const RelatedState = styled.p`
+  margin: 0;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+export const RelatedList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+`;
+
+export const RelatedItem = styled.li`
+  padding: 0.75rem 0.85rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  background: color-mix(in srgb, ${({ theme }) => theme.colors.bg} 35%, ${({ theme }) => theme.colors.surface});
+`;
+
+export const RelatedMeta = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+export const RelatedBadge = styled.span`
+  padding: 0.08rem 0.4rem;
+  border-radius: ${({ theme }) => theme.radii.pill};
+  background: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 15%, transparent);
+  color: ${({ theme }) => theme.colors.accent};
+  font-weight: 600;
+`;
+
+export const RelatedNewsTitle = styled.p`
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+`;
+
+export const RelatedSource = styled.span`
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.textMuted};
 `;

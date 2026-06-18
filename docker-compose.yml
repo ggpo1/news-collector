@@ -80,5 +80,28 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  topic-linker:
+    build:
+      context: .
+      dockerfile: Dockerfile.topic-linker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;
+        Port=5432;
+        Database=${POSTGRES_DB:-news_collector};
+        Username=${POSTGRES_USER:-news};
+        Password=${POSTGRES_PASSWORD:-news}
+      TopicLinker__PollingIntervalSeconds: ${TOPIC_LINKER_INTERVAL_SECONDS:-60}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres_data:

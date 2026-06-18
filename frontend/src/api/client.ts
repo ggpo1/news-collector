@@ -1,4 +1,13 @@
-import type { ArticleEnrichmentResult, NewsItemDetail, NewsItemList, PagedResult, Source } from './types';
+import type {
+  ArticleEnrichmentResult,
+  LinkType,
+  NewsItemDetail,
+  NewsItemList,
+  NewsLink,
+  PagedResult,
+  RelatedNews,
+  Source,
+} from './types';
 import { getVisitorId } from './visitor-id';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
@@ -53,4 +62,25 @@ export function enrichNewsContent(id: string): Promise<ArticleEnrichmentResult> 
   return request<ArticleEnrichmentResult>(`/api/news/${id}/enrich-content`, {
     method: 'POST',
   });
+}
+
+export function getRelatedNews(id: string): Promise<RelatedNews[]> {
+  return request<RelatedNews[]>(`/api/news/${id}/related`);
+}
+
+export function getNewsLinks(params: {
+  page: number;
+  pageSize: number;
+  linkType?: LinkType;
+}): Promise<PagedResult<NewsLink>> {
+  const search = new URLSearchParams({
+    page: String(params.page),
+    pageSize: String(params.pageSize),
+  });
+
+  if (params.linkType) {
+    search.set('linkType', params.linkType);
+  }
+
+  return request<PagedResult<NewsLink>>(`/api/news-links?${search}`);
 }

@@ -55,3 +55,25 @@ export interface ArticleEnrichmentResult {
   item: NewsItemDetail | null;
   message: string | null;
 }
+
+export type LinkType = 'SameTopic' | 'Duplicate' | 'Related';
+
+export type LinkMethod = 'Manual' | 'TitleSimilarity' | 'Embedding';
+
+export interface RelatedNews {
+  linkId: string;
+  linkType: LinkType;
+  linkMethod: LinkMethod;
+  confidence: number;
+  news: NewsItemList;
+}
+
+export interface NewsLink {
+  id: string;
+  linkType: LinkType;
+  linkMethod: LinkMethod;
+  confidence: number;
+  createdAt: string;
+  newsLow: NewsItemList;
+  newsHigh: NewsItemList;
+}

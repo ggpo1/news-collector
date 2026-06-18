@@ -15,6 +15,13 @@ export const Header = styled.header`
   margin-bottom: 1.5rem;
 `;
 
+export const HeaderActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
 export const Title = styled.h1`
   margin: 0;
   font-size: 1.5rem;

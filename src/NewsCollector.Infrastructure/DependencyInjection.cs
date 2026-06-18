@@ -19,6 +19,7 @@ public static class DependencyInjection
 
         services.AddScoped<ISourcesQueryService, SourcesQueryService>();
         services.AddScoped<INewsQueryService, NewsQueryService>();
+        services.AddScoped<INewsLinkQueryService, NewsLinkQueryService>();
         services.AddScoped<IApiVisitWriter, ApiVisitWriter>();
 
         return services;
@@ -48,6 +49,12 @@ public static class DependencyInjection
         services.AddContentEnrichment();
         services.AddScoped<INewsIngestionService, NewsIngestionService>();
 
+        return services;
+    }
+
+    public static IServiceCollection AddTopicLinking(this IServiceCollection services)
+    {
+        services.AddScoped<ITopicLinkingService, TopicLinkingService>();
         return services;
     }
 

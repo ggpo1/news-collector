@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using NewsCollector.Api.Middleware;
 using NewsCollector.Application.Options;
@@ -15,7 +16,11 @@ builder.Services.AddContentEnrichment();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<NewsCollectorDbContext>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

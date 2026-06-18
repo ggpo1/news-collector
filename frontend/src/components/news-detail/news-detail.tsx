@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { enrichNewsContent, getNewsById } from '../../api/client';
-import type { NewsItemDetail } from '../../api/types';
+import { enrichNewsContent, getNewsById, getRelatedNews } from '../../api/client';
+import { formatConfidence, LINK_METHOD_LABELS, LINK_TYPE_LABELS } from '../../api/link-labels';
+import type { NewsItemDetail, RelatedNews } from '../../api/types';
 import * as S from './news-detail.styles';
 
 interface NewsDetailProps {
@@ -25,6 +26,8 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
   const [enriching, setEnriching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enrichError, setEnrichError] = useState<string | null>(null);
+  const [related, setRelated] = useState<RelatedNews[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
 
   const loadItem = useCallback(async (id: string) => {
     setLoading(true);
@@ -46,11 +49,45 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
       setItem(null);
       setError(null);
       setEnrichError(null);
+      setRelated([]);
       return;
     }
 
     void loadItem(newsId);
   }, [newsId, loadItem]);
+
+  useEffect(() => {
+    if (!newsId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadRelated = async () => {
+      setRelatedLoading(true);
+
+      try {
+        const data = await getRelatedNews(newsId);
+        if (!cancelled) {
+          setRelated(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setRelated([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setRelatedLoading(false);
+        }
+      }
+    };
+
+    void loadRelated();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [newsId]);
 
   const handleEnrichContent = async () => {
     if (!newsId || !item) {
@@ -140,6 +177,29 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
           Открыть оригинал →
         </S.ExternalLink>
       </S.Actions>
+
+      <S.RelatedSection>
+        <S.RelatedTitle>Связанные новости</S.RelatedTitle>
+        {relatedLoading ? (
+          <S.RelatedState>Загрузка связей…</S.RelatedState>
+        ) : related.length === 0 ? (
+          <S.RelatedState>Связей пока нет</S.RelatedState>
+        ) : (
+          <S.RelatedList>
+            {related.map((entry) => (
+              <S.RelatedItem key={entry.linkId}>
+                <S.RelatedMeta>
+                  <S.RelatedBadge>{LINK_TYPE_LABELS[entry.linkType]}</S.RelatedBadge>
+                  <span>{formatConfidence(entry.confidence)}</span>
+                  <span>{LINK_METHOD_LABELS[entry.linkMethod]}</span>
+                </S.RelatedMeta>
+                <S.RelatedNewsTitle>{entry.news.title}</S.RelatedNewsTitle>
+                <S.RelatedSource>{entry.news.sourceName}</S.RelatedSource>
+              </S.RelatedItem>
+            ))}
+          </S.RelatedList>
+        )}
+      </S.RelatedSection>
     </S.Panel>
   );
 }
