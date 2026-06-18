@@ -1,0 +1,19 @@
+@NewsCollector.Api_HostAddress = http://localhost:8080
+
+### Health
+GET {{NewsCollector.Api_HostAddress}}/health
+
+### Sources
+GET {{NewsCollector.Api_HostAddress}}/api/sources
+
+### News (paginated)
+GET {{NewsCollector.Api_HostAddress}}/api/news?page=1&pageSize=10
+
+### News with content only
+GET {{NewsCollector.Api_HostAddress}}/api/news?page=1&pageSize=10&hasContent=true
+
+### News detail
+GET {{NewsCollector.Api_HostAddress}}/api/news/{{newsId}}
+
+### Enrich article content
+POST {{NewsCollector.Api_HostAddress}}/api/news/{{newsId}}/enrich-content

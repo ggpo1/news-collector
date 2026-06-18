@@ -1,0 +1,16 @@
+namespace NewsCollector.Application.Dtos;
+
+public sealed record NewsItemDetailDto(
+    Guid Id,
+    Guid SourceId,
+    string SourceName,
+    string ExternalId,
+    string Title,
+    string? Summary,
+    string? Content,
+    string Url,
+    DateTimeOffset? PublishedAt,
+    DateTimeOffset FetchedAt,
+    DateTimeOffset? ContentFetchedAt,
+    string? ContentHash,
+    DateTimeOffset CreatedAt);
