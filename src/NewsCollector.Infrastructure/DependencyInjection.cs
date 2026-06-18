@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using NewsCollector.Application.Abstractions;
+using NewsCollector.Application.Options;
+using NewsCollector.Infrastructure.Ai;
 using NewsCollector.Infrastructure.Feeds;
 using NewsCollector.Infrastructure.Persistence;
 using NewsCollector.Infrastructure.Scraping;
@@ -56,6 +60,21 @@ public static class DependencyInjection
     public static IServiceCollection AddTopicLinking(this IServiceCollection services)
     {
         services.AddScoped<ITopicLinkingService, TopicLinkingService>();
+        return services;
+    }
+
+    public static IServiceCollection AddAiRewrite(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<OllamaOptions>(configuration.GetSection(OllamaOptions.SectionName));
+
+        services.AddHttpClient("Ollama", (serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<OllamaOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+            client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+        });
+
+        services.AddScoped<IAiNewsRewriteService, OllamaAiNewsRewriteService>();
         return services;
     }
 

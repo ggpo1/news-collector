@@ -36,6 +36,11 @@ services:
         Database=${POSTGRES_DB:-news_collector};
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
+      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      Ollama__Model: ${OLLAMA_MODEL:-llama3.2}
+      Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-120}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     logging:
       driver: json-file
       options:

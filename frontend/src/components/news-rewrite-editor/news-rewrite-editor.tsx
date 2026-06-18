@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { createNewsRewrite, getNewsRewrites, updateNewsRewrite } from '../../api/client';
+import { aiRewriteNews, createNewsRewrite, getNewsRewrites, updateNewsRewrite } from '../../api/client';
 import type { NewsItemDetail, NewsRewrite } from '../../api/types';
 import * as S from './news-rewrite-editor.styles';
 
@@ -50,6 +50,7 @@ export function NewsRewriteEditor({
   const [form, setForm] = useState<EditorForm>(() => buildInitialForm(sourceNews));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [aiRewriting, setAiRewriting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -132,8 +133,24 @@ export function NewsRewriteEditor({
     }
   };
 
-  const handleAiRewrite = () => {
-    // Заглушка: интеграция с ИИ будет добавлена позже.
+  const handleAiRewrite = async () => {
+    setAiRewriting(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const result = await aiRewriteNews(sourceNews.id);
+      setForm({
+        title: result.title,
+        summary: result.summary ?? '',
+        content: result.content,
+      });
+      setSuccessMessage('Текст сгенерирован ИИ. Проверьте результат и сохраните.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось переписать с помощью ИИ');
+    } finally {
+      setAiRewriting(false);
+    }
   };
 
   return (
@@ -192,8 +209,12 @@ export function NewsRewriteEditor({
         )}
 
         <S.Footer>
-          <S.AiButton type="button" onClick={handleAiRewrite}>
-            Переписать с помощью ИИ
+          <S.AiButton
+            type="button"
+            disabled={loading || aiRewriting || saving}
+            onClick={() => void handleAiRewrite()}
+          >
+            {aiRewriting ? 'ИИ переписывает…' : 'Переписать с помощью ИИ'}
           </S.AiButton>
 
           <S.FooterGroup>

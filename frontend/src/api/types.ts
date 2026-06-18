@@ -105,3 +105,9 @@ export interface UpdateNewsRewritePayload {
   summary: string | null;
   content: string | null;
 }
+
+export interface AiNewsRewriteResult {
+  title: string;
+  summary: string | null;
+  content: string;
+}

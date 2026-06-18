@@ -13,6 +13,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.Configure<CollectorOptions>(builder.Configuration.GetSection(CollectorOptions.SectionName));
 builder.Services.AddPersistence(connectionString);
 builder.Services.AddContentEnrichment();
+builder.Services.AddAiRewrite(builder.Configuration);
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<NewsCollectorDbContext>();
 

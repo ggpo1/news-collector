@@ -1,4 +1,5 @@
 import type {
+  AiNewsRewriteResult,
   ArticleEnrichmentResult,
   CreateNewsRewritePayload,
   LinkType,
@@ -15,6 +16,19 @@ import { getVisitorId } from './visitor-id';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
+async function readApiError(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { error?: string };
+    if (body.error) {
+      return body.error;
+    }
+  } catch {
+    // Response body is not JSON.
+  }
+
+  return `API error ${response.status}: ${response.statusText}`;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   headers.set('X-Visitor-Id', getVisitorId());
@@ -25,7 +39,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${response.statusText}`);
+    throw new Error(await readApiError(response));
   }
 
   return response.json() as Promise<T>;
@@ -63,6 +77,12 @@ export function getNewsById(id: string): Promise<NewsItemDetail> {
 
 export function enrichNewsContent(id: string): Promise<ArticleEnrichmentResult> {
   return request<ArticleEnrichmentResult>(`/api/news/${id}/enrich-content`, {
+    method: 'POST',
+  });
+}
+
+export function aiRewriteNews(id: string): Promise<AiNewsRewriteResult> {
+  return request<AiNewsRewriteResult>(`/api/news/${id}/ai-rewrite`, {
     method: 'POST',
   });
 }
@@ -131,6 +151,6 @@ export async function deleteNewsRewrite(id: string): Promise<void> {
   });
 
   if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${response.statusText}`);
+    throw new Error(await readApiError(response));
   }
 }

@@ -12,13 +12,16 @@ public sealed class NewsController : ControllerBase
 
     private readonly INewsQueryService _newsQueryService;
     private readonly IArticleContentEnrichmentService _contentEnrichmentService;
+    private readonly IAiNewsRewriteService _aiNewsRewriteService;
 
     public NewsController(
         INewsQueryService newsQueryService,
-        IArticleContentEnrichmentService contentEnrichmentService)
+        IArticleContentEnrichmentService contentEnrichmentService,
+        IAiNewsRewriteService aiNewsRewriteService)
     {
         _newsQueryService = newsQueryService;
         _contentEnrichmentService = contentEnrichmentService;
+        _aiNewsRewriteService = aiNewsRewriteService;
     }
 
     [HttpGet]
@@ -73,6 +76,23 @@ public sealed class NewsController : ControllerBase
         }
 
         return Ok(result);
+    }
+
+    [HttpPost("{id:guid}/ai-rewrite")]
+    [ProducesResponseType(typeof(AiNewsRewriteResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AiRewrite(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _aiNewsRewriteService.RewriteAsync(id, cancellationToken);
+            return result is null ? NotFound() : Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpGet("{id:guid}/related")]

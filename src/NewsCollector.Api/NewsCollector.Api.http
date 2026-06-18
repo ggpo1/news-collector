@@ -18,6 +18,9 @@ GET {{NewsCollector.Api_HostAddress}}/api/news/{{newsId}}
 ### Enrich article content
 POST {{NewsCollector.Api_HostAddress}}/api/news/{{newsId}}/enrich-content
 
+### AI rewrite article
+POST {{NewsCollector.Api_HostAddress}}/api/news/{{newsId}}/ai-rewrite
+
 ### News rewrites (paginated)
 GET {{NewsCollector.Api_HostAddress}}/api/news-rewrites?page=1&pageSize=20
 
