@@ -21,7 +21,7 @@ function formatDate(value: string | null): string {
 export function SourceTaskCard({ rewrite, onOpenSourceNews, compact = false }: SourceTaskCardProps) {
   return (
     <S.Card $compact={compact}>
-      <S.Label>Исходная задача</S.Label>
+      <S.Label>Исходная новость</S.Label>
       <S.Meta>
         <S.Badge>{rewrite.sourceNewsSourceName}</S.Badge>
         {rewrite.sourceNewsPublishedAt && (

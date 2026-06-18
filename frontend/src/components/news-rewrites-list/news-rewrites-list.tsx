@@ -1,6 +1,6 @@
-import type { NewsRewrite } from '../../api/types';
-import { SourceTaskCard } from '../source-task-card/source-task-card';
-import * as S from './news-rewrites-list.styles';
+import type { NewsRewrite } from "../../api/types";
+import { SourceTaskCard } from "../source-task-card/source-task-card";
+import * as S from "./news-rewrites-list.styles";
 
 interface NewsRewritesListProps {
   items: NewsRewrite[];
@@ -12,9 +12,9 @@ interface NewsRewritesListProps {
 }
 
 function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('ru-RU', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
+  return new Intl.DateTimeFormat("ru-RU", {
+    dateStyle: "medium",
+    timeStyle: "short",
   }).format(new Date(value));
 }
 
@@ -39,11 +39,7 @@ export function NewsRewritesList({
   }
 
   if (items.length === 0) {
-    return (
-      <S.State>
-        Переписанных новостей пока нет. Откройте новость и нажмите «Переписать».
-      </S.State>
-    );
+    return <S.State>Переписанных новостей пока нет. Откройте новость и нажмите «Переписать».</S.State>;
   }
 
   return (
@@ -60,10 +56,10 @@ export function NewsRewritesList({
               </S.Meta>
               <S.Title>{item.title}</S.Title>
               {preview && <S.Preview>{preview}</S.Preview>}
+              <S.TaskWrap>
+                <SourceTaskCard rewrite={item} onOpenSourceNews={onOpenSourceNews} compact />
+              </S.TaskWrap>
             </S.Card>
-            <S.TaskWrap>
-              <SourceTaskCard rewrite={item} onOpenSourceNews={onOpenSourceNews} compact />
-            </S.TaskWrap>
           </li>
         );
       })}
