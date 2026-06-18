@@ -13,6 +13,7 @@ export const Overlay = styled.div`
 `;
 
 export const Dialog = styled.div`
+  position: relative;
   width: min(720px, 100%);
   max-height: min(90vh, 900px);
   display: flex;
@@ -61,9 +62,14 @@ export const CloseButton = styled.button`
   line-height: 1;
   cursor: pointer;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${({ theme }) => theme.colors.surfaceHover};
     color: ${({ theme }) => theme.colors.text};
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 `;
 
@@ -99,6 +105,11 @@ export const Input = styled.input`
     border-color: ${({ theme }) => theme.colors.accent};
     box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.accent};
   }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
 `;
 
 export const TextArea = styled.textarea`
@@ -117,6 +128,11 @@ export const TextArea = styled.textarea`
     outline: none;
     border-color: ${({ theme }) => theme.colors.accent};
     box-shadow: 0 0 0 1px ${({ theme }) => theme.colors.accent};
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
   }
 `;
 
@@ -202,4 +218,51 @@ export const Success = styled.p`
   margin: 0;
   font-size: 0.85rem;
   color: ${({ theme }) => theme.colors.accent};
+`;
+
+export const AiLoaderOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  border-radius: inherit;
+  background: color-mix(in srgb, ${({ theme }) => theme.colors.surface} 88%, transparent);
+  backdrop-filter: blur(2px);
+`;
+
+export const Spinner = styled.div`
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid color-mix(in srgb, ${({ theme }) => theme.colors.accent} 20%, transparent);
+  border-top-color: ${({ theme }) => theme.colors.accent};
+  border-radius: 50%;
+  animation: ai-spin 0.8s linear infinite;
+
+  @keyframes ai-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+export const LoaderTitle = styled.p`
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text};
+  text-align: center;
+`;
+
+export const LoaderHint = styled.p`
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-align: center;
 `;

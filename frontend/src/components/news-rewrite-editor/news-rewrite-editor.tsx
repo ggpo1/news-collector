@@ -153,9 +153,19 @@ export function NewsRewriteEditor({
     }
   };
 
+  const isBusy = aiRewriting;
+
   return (
     <S.Overlay role="presentation">
-      <S.Dialog role="dialog" aria-modal="true" aria-labelledby="rewrite-editor-title">
+      <S.Dialog role="dialog" aria-modal="true" aria-labelledby="rewrite-editor-title" aria-busy={isBusy}>
+        {aiRewriting && (
+          <S.AiLoaderOverlay role="status" aria-live="polite" aria-label="Генерация текста">
+            <S.Spinner />
+            <S.LoaderTitle>ИИ переписывает новость</S.LoaderTitle>
+            <S.LoaderHint>Это может занять несколько минут. Не закрывайте окно.</S.LoaderHint>
+          </S.AiLoaderOverlay>
+        )}
+
         <S.Header>
           <S.HeaderText>
             <S.Title id="rewrite-editor-title">Редактор переписывания</S.Title>
@@ -164,7 +174,12 @@ export function NewsRewriteEditor({
               {rewriteId ? ' · редактируется сохранённая версия' : ' · новый черновик'}
             </S.Subtitle>
           </S.HeaderText>
-          <S.CloseButton type="button" aria-label="Закрыть" onClick={onClose}>
+          <S.CloseButton
+            type="button"
+            aria-label="Закрыть"
+            disabled={isBusy || saving}
+            onClick={onClose}
+          >
             ×
           </S.CloseButton>
         </S.Header>
@@ -179,6 +194,7 @@ export function NewsRewriteEditor({
               Заголовок
               <S.Input
                 value={form.title}
+                disabled={isBusy}
                 onChange={(event) => handleFieldChange('title', event.target.value)}
                 placeholder="Заголовок переписанной новости"
               />
@@ -188,6 +204,7 @@ export function NewsRewriteEditor({
               Краткое описание
               <S.TextArea
                 value={form.summary}
+                disabled={isBusy}
                 onChange={(event) => handleFieldChange('summary', event.target.value)}
                 placeholder="Краткое описание (необязательно)"
                 rows={3}
@@ -198,6 +215,7 @@ export function NewsRewriteEditor({
               Текст новости
               <S.ContentArea
                 value={form.content}
+                disabled={isBusy}
                 onChange={(event) => handleFieldChange('content', event.target.value)}
                 placeholder="Полный текст переписанной новости"
               />
@@ -218,12 +236,12 @@ export function NewsRewriteEditor({
           </S.AiButton>
 
           <S.FooterGroup>
-            <S.SecondaryButton type="button" disabled={saving} onClick={onClose}>
+            <S.SecondaryButton type="button" disabled={saving || isBusy} onClick={onClose}>
               Отмена
             </S.SecondaryButton>
             <S.PrimaryButton
               type="button"
-              disabled={loading || saving}
+              disabled={loading || saving || isBusy}
               onClick={() => void handleSave()}
             >
               {saving ? 'Сохранение…' : 'Сохранить'}
