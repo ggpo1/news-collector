@@ -1,12 +1,15 @@
 import type {
   ArticleEnrichmentResult,
+  CreateNewsRewritePayload,
   LinkType,
   NewsItemDetail,
   NewsItemList,
   NewsLink,
+  NewsRewrite,
   PagedResult,
   RelatedNews,
   Source,
+  UpdateNewsRewritePayload,
 } from './types';
 import { getVisitorId } from './visitor-id';
 
@@ -83,4 +86,37 @@ export function getNewsLinks(params: {
   }
 
   return request<PagedResult<NewsLink>>(`/api/news-links?${search}`);
+}
+
+export function getNewsRewrites(params: {
+  page: number;
+  pageSize: number;
+  sourceNewsId?: string;
+}): Promise<PagedResult<NewsRewrite>> {
+  const search = new URLSearchParams({
+    page: String(params.page),
+    pageSize: String(params.pageSize),
+  });
+
+  if (params.sourceNewsId) {
+    search.set('sourceNewsId', params.sourceNewsId);
+  }
+
+  return request<PagedResult<NewsRewrite>>(`/api/news-rewrites?${search}`);
+}
+
+export function createNewsRewrite(payload: CreateNewsRewritePayload): Promise<NewsRewrite> {
+  return request<NewsRewrite>('/api/news-rewrites', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateNewsRewrite(id: string, payload: UpdateNewsRewritePayload): Promise<NewsRewrite> {
+  return request<NewsRewrite>(`/api/news-rewrites/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }

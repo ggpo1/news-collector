@@ -77,3 +77,27 @@ export interface NewsLink {
   newsLow: NewsItemList;
   newsHigh: NewsItemList;
 }
+
+export interface NewsRewrite {
+  id: string;
+  sourceNewsId: string;
+  sourceNewsTitle: string;
+  title: string;
+  summary: string | null;
+  content: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNewsRewritePayload {
+  sourceNewsId: string;
+  title: string;
+  summary: string | null;
+  content: string | null;
+}
+
+export interface UpdateNewsRewritePayload {
+  title: string;
+  summary: string | null;
+  content: string | null;
+}

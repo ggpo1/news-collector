@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<ISourcesQueryService, SourcesQueryService>();
         services.AddScoped<INewsQueryService, NewsQueryService>();
         services.AddScoped<INewsLinkQueryService, NewsLinkQueryService>();
+        services.AddScoped<INewsRewriteService, NewsRewriteService>();
         services.AddScoped<IApiVisitWriter, ApiVisitWriter>();
 
         return services;

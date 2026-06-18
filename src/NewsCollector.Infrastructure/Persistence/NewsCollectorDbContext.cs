@@ -18,6 +18,8 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<ApiVisit> ApiVisits => Set<ApiVisit>();
 
+    public DbSet<NewsRewrite> NewsRewrites => Set<NewsRewrite>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NewsCollectorDbContext).Assembly);

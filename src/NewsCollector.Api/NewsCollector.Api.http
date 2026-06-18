@@ -17,3 +17,36 @@ GET {{NewsCollector.Api_HostAddress}}/api/news/{{newsId}}
 
 ### Enrich article content
 POST {{NewsCollector.Api_HostAddress}}/api/news/{{newsId}}/enrich-content
+
+### News rewrites (paginated)
+GET {{NewsCollector.Api_HostAddress}}/api/news-rewrites?page=1&pageSize=20
+
+### News rewrites for source news
+GET {{NewsCollector.Api_HostAddress}}/api/news-rewrites?sourceNewsId={{newsId}}&page=1&pageSize=20
+
+### News rewrite detail
+GET {{NewsCollector.Api_HostAddress}}/api/news-rewrites/{{rewriteId}}
+
+### Create news rewrite
+POST {{NewsCollector.Api_HostAddress}}/api/news-rewrites
+Content-Type: application/json
+
+{
+  "sourceNewsId": "{{newsId}}",
+  "title": "Переписанный заголовок",
+  "summary": "Краткое описание",
+  "content": "Полный переписанный текст новости."
+}
+
+### Update news rewrite
+PUT {{NewsCollector.Api_HostAddress}}/api/news-rewrites/{{rewriteId}}
+Content-Type: application/json
+
+{
+  "title": "Обновлённый заголовок",
+  "summary": null,
+  "content": "Обновлённый текст."
+}
+
+### Delete news rewrite
+DELETE {{NewsCollector.Api_HostAddress}}/api/news-rewrites/{{rewriteId}}

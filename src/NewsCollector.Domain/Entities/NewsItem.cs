@@ -33,4 +33,6 @@ public class NewsItem
     public ICollection<NewsLink> LinksAsLow { get; set; } = [];
 
     public ICollection<NewsLink> LinksAsHigh { get; set; } = [];
+
+    public ICollection<NewsRewrite> Rewrites { get; set; } = [];
 }

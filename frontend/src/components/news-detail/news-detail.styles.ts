@@ -90,6 +90,22 @@ export const FetchButton = styled.button`
   }
 `;
 
+export const RewriteButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 50%, ${({ theme }) => theme.colors.border});
+    color: ${({ theme }) => theme.colors.accent};
+  }
+`;
+
 export const FetchError = styled.p`
   margin: 0.75rem 0 0;
   font-size: 0.85rem;

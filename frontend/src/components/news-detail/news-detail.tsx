@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { enrichNewsContent, getNewsById, getRelatedNews } from '../../api/client';
 import { formatConfidence, LINK_METHOD_LABELS, LINK_TYPE_LABELS } from '../../api/link-labels';
 import type { NewsItemDetail, RelatedNews } from '../../api/types';
+import { NewsRewriteEditor } from '../news-rewrite-editor/news-rewrite-editor';
 import * as S from './news-detail.styles';
 
 interface NewsDetailProps {
@@ -28,6 +29,7 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
   const [enrichError, setEnrichError] = useState<string | null>(null);
   const [related, setRelated] = useState<RelatedNews[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const loadItem = useCallback(async (id: string) => {
     setLoading(true);
@@ -50,6 +52,7 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
       setError(null);
       setEnrichError(null);
       setRelated([]);
+      setEditorOpen(false);
       return;
     }
 
@@ -148,7 +151,8 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
   const showFetchButton = !item.content;
 
   return (
-    <S.Panel>
+    <>
+      <S.Panel>
       <S.Header>
         <S.Meta>
           <span>{item.sourceName}</span>
@@ -173,6 +177,9 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
             {enriching ? 'Загрузка текста…' : 'Загрузить полный текст'}
           </S.FetchButton>
         )}
+        <S.RewriteButton type="button" onClick={() => setEditorOpen(true)}>
+          Переписать
+        </S.RewriteButton>
         <S.ExternalLink href={item.url} target="_blank" rel="noreferrer">
           Открыть оригинал →
         </S.ExternalLink>
@@ -200,6 +207,14 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
           </S.RelatedList>
         )}
       </S.RelatedSection>
-    </S.Panel>
+      </S.Panel>
+
+      {editorOpen && (
+        <NewsRewriteEditor
+          sourceNews={item}
+          onClose={() => setEditorOpen(false)}
+        />
+      )}
+    </>
   );
 }
