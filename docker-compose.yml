@@ -48,7 +48,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-5181}:80"
+      - "${FRONTEND_PORT:-5190}:80"
     depends_on:
       - api
     logging:
