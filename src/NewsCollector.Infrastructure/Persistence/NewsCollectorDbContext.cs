@@ -16,6 +16,8 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<NewsLink> NewsLinks => Set<NewsLink>();
 
+    public DbSet<ApiVisit> ApiVisits => Set<ApiVisit>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NewsCollectorDbContext).Assembly);

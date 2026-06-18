@@ -19,6 +19,7 @@ public static class DependencyInjection
 
         services.AddScoped<ISourcesQueryService, SourcesQueryService>();
         services.AddScoped<INewsQueryService, NewsQueryService>();
+        services.AddScoped<IApiVisitWriter, ApiVisitWriter>();
 
         return services;
     }

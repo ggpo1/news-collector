@@ -1,9 +1,16 @@
 import type { ArticleEnrichmentResult, NewsItemDetail, NewsItemList, PagedResult, Source } from './types';
+import { getVisitorId } from './visitor-id';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, init);
+  const headers = new Headers(init?.headers);
+  headers.set('X-Visitor-Id', getVisitorId());
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers,
+  });
 
   if (!response.ok) {
     throw new Error(`API error ${response.status}: ${response.statusText}`);

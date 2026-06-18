@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using NewsCollector.Api.Middleware;
 using NewsCollector.Application.Options;
 using NewsCollector.Infrastructure;
 using NewsCollector.Infrastructure.Persistence;
@@ -51,6 +52,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseMiddleware<ApiVisitTrackingMiddleware>();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
