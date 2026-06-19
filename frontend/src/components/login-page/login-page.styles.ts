@@ -88,6 +88,8 @@ export const Footer = styled.div`
   margin-top: 1rem;
   display: flex;
   justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
 `;
 
 export const LinkButton = styled.button`
