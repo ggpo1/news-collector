@@ -1,4 +1,5 @@
 import styled, { css } from 'styled-components';
+import { NavLink } from 'react-router-dom';
 import { mediaDown, mediaUp } from '../../styles/media';
 
 export const SidebarNav = styled.nav`
@@ -31,11 +32,12 @@ export const BottomNav = styled.nav<{ $columns: number }>`
   }
 `;
 
-export const NavButton = styled.button<{ $active?: boolean; $variant: 'sidebar' | 'bottom' }>`
+export const NavLinkButton = styled(NavLink)<{ $variant: 'sidebar' | 'bottom' }>`
   border: none;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.textMuted};
   background: transparent;
+  text-decoration: none;
   transition:
     background ${({ theme }) => theme.transitions.fast},
     color ${({ theme }) => theme.transitions.fast},
@@ -83,12 +85,10 @@ export const NavButton = styled.button<{ $active?: boolean; $variant: 'sidebar' 
           }
         `}
 
-  ${({ theme, $active }) =>
-    $active &&
-    css`
-      color: ${theme.colors.accent};
-      background: ${theme.colors.accentMuted};
-    `}
+  &[aria-current='page'] {
+    color: ${({ theme }) => theme.colors.accent};
+    background: ${({ theme }) => theme.colors.accentMuted};
+  }
 `;
 
 export const NavLabel = styled.span<{ $hideOnMobile?: boolean }>`

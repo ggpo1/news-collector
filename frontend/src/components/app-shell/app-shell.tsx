@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { USER_ROLE_LABELS } from '../../api/role-labels';
+import { PATHS } from '../../app/paths';
 import { useAuth } from '../../contexts/auth-context';
 import { AppNav } from '../app-nav/app-nav';
 import type { AppSection } from '../app-nav/app-nav';
@@ -9,22 +11,17 @@ interface AppShellProps {
   section: AppSection;
   sectionTitle: string;
   sectionSubtitle: string;
-  onSectionChange: (section: AppSection) => void;
-  toolbar?: ReactNode;
-  error?: string | null;
   children: ReactNode;
 }
 
-export function AppShell({
-  section,
-  sectionTitle,
-  sectionSubtitle,
-  onSectionChange,
-  toolbar,
-  error,
-  children,
-}: AppShellProps) {
+export function AppShell({ section, sectionTitle, sectionSubtitle, children }: AppShellProps) {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate(PATHS.login);
+  };
 
   return (
     <S.Shell>
@@ -34,13 +31,13 @@ export function AppShell({
           <S.BrandSubtitle>Сбор и переписывание новостей</S.BrandSubtitle>
         </S.Brand>
         <S.SidebarNavSlot>
-          <AppNav value={section} onChange={onSectionChange} variant="sidebar" />
+          <AppNav section={section} variant="sidebar" />
         </S.SidebarNavSlot>
         {user && (
           <S.UserPanel>
             <S.UserName>{user.displayName}</S.UserName>
             <S.UserRole>{USER_ROLE_LABELS[user.role]}</S.UserRole>
-            <S.LogoutButton type="button" onClick={logout}>
+            <S.LogoutButton type="button" onClick={handleLogout}>
               Выйти
             </S.LogoutButton>
           </S.UserPanel>
@@ -54,7 +51,7 @@ export function AppShell({
             <S.MobileSubtitle>{sectionSubtitle}</S.MobileSubtitle>
           </S.MobileTitle>
           {user && (
-            <S.MobileLogout type="button" onClick={logout}>
+            <S.MobileLogout type="button" onClick={handleLogout}>
               Выйти
             </S.MobileLogout>
           )}
@@ -66,12 +63,10 @@ export function AppShell({
             <S.PageSubtitle>{sectionSubtitle}</S.PageSubtitle>
           </S.PageHeader>
 
-          {toolbar && <S.Toolbar>{toolbar}</S.Toolbar>}
-          {error && <S.ErrorBanner role="alert">{error}</S.ErrorBanner>}
           {children}
         </S.Content>
 
-        <AppNav value={section} onChange={onSectionChange} variant="bottom" />
+        <AppNav section={section} variant="bottom" />
       </S.Main>
     </S.Shell>
   );

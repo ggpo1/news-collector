@@ -1,5 +1,6 @@
-import { NavIcon } from './nav-icon';
+import { SECTION_PATHS } from '../../app/paths';
 import { useAuth } from '../../contexts/auth-context';
+import { NavIcon } from './nav-icon';
 import * as S from './app-nav.styles';
 
 export type AppSection = 'news' | 'links' | 'rewrites' | 'sources' | 'users';
@@ -13,12 +14,11 @@ const NAV_ITEMS: { id: AppSection; label: string; chiefOnly?: boolean }[] = [
 ];
 
 interface AppNavProps {
-  value: AppSection;
-  onChange: (section: AppSection) => void;
+  section: AppSection;
   variant: 'sidebar' | 'bottom';
 }
 
-export function AppNav({ value, onChange, variant }: AppNavProps) {
+export function AppNav({ section, variant }: AppNavProps) {
   const { isChiefEditor } = useAuth();
   const items = NAV_ITEMS.filter((item) => !item.chiefOnly || isChiefEditor);
   const Root = variant === 'sidebar' ? S.SidebarNav : S.BottomNav;
@@ -26,17 +26,15 @@ export function AppNav({ value, onChange, variant }: AppNavProps) {
   return (
     <Root aria-label="Разделы приложения" $columns={items.length}>
       {items.map((item) => (
-        <S.NavButton
+        <S.NavLinkButton
           key={item.id}
-          type="button"
-          $active={value === item.id}
+          to={SECTION_PATHS[item.id]}
           $variant={variant}
-          aria-current={value === item.id ? 'page' : undefined}
-          onClick={() => onChange(item.id)}
+          aria-current={section === item.id ? 'page' : undefined}
         >
           <NavIcon section={item.id} />
           <S.NavLabel $hideOnMobile={variant === 'bottom'}>{item.label}</S.NavLabel>
-        </S.NavButton>
+        </S.NavLinkButton>
       ))}
     </Root>
   );
