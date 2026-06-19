@@ -1,39 +1,39 @@
-import { useState } from 'react';
-import { USER_ROLE_LABELS } from '../../api/role-labels';
-import { validateInvitation } from '../../api/client';
-import type { UserRole } from '../../api/types';
-import { useAuth } from '../../contexts/auth-context';
-import * as S from './login-page.styles';
+import { useState } from "react";
+import { USER_ROLE_LABELS } from "../../api/role-labels";
+import { validateInvitation } from "../../api/client";
+import type { UserRole } from "../../api/types";
+import { useAuth } from "../../contexts/auth-context";
+import * as S from "./login-page.styles";
 
-type AuthMode = 'login' | 'register-code' | 'register-details';
+type AuthMode = "login" | "register-code" | "register-details";
 
 export function LoginPage() {
   const { login, register } = useAuth();
-  const [mode, setMode] = useState<AuthMode>('login');
-  const [loginName, setLoginName] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [invitationCode, setInvitationCode] = useState('');
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [loginName, setLoginName] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [invitationCode, setInvitationCode] = useState("");
   const [invitationRole, setInvitationRole] = useState<UserRole | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const resetRegisterState = () => {
-    setInvitationCode('');
+    setInvitationCode("");
     setInvitationRole(null);
-    setLoginName('');
-    setPassword('');
-    setDisplayName('');
+    setLoginName("");
+    setPassword("");
+    setDisplayName("");
     setError(null);
   };
 
   const switchToLogin = () => {
-    setMode('login');
+    setMode("login");
     resetRegisterState();
   };
 
   const switchToRegister = () => {
-    setMode('register-code');
+    setMode("register-code");
     resetRegisterState();
   };
 
@@ -45,7 +45,7 @@ export function LoginPage() {
     try {
       await login(loginName.trim(), password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось войти');
+      setError(err instanceof Error ? err.message : "Не удалось войти");
     } finally {
       setSubmitting(false);
     }
@@ -59,9 +59,9 @@ export function LoginPage() {
     try {
       const result = await validateInvitation(invitationCode.trim());
       setInvitationRole(result.role);
-      setMode('register-details');
+      setMode("register-details");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неверный или уже использованный код');
+      setError(err instanceof Error ? err.message : "Неверный или уже использованный код");
     } finally {
       setSubmitting(false);
     }
@@ -75,13 +75,13 @@ export function LoginPage() {
     try {
       await register(invitationCode.trim(), loginName.trim(), password, displayName.trim());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось зарегистрироваться');
+      setError(err instanceof Error ? err.message : "Не удалось зарегистрироваться");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (mode === 'register-code') {
+  if (mode === "register-code") {
     return (
       <S.Page>
         <S.Card>
@@ -104,7 +104,7 @@ export function LoginPage() {
             {error && <S.Error>{error}</S.Error>}
 
             <S.Button type="submit" disabled={submitting || !invitationCode.trim()}>
-              {submitting ? 'Проверка…' : 'Продолжить'}
+              {submitting ? "Проверка…" : "Продолжить"}
             </S.Button>
           </S.Form>
 
@@ -118,7 +118,7 @@ export function LoginPage() {
     );
   }
 
-  if (mode === 'register-details') {
+  if (mode === "register-details") {
     return (
       <S.Page>
         <S.Card>
@@ -126,7 +126,7 @@ export function LoginPage() {
           <S.Subtitle>
             {invitationRole
               ? `Роль по приглашению: ${USER_ROLE_LABELS[invitationRole]}`
-              : 'Заполните данные для входа в систему'}
+              : "Заполните данные для входа в систему"}
           </S.Subtitle>
 
           <S.Form onSubmit={(event) => void handleRegister(event)}>
@@ -164,7 +164,7 @@ export function LoginPage() {
             {error && <S.Error>{error}</S.Error>}
 
             <S.Button type="submit" disabled={submitting}>
-              {submitting ? 'Регистрация…' : 'Зарегистрироваться'}
+              {submitting ? "Регистрация…" : "Зарегистрироваться"}
             </S.Button>
           </S.Form>
 
@@ -173,7 +173,7 @@ export function LoginPage() {
               type="button"
               disabled={submitting}
               onClick={() => {
-                setMode('register-code');
+                setMode("register-code");
                 setError(null);
               }}
             >
@@ -216,20 +216,15 @@ export function LoginPage() {
           {error && <S.Error>{error}</S.Error>}
 
           <S.Button type="submit" disabled={submitting}>
-            {submitting ? 'Вход…' : 'Войти'}
+            {submitting ? "Вход…" : "Войти"}
           </S.Button>
         </S.Form>
-
         <S.Footer>
+          <S.Hint>Или если есть код приглашения:</S.Hint>
           <S.LinkButton type="button" disabled={submitting} onClick={switchToRegister}>
             Зарегистрироваться по коду
           </S.LinkButton>
         </S.Footer>
-
-        <S.Hint>
-          Первый запуск: логин <strong>chief</strong>, пароль из переменной AUTH_SEED_CHIEF_PASSWORD
-          (по умолчанию changeme).
-        </S.Hint>
       </S.Card>
     </S.Page>
   );
