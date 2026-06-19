@@ -1,13 +1,15 @@
 import { NavIcon } from './nav-icon';
+import { useAuth } from '../../contexts/auth-context';
 import * as S from './app-nav.styles';
 
-export type AppSection = 'news' | 'links' | 'rewrites' | 'sources';
+export type AppSection = 'news' | 'links' | 'rewrites' | 'sources' | 'users';
 
-const NAV_ITEMS: { id: AppSection; label: string }[] = [
+const NAV_ITEMS: { id: AppSection; label: string; chiefOnly?: boolean }[] = [
   { id: 'news', label: 'Новости' },
   { id: 'links', label: 'Связи' },
   { id: 'rewrites', label: 'Переписи' },
-  { id: 'sources', label: 'Источники' },
+  { id: 'sources', label: 'Источники', chiefOnly: true },
+  { id: 'users', label: 'Пользователи', chiefOnly: true },
 ];
 
 interface AppNavProps {
@@ -17,11 +19,13 @@ interface AppNavProps {
 }
 
 export function AppNav({ value, onChange, variant }: AppNavProps) {
+  const { isChiefEditor } = useAuth();
+  const items = NAV_ITEMS.filter((item) => !item.chiefOnly || isChiefEditor);
   const Root = variant === 'sidebar' ? S.SidebarNav : S.BottomNav;
 
   return (
-    <Root aria-label="Разделы приложения">
-      {NAV_ITEMS.map((item) => (
+    <Root aria-label="Разделы приложения" $columns={items.length}>
+      {items.map((item) => (
         <S.NavButton
           key={item.id}
           type="button"

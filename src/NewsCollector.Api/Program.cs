@@ -1,8 +1,15 @@
+using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using NewsCollector.Api.Auth;
 using NewsCollector.Api.Middleware;
+using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Options;
 using NewsCollector.Infrastructure;
+using NewsCollector.Infrastructure.Auth;
 using NewsCollector.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,11 +18,44 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
 builder.Services.Configure<CollectorOptions>(builder.Configuration.GetSection(CollectorOptions.SectionName));
+builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContext, HttpUserContext>();
 builder.Services.AddPersistence(connectionString);
 builder.Services.AddContentEnrichment();
 builder.Services.AddAiRewrite(builder.Configuration);
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<NewsCollectorDbContext>();
+
+var authOptions = builder.Configuration.GetSection(AuthOptions.SectionName).Get<AuthOptions>()
+    ?? new AuthOptions();
+
+if (string.IsNullOrWhiteSpace(authOptions.JwtSecret))
+{
+    throw new InvalidOperationException("Auth:JwtSecret must be configured.");
+}
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authOptions.JwtSecret))
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -51,6 +91,12 @@ if (runMigrations)
     await db.Database.MigrateAsync();
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<AuthDataSeeder>();
+    await seeder.SeedAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -58,8 +104,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseMiddleware<ApiVisitTrackingMiddleware>();
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

@@ -92,6 +92,44 @@ export interface NewsLink {
   newsHigh: NewsItemList;
 }
 
+export type UserRole = 'ChiefEditor' | 'Editor';
+
+export interface CurrentUser {
+  id: string;
+  login: string;
+  displayName: string;
+  role: UserRole;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  user: CurrentUser;
+}
+
+export interface UserAccount {
+  id: string;
+  login: string;
+  displayName: string;
+  role: UserRole;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserPayload {
+  login: string;
+  password: string;
+  displayName: string;
+  role: UserRole;
+}
+
+export interface UpdateUserPayload {
+  displayName: string;
+  role: UserRole;
+  isActive: boolean;
+  password: string | null;
+}
+
 export interface NewsRewrite {
   id: string;
   sourceNewsId: string;
@@ -100,6 +138,9 @@ export interface NewsRewrite {
   sourceNewsTitle: string;
   sourceNewsUrl: string;
   sourceNewsPublishedAt: string | null;
+  authorId: string;
+  authorLogin: string;
+  authorDisplayName: string;
   title: string;
   summary: string | null;
   content: string | null;

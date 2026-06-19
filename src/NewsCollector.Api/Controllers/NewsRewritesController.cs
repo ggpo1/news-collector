@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Dtos;
@@ -5,6 +6,7 @@ using NewsCollector.Application.Dtos;
 namespace NewsCollector.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/news-rewrites")]
 public sealed class NewsRewritesController : ControllerBase
 {
@@ -53,6 +55,7 @@ public sealed class NewsRewritesController : ControllerBase
     [ProducesResponseType(typeof(NewsRewriteDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create(
         [FromBody] CreateNewsRewriteRequest request,
         CancellationToken cancellationToken)
@@ -62,19 +65,23 @@ public sealed class NewsRewritesController : ControllerBase
             return BadRequest(new { error = "title is required" });
         }
 
-        var rewrite = await _newsRewriteService.CreateAsync(request, cancellationToken);
-        if (rewrite is null)
-        {
-            return NotFound(new { error = "source news not found" });
-        }
+        var result = await _newsRewriteService.CreateAsync(request, cancellationToken);
 
-        return CreatedAtAction(nameof(GetById), new { id = rewrite.Id }, rewrite);
+        return result.Status switch
+        {
+            MutationStatus.Success => CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value),
+            MutationStatus.NotFound => NotFound(new { error = "source news not found" }),
+            MutationStatus.Conflict => Conflict(new { error = "you already have a rewrite for this news item" }),
+            MutationStatus.Forbidden => Forbid(),
+            _ => BadRequest()
+        };
     }
 
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(NewsRewriteDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Update(
         Guid id,
         [FromBody] UpdateNewsRewriteRequest request,
@@ -85,16 +92,31 @@ public sealed class NewsRewritesController : ControllerBase
             return BadRequest(new { error = "title is required" });
         }
 
-        var rewrite = await _newsRewriteService.UpdateAsync(id, request, cancellationToken);
-        return rewrite is null ? NotFound() : Ok(rewrite);
+        var result = await _newsRewriteService.UpdateAsync(id, request, cancellationToken);
+
+        return result.Status switch
+        {
+            MutationStatus.Success => Ok(result.Value),
+            MutationStatus.NotFound => NotFound(),
+            MutationStatus.Forbidden => Forbid(),
+            _ => BadRequest()
+        };
     }
 
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await _newsRewriteService.DeleteAsync(id, cancellationToken);
-        return deleted ? NoContent() : NotFound();
+        var result = await _newsRewriteService.DeleteAsync(id, cancellationToken);
+
+        return result.Status switch
+        {
+            MutationStatus.Success => NoContent(),
+            MutationStatus.NotFound => NotFound(),
+            MutationStatus.Forbidden => Forbid(),
+            _ => BadRequest()
+        };
     }
 }

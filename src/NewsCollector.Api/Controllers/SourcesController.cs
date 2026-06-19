@@ -1,10 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Dtos;
+using NewsCollector.Domain.Enums;
 
 namespace NewsCollector.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/sources")]
 public sealed class SourcesController : ControllerBase
 {
@@ -32,6 +35,7 @@ public sealed class SourcesController : ControllerBase
         return source is null ? NotFound() : Ok(source);
     }
 
+    [Authorize(Roles = nameof(UserRole.ChiefEditor))]
     [HttpPost]
     [ProducesResponseType(typeof(SourceDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -64,6 +68,7 @@ public sealed class SourcesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = source.Id }, source);
     }
 
+    [Authorize(Roles = nameof(UserRole.ChiefEditor))]
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(SourceDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -104,6 +109,7 @@ public sealed class SourcesController : ControllerBase
         return Ok(source);
     }
 
+    [Authorize(Roles = nameof(UserRole.ChiefEditor))]
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

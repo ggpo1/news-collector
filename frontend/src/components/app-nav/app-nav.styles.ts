@@ -12,14 +12,14 @@ export const SidebarNav = styled.nav`
   }
 `;
 
-export const BottomNav = styled.nav`
+export const BottomNav = styled.nav<{ $columns: number }>`
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 100;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(${({ $columns }) => $columns}, 1fr);
   gap: 0.25rem;
   padding: 0.35rem 0.5rem calc(0.35rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid ${({ theme }) => theme.colors.borderSubtle};

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { AppSection } from '../components/app-nav/app-nav';
 import { AppShell } from '../components/app-shell/app-shell';
+import { LoginPage } from '../components/login-page/login-page';
 import { MasterDetailLayout } from '../components/master-detail-layout/master-detail-layout';
 import { NewsDetail } from '../components/news-detail/news-detail';
 import { NewsLinksView } from '../components/news-links-view/news-links-view';
@@ -9,6 +10,9 @@ import { NewsRewritesView } from '../components/news-rewrites-view/news-rewrites
 import { Pagination } from '../components/pagination/pagination';
 import { SourceSelect } from '../components/source-select/source-select';
 import { SourcesView } from '../components/sources-view/sources-view';
+import { UsersView } from '../components/users-view/users-view';
+import { LoadingState } from '../components/ui/loading-state';
+import { useAuth } from '../contexts/auth-context';
 import { useNews } from '../hooks/use-news/use-news';
 import { useSources } from '../hooks/use-sources/use-sources';
 
@@ -29,9 +33,14 @@ const SECTION_META: Record<AppSection, { title: string; subtitle: string }> = {
     title: 'Источники',
     subtitle: 'RSS-фиды и настройки сбора',
   },
+  users: {
+    title: 'Пользователи',
+    subtitle: 'Учётные записи редакторов',
+  },
 };
 
 export default function App() {
+  const { user, loading: authLoading, isChiefEditor } = useAuth();
   const [section, setSection] = useState<AppSection>('news');
   const { sources, loading: sourcesLoading, error: sourcesError, reload: reloadSources } =
     useSources();
@@ -56,11 +65,25 @@ export default function App() {
     setSelectedNewsId(null);
   }, [section]);
 
+  useEffect(() => {
+    if (!isChiefEditor && (section === 'sources' || section === 'users')) {
+      setSection('news');
+    }
+  }, [isChiefEditor, section]);
+
   const handleOpenSourceNews = (sourceNewsId: string, sourceId: string) => {
     setSelectedSourceId(sourceId);
     setSelectedNewsId(sourceNewsId);
     setSection('news');
   };
+
+  if (authLoading) {
+    return <LoadingState label="Проверка сессии…" />;
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
 
   const meta = SECTION_META[section];
 
@@ -116,13 +139,15 @@ export default function App() {
         <NewsRewritesView onOpenSourceNews={handleOpenSourceNews} />
       )}
 
-      {section === 'sources' && (
+      {section === 'sources' && isChiefEditor && (
         <SourcesView
           sources={sources}
           loading={sourcesLoading}
           onChanged={() => void reloadSources()}
         />
       )}
+
+      {section === 'users' && isChiefEditor && <UsersView />}
     </AppShell>
   );
 }

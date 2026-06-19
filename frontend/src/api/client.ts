@@ -1,9 +1,13 @@
+import { clearAuthToken, getAuthToken } from './auth-storage';
 import type {
   AiNewsRewriteResult,
   ArticleEnrichmentResult,
   CreateNewsRewritePayload,
   CreateSourcePayload,
+  CreateUserPayload,
+  CurrentUser,
   LinkType,
+  LoginResponse,
   NewsItemDetail,
   NewsItemList,
   NewsLink,
@@ -13,10 +17,20 @@ import type {
   Source,
   UpdateNewsRewritePayload,
   UpdateSourcePayload,
+  UpdateUserPayload,
+  UserAccount,
 } from './types';
 import { getVisitorId } from './visitor-id';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
+
+type UnauthorizedHandler = () => void;
+
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
+  unauthorizedHandler = handler;
+}
 
 async function readApiError(response: Response): Promise<string> {
   try {
@@ -31,20 +45,95 @@ async function readApiError(response: Response): Promise<string> {
   return `API error ${response.status}: ${response.statusText}`;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+function buildHeaders(init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
   headers.set('X-Visitor-Id', getVisitorId());
 
+  const token = getAuthToken();
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  return headers;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers,
+    headers: buildHeaders(init),
   });
+
+  if (response.status === 401) {
+    unauthorizedHandler?.();
+    throw new Error('Требуется авторизация');
+  }
 
   if (!response.ok) {
     throw new Error(await readApiError(response));
   }
 
   return response.json() as Promise<T>;
+}
+
+async function requestVoid(path: string, init?: RequestInit): Promise<void> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: buildHeaders(init),
+  });
+
+  if (response.status === 401) {
+    unauthorizedHandler?.();
+    throw new Error('Требуется авторизация');
+  }
+
+  if (!response.ok) {
+    throw new Error(await readApiError(response));
+  }
+}
+
+export function login(loginName: string, password: string): Promise<LoginResponse> {
+  return fetch(`${API_BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Visitor-Id': getVisitorId(),
+    },
+    body: JSON.stringify({ login: loginName, password }),
+  }).then(async (response) => {
+    if (!response.ok) {
+      throw new Error(await readApiError(response));
+    }
+
+    return response.json() as Promise<LoginResponse>;
+  });
+}
+
+export function getCurrentUser(): Promise<CurrentUser> {
+  return request<CurrentUser>('/api/auth/me');
+}
+
+export function logoutLocally() {
+  clearAuthToken();
+}
+
+export function getUsers(): Promise<UserAccount[]> {
+  return request<UserAccount[]>('/api/users');
+}
+
+export function createUser(payload: CreateUserPayload): Promise<UserAccount> {
+  return request<UserAccount>('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateUser(id: string, payload: UpdateUserPayload): Promise<UserAccount> {
+  return request<UserAccount>(`/api/users/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }
 
 export function getSources(): Promise<Source[]> {
@@ -67,18 +156,8 @@ export function updateSource(id: string, payload: UpdateSourcePayload): Promise<
   });
 }
 
-export async function deleteSource(id: string): Promise<void> {
-  const headers = new Headers();
-  headers.set('X-Visitor-Id', getVisitorId());
-
-  const response = await fetch(`${API_BASE}/api/sources/${id}`, {
-    method: 'DELETE',
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new Error(await readApiError(response));
-  }
+export function deleteSource(id: string): Promise<void> {
+  return requestVoid(`/api/sources/${id}`, { method: 'DELETE' });
 }
 
 export function getNews(params: {
@@ -173,16 +252,6 @@ export function updateNewsRewrite(id: string, payload: UpdateNewsRewritePayload)
   });
 }
 
-export async function deleteNewsRewrite(id: string): Promise<void> {
-  const headers = new Headers();
-  headers.set('X-Visitor-Id', getVisitorId());
-
-  const response = await fetch(`${API_BASE}/api/news-rewrites/${id}`, {
-    method: 'DELETE',
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new Error(await readApiError(response));
-  }
+export function deleteNewsRewrite(id: string): Promise<void> {
+  return requestVoid(`/api/news-rewrites/${id}`, { method: 'DELETE' });
 }

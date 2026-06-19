@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Options;
+using NewsCollector.Infrastructure.Auth;
 using NewsCollector.Infrastructure.Ai;
 using NewsCollector.Infrastructure.Feeds;
 using NewsCollector.Infrastructure.Persistence;
@@ -26,6 +27,11 @@ public static class DependencyInjection
         services.AddScoped<INewsLinkQueryService, NewsLinkQueryService>();
         services.AddScoped<INewsRewriteService, NewsRewriteService>();
         services.AddScoped<IApiVisitWriter, ApiVisitWriter>();
+
+        services.AddSingleton<PasswordHasherService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<AuthDataSeeder>();
 
         return services;
     }

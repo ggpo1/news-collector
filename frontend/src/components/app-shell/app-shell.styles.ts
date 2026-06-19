@@ -44,6 +44,54 @@ export const BrandSubtitle = styled.p`
 export const SidebarNavSlot = styled.div`
   flex: 1;
   padding-top: 0.35rem;
+  overflow-y: auto;
+`;
+
+export const UserPanel = styled.div`
+  margin-top: auto;
+  padding: 1rem 1.1rem 1.2rem;
+  border-top: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+`;
+
+export const UserName = styled.p`
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+`;
+
+export const UserRole = styled.p`
+  margin: 0.2rem 0 0.75rem;
+  font-size: 0.78rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+export const LogoutButton = styled.button`
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceHover};
+  }
+`;
+
+export const MobileLogout = styled.button`
+  flex-shrink: 0;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.pill};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
 `;
 
 export const Main = styled.main`

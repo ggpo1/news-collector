@@ -30,11 +30,24 @@ public class NewsRewriteConfiguration : IEntityTypeConfiguration<NewsRewrite>
 
         builder.HasIndex(r => r.SourceNewsId);
 
+        builder.Property(r => r.AuthorId)
+            .IsRequired(false);
+
+        builder.HasIndex(r => r.AuthorId);
+
+        builder.HasIndex(r => new { r.SourceNewsId, r.AuthorId })
+            .IsUnique();
+
         builder.HasIndex(r => r.CreatedAt);
 
         builder.HasOne(r => r.SourceNews)
             .WithMany(n => n.Rewrites)
             .HasForeignKey(r => r.SourceNewsId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(r => r.Author)
+            .WithMany(u => u.Rewrites)
+            .HasForeignKey(r => r.AuthorId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Dtos;
@@ -5,6 +6,7 @@ using NewsCollector.Application.Dtos;
 namespace NewsCollector.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/news")]
 public sealed class NewsController : ControllerBase
 {

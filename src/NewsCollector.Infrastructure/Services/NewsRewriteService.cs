@@ -9,10 +9,12 @@ namespace NewsCollector.Infrastructure.Services;
 public sealed class NewsRewriteService : INewsRewriteService
 {
     private readonly NewsCollectorDbContext _db;
+    private readonly IUserContext _userContext;
 
-    public NewsRewriteService(NewsCollectorDbContext db)
+    public NewsRewriteService(NewsCollectorDbContext db, IUserContext userContext)
     {
         _db = db;
+        _userContext = userContext;
     }
 
     public async Task<PagedResult<NewsRewriteDto>> GetPagedAsync(
@@ -21,9 +23,7 @@ public sealed class NewsRewriteService : INewsRewriteService
         Guid? sourceNewsId = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _db.NewsRewrites
-            .AsNoTracking()
-            .AsQueryable();
+        var query = ApplyAccessFilter(_db.NewsRewrites.AsNoTracking());
 
         if (sourceNewsId.HasValue)
         {
@@ -44,24 +44,38 @@ public sealed class NewsRewriteService : INewsRewriteService
 
     public async Task<NewsRewriteDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _db.NewsRewrites
-            .AsNoTracking()
+        return await ApplyAccessFilter(_db.NewsRewrites.AsNoTracking())
             .Where(r => r.Id == id)
             .Select(MapToDto())
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<NewsRewriteDto?> CreateAsync(
+    public async Task<MutationResult<NewsRewriteDto>> CreateAsync(
         CreateNewsRewriteRequest request,
         CancellationToken cancellationToken = default)
     {
+        if (_userContext.UserId is not Guid authorId)
+        {
+            return new MutationResult<NewsRewriteDto>(null, MutationStatus.Forbidden);
+        }
+
         var sourceExists = await _db.NewsItems
             .AsNoTracking()
             .AnyAsync(n => n.Id == request.SourceNewsId, cancellationToken);
 
         if (!sourceExists)
         {
-            return null;
+            return new MutationResult<NewsRewriteDto>(null, MutationStatus.NotFound);
+        }
+
+        var duplicateExists = await _db.NewsRewrites
+            .AnyAsync(
+                r => r.SourceNewsId == request.SourceNewsId && r.AuthorId == authorId,
+                cancellationToken);
+
+        if (duplicateExists)
+        {
+            return new MutationResult<NewsRewriteDto>(null, MutationStatus.Conflict);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -69,6 +83,7 @@ public sealed class NewsRewriteService : INewsRewriteService
         {
             Id = Guid.NewGuid(),
             SourceNewsId = request.SourceNewsId,
+            AuthorId = authorId,
             Title = request.Title.Trim(),
             Summary = NormalizeOptionalText(request.Summary),
             Content = NormalizeOptionalText(request.Content),
@@ -79,10 +94,11 @@ public sealed class NewsRewriteService : INewsRewriteService
         _db.NewsRewrites.Add(rewrite);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return await GetByIdAsync(rewrite.Id, cancellationToken);
+        var created = await GetByIdAsync(rewrite.Id, cancellationToken);
+        return new MutationResult<NewsRewriteDto>(created, MutationStatus.Success);
     }
 
-    public async Task<NewsRewriteDto?> UpdateAsync(
+    public async Task<MutationResult<NewsRewriteDto>> UpdateAsync(
         Guid id,
         UpdateNewsRewriteRequest request,
         CancellationToken cancellationToken = default)
@@ -92,7 +108,12 @@ public sealed class NewsRewriteService : INewsRewriteService
 
         if (rewrite is null)
         {
-            return null;
+            return new MutationResult<NewsRewriteDto>(null, MutationStatus.NotFound);
+        }
+
+        if (!CanModify(rewrite.AuthorId))
+        {
+            return new MutationResult<NewsRewriteDto>(null, MutationStatus.Forbidden);
         }
 
         rewrite.Title = request.Title.Trim();
@@ -102,22 +123,54 @@ public sealed class NewsRewriteService : INewsRewriteService
 
         await _db.SaveChangesAsync(cancellationToken);
 
-        return await GetByIdAsync(id, cancellationToken);
+        var updated = await GetByIdAsync(id, cancellationToken);
+        return new MutationResult<NewsRewriteDto>(updated, MutationStatus.Success);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<MutationResult<bool>> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var rewrite = await _db.NewsRewrites
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
         if (rewrite is null)
         {
-            return false;
+            return new MutationResult<bool>(false, MutationStatus.NotFound);
+        }
+
+        if (!CanModify(rewrite.AuthorId))
+        {
+            return new MutationResult<bool>(false, MutationStatus.Forbidden);
         }
 
         _db.NewsRewrites.Remove(rewrite);
         await _db.SaveChangesAsync(cancellationToken);
-        return true;
+
+        return new MutationResult<bool>(true, MutationStatus.Success);
+    }
+
+    private IQueryable<NewsRewrite> ApplyAccessFilter(IQueryable<NewsRewrite> query)
+    {
+        if (_userContext.IsChiefEditor)
+        {
+            return query;
+        }
+
+        if (_userContext.UserId is Guid userId)
+        {
+            return query.Where(r => r.AuthorId == userId);
+        }
+
+        return query.Where(_ => false);
+    }
+
+    private bool CanModify(Guid authorId)
+    {
+        if (_userContext.IsChiefEditor)
+        {
+            return true;
+        }
+
+        return _userContext.UserId == authorId;
     }
 
     private static System.Linq.Expressions.Expression<Func<NewsRewrite, NewsRewriteDto>> MapToDto() =>
@@ -129,6 +182,9 @@ public sealed class NewsRewriteService : INewsRewriteService
             r.SourceNews.Title,
             r.SourceNews.Url,
             r.SourceNews.PublishedAt,
+            r.AuthorId,
+            r.Author.Login,
+            r.Author.DisplayName,
             r.Title,
             r.Summary,
             r.Content,

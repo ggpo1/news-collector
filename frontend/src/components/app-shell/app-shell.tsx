@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { USER_ROLE_LABELS } from '../../api/role-labels';
+import { useAuth } from '../../contexts/auth-context';
 import { AppNav } from '../app-nav/app-nav';
 import type { AppSection } from '../app-nav/app-nav';
 import * as S from './app-shell.styles';
@@ -22,6 +24,8 @@ export function AppShell({
   error,
   children,
 }: AppShellProps) {
+  const { user, logout } = useAuth();
+
   return (
     <S.Shell>
       <S.Sidebar>
@@ -32,6 +36,15 @@ export function AppShell({
         <S.SidebarNavSlot>
           <AppNav value={section} onChange={onSectionChange} variant="sidebar" />
         </S.SidebarNavSlot>
+        {user && (
+          <S.UserPanel>
+            <S.UserName>{user.displayName}</S.UserName>
+            <S.UserRole>{USER_ROLE_LABELS[user.role]}</S.UserRole>
+            <S.LogoutButton type="button" onClick={logout}>
+              Выйти
+            </S.LogoutButton>
+          </S.UserPanel>
+        )}
       </S.Sidebar>
 
       <S.Main>
@@ -40,6 +53,11 @@ export function AppShell({
             <S.MobileHeading>{sectionTitle}</S.MobileHeading>
             <S.MobileSubtitle>{sectionSubtitle}</S.MobileSubtitle>
           </S.MobileTitle>
+          {user && (
+            <S.MobileLogout type="button" onClick={logout}>
+              Выйти
+            </S.MobileLogout>
+          )}
         </S.MobileTopBar>
 
         <S.Content>

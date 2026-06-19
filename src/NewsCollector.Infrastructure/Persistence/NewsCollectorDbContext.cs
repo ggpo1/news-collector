@@ -20,6 +20,8 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<NewsRewrite> NewsRewrites => Set<NewsRewrite>();
 
+    public DbSet<User> Users => Set<User>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NewsCollectorDbContext).Assembly);

@@ -6,6 +6,8 @@ public class NewsRewrite
 
     public Guid SourceNewsId { get; set; }
 
+    public Guid AuthorId { get; set; }
+
     public required string Title { get; set; }
 
     public string? Summary { get; set; }
@@ -17,4 +19,6 @@ public class NewsRewrite
     public DateTimeOffset UpdatedAt { get; set; }
 
     public NewsItem SourceNews { get; set; } = null!;
+
+    public User Author { get; set; } = null!;
 }

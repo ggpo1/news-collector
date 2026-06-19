@@ -68,6 +68,25 @@ export function NavIcon({ section }: NavIconProps) {
           />
         </svg>
       );
+    case 'users':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="9" cy="8.5" r="3" fill="none" stroke="currentColor" strokeWidth="1.75" />
+          <path
+            d="M3.5 19.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+          />
+          <path
+            d="M16 8.25h5M18.5 5.75v5"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
     default:
       return null;
   }

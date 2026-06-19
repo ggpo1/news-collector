@@ -1,4 +1,5 @@
 import type { NewsRewrite } from '../../api/types';
+import { useAuth } from '../../contexts/auth-context';
 import { SourceTaskCard } from '../source-task-card/source-task-card';
 import { EmptyState } from '../ui/empty-state';
 import { LoadingState } from '../ui/loading-state';
@@ -32,6 +33,8 @@ export function NewsRewritesList({
   onSelect,
   onOpenSourceNews,
 }: NewsRewritesListProps) {
+  const { isChiefEditor } = useAuth();
+
   if (loading) {
     return <LoadingState label="Загрузка переписей…" />;
   }
@@ -59,6 +62,7 @@ export function NewsRewritesList({
               <S.CardTop>
                 <S.Meta>
                   <S.Badge>перепись</S.Badge>
+                  {isChiefEditor && <span>{item.authorDisplayName}</span>}
                   <time dateTime={item.updatedAt}>изменено {formatDate(item.updatedAt)}</time>
                 </S.Meta>
                 <S.Chevron aria-hidden="true">›</S.Chevron>
