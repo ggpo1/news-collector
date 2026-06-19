@@ -8,9 +8,23 @@ export interface Source {
   isActive: boolean;
   fetchIntervalMinutes: number;
   lastFetchedAt: string | null;
+  contentFetchEnabled: boolean;
+  contentSelector: string | null;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CreateSourcePayload {
+  name: string;
+  type: SourceType;
+  url: string;
+  isActive: boolean;
+  fetchIntervalMinutes: number;
+  contentFetchEnabled: boolean;
+  contentSelector: string | null;
+}
+
+export interface UpdateSourcePayload extends CreateSourcePayload {}
 
 export interface NewsItemList {
   id: string;

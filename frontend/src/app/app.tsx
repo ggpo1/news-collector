@@ -7,6 +7,7 @@ import { NewsList } from '../components/news-list/news-list';
 import { NewsRewritesView } from '../components/news-rewrites-view/news-rewrites-view';
 import { Pagination } from '../components/pagination/pagination';
 import { SourceSelect } from '../components/source-select/source-select';
+import { SourcesView } from '../components/sources-view/sources-view';
 import { useNews } from '../hooks/use-news/use-news';
 import { useSources } from '../hooks/use-sources/use-sources';
 
@@ -14,11 +15,14 @@ const SECTION_SUBTITLES: Record<AppSection, string> = {
   news: 'Новости по выбранному источнику',
   links: 'Связи между новостями на одну тему',
   rewrites: 'Сохранённые переписанные версии новостей',
+  sources: 'RSS-источники и настройки сбора новостей',
 };
 
 export default function App() {
   const [section, setSection] = useState<AppSection>('news');
-  const { sources, loading: sourcesLoading, error: sourcesError } = useSources();
+  const { sources, loading: sourcesLoading, error: sourcesError, reload: reloadSources } =
+    useSources();
+  const activeSources = sources.filter((source) => source.isActive);
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
 
@@ -26,10 +30,10 @@ export default function App() {
     useNews(selectedSourceId);
 
   useEffect(() => {
-    if (sources.length > 0 && !selectedSourceId) {
-      setSelectedSourceId(sources[0].id);
+    if (activeSources.length > 0 && !selectedSourceId) {
+      setSelectedSourceId(activeSources[0].id);
     }
-  }, [sources, selectedSourceId]);
+  }, [activeSources, selectedSourceId]);
 
   useEffect(() => {
     setSelectedNewsId(null);
@@ -52,7 +56,7 @@ export default function App() {
           <AppNav value={section} onChange={setSection} />
           {section === 'news' && (
             <SourceSelect
-              sources={sources}
+              sources={activeSources}
               value={selectedSourceId}
               loading={sourcesLoading}
               onChange={setSelectedSourceId}
@@ -89,6 +93,15 @@ export default function App() {
 
       {section === 'rewrites' && (
         <NewsRewritesView onOpenSourceNews={handleOpenSourceNews} />
+      )}
+
+      {section === 'sources' && (
+        <SourcesView
+          sources={sources}
+          loading={sourcesLoading}
+          error={sourcesError}
+          onChanged={() => void reloadSources()}
+        />
       )}
     </S.Layout>
   );

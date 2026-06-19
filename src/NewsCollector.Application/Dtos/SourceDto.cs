@@ -10,5 +10,7 @@ public sealed record SourceDto(
     bool IsActive,
     int FetchIntervalMinutes,
     DateTimeOffset? LastFetchedAt,
+    bool ContentFetchEnabled,
+    string? ContentSelector,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

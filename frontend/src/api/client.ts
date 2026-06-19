@@ -2,6 +2,7 @@ import type {
   AiNewsRewriteResult,
   ArticleEnrichmentResult,
   CreateNewsRewritePayload,
+  CreateSourcePayload,
   LinkType,
   NewsItemDetail,
   NewsItemList,
@@ -11,6 +12,7 @@ import type {
   RelatedNews,
   Source,
   UpdateNewsRewritePayload,
+  UpdateSourcePayload,
 } from './types';
 import { getVisitorId } from './visitor-id';
 
@@ -47,6 +49,36 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getSources(): Promise<Source[]> {
   return request<Source[]>('/api/sources');
+}
+
+export function createSource(payload: CreateSourcePayload): Promise<Source> {
+  return request<Source>('/api/sources', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateSource(id: string, payload: UpdateSourcePayload): Promise<Source> {
+  return request<Source>(`/api/sources/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteSource(id: string): Promise<void> {
+  const headers = new Headers();
+  headers.set('X-Visitor-Id', getVisitorId());
+
+  const response = await fetch(`${API_BASE}/api/sources/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(await readApiError(response));
+  }
 }
 
 export function getNews(params: {

@@ -21,7 +21,7 @@ public static class DependencyInjection
         services.AddDbContext<NewsCollectorDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        services.AddScoped<ISourcesQueryService, SourcesQueryService>();
+        services.AddScoped<ISourcesService, SourcesService>();
         services.AddScoped<INewsQueryService, NewsQueryService>();
         services.AddScoped<INewsLinkQueryService, NewsLinkQueryService>();
         services.AddScoped<INewsRewriteService, NewsRewriteService>();
