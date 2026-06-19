@@ -15,4 +15,13 @@ public interface IInvitationCodeService
     Task<ValidateInvitationResponse?> ValidateAsync(
         string code,
         CancellationToken cancellationToken = default);
+
+    Task<InvitationCodeDeleteResult> DeleteAsync(string code, CancellationToken cancellationToken = default);
+}
+
+public enum InvitationCodeDeleteResult
+{
+    NotFound,
+    InvalidCode,
+    Deleted
 }

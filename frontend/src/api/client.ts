@@ -149,6 +149,10 @@ export function createInvitationCode(payload: CreateInvitationCodePayload): Prom
   });
 }
 
+export function deleteInvitationCode(code: string): Promise<void> {
+  return requestVoid(`/api/invitation-codes/${code}`, { method: 'DELETE' });
+}
+
 export function getCurrentUser(): Promise<CurrentUser> {
   return request<CurrentUser>('/api/auth/me');
 }
@@ -167,6 +171,10 @@ export function createUser(payload: CreateUserPayload): Promise<UserAccount> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+}
+
+export function deleteUser(id: string): Promise<void> {
+  return requestVoid(`/api/users/${id}`, { method: 'DELETE' });
 }
 
 export function updateUser(id: string, payload: UpdateUserPayload): Promise<UserAccount> {

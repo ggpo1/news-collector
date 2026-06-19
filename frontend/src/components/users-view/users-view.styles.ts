@@ -204,16 +204,33 @@ export const CodeBlock = styled.pre`
   word-break: break-all;
 `;
 
-export const CopyButton = styled.button`
+export const CardActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-top: 0.75rem;
+`;
+
+export const ActionButton = styled.button`
   min-height: 2.35rem;
   padding: 0.45rem 0.85rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radii.md};
   background: transparent;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: ${({ theme }) => theme.colors.text};
   font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+`;
+
+export const DangerButton = styled(ActionButton)`
+  border-color: color-mix(in srgb, ${({ theme }) => theme.colors.danger} 40%, transparent);
+  color: ${({ theme }) => theme.colors.danger};
 `;
 
 export const Hint = styled.p`

@@ -45,4 +45,19 @@ public sealed class InvitationCodesController : ControllerBase
         var code = await _invitationCodeService.CreateAsync(request, userId, cancellationToken);
         return CreatedAtAction(nameof(GetAll), new { code = code!.Code }, code);
     }
+
+    [HttpDelete("{code:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid code, CancellationToken cancellationToken)
+    {
+        var result = await _invitationCodeService.DeleteAsync(code.ToString(), cancellationToken);
+
+        return result switch
+        {
+            InvitationCodeDeleteResult.Deleted => NoContent(),
+            InvitationCodeDeleteResult.InvalidCode => BadRequest(new { error = "invalid invitation code" }),
+            _ => NotFound()
+        };
+    }
 }

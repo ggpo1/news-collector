@@ -12,10 +12,12 @@ namespace NewsCollector.Api.Controllers;
 public sealed class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IUserContext _userContext;
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, IUserContext userContext)
     {
         _userService = userService;
+        _userContext = userContext;
     }
 
     [HttpGet]
@@ -73,5 +75,28 @@ public sealed class UsersController : ControllerBase
 
         var user = await _userService.UpdateAsync(id, request, cancellationToken);
         return user is null ? NotFound() : Ok(user);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        if (_userContext.UserId is not Guid currentUserId)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _userService.DeleteAsync(id, currentUserId, cancellationToken);
+
+        return result switch
+        {
+            UserDeleteResult.NotFound => NotFound(),
+            UserDeleteResult.CannotDeleteSelf => Conflict(new { error = "cannot delete your own account" }),
+            UserDeleteResult.HasRewrites => Conflict(new { error = "cannot delete user with existing rewrites" }),
+            UserDeleteResult.Deleted => NoContent(),
+            _ => NotFound()
+        };
     }
 }

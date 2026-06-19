@@ -83,6 +83,29 @@ public sealed class InvitationCodeService : IInvitationCodeService
         return invitation is null ? null : new ValidateInvitationResponse(invitation.Role);
     }
 
+    public async Task<InvitationCodeDeleteResult> DeleteAsync(
+        string code,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryParseCode(code, out var parsedCode))
+        {
+            return InvitationCodeDeleteResult.InvalidCode;
+        }
+
+        var invitation = await _db.InvitationCodes
+            .FirstOrDefaultAsync(c => c.Code == parsedCode, cancellationToken);
+
+        if (invitation is null)
+        {
+            return InvitationCodeDeleteResult.NotFound;
+        }
+
+        _db.InvitationCodes.Remove(invitation);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return InvitationCodeDeleteResult.Deleted;
+    }
+
     internal static bool TryParseCode(string code, out Guid parsedCode)
     {
         return Guid.TryParse(code.Trim(), out parsedCode);

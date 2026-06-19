@@ -9,4 +9,14 @@ public interface IUserService
     Task<UserDto?> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default);
 
     Task<UserDto?> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default);
+
+    Task<UserDeleteResult> DeleteAsync(Guid id, Guid currentUserId, CancellationToken cancellationToken = default);
+}
+
+public enum UserDeleteResult
+{
+    NotFound,
+    CannotDeleteSelf,
+    HasRewrites,
+    Deleted
 }

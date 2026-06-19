@@ -1,12 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { USER_ROLE_LABELS } from '../../api/role-labels';
-import { createInvitationCode, createUser, getInvitationCodes, getUsers } from '../../api/client';
+import {
+  createInvitationCode,
+  createUser,
+  deleteInvitationCode,
+  deleteUser,
+  getInvitationCodes,
+  getUsers,
+} from '../../api/client';
 import type { InvitationCode, UserAccount, UserRole } from '../../api/types';
+import { useAuth } from '../../contexts/auth-context';
 import { EmptyState } from '../ui/empty-state';
 import { LoadingState } from '../ui/loading-state';
 import * as S from './users-view.styles';
 
 export function UsersView() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [invitationCodes, setInvitationCodes] = useState<InvitationCode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,6 +23,8 @@ export function UsersView() {
   const [formOpen, setFormOpen] = useState(false);
   const [inviteFormOpen, setInviteFormOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [deletingCode, setDeletingCode] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
@@ -103,6 +114,47 @@ export function UsersView() {
     }
   };
 
+  const handleDeleteInvitation = async (item: InvitationCode) => {
+    const confirmed = window.confirm('Удалить пригласительный код?');
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingCode(item.code);
+
+    try {
+      await deleteInvitationCode(item.code);
+      await load();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Не удалось удалить код');
+    } finally {
+      setDeletingCode(null);
+    }
+  };
+
+  const handleDeleteUser = async (user: UserAccount) => {
+    if (user.id === currentUser?.id) {
+      window.alert('Нельзя удалить свой аккаунт');
+      return;
+    }
+
+    const confirmed = window.confirm(`Удалить пользователя «${user.displayName}» (@${user.login})?`);
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingUserId(user.id);
+
+    try {
+      await deleteUser(user.id);
+      await load();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Не удалось удалить пользователя');
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
+
   return (
     <>
       <S.Root>
@@ -142,11 +194,20 @@ export function UsersView() {
                             : 'ожидает'}
                         </S.Badge>
                       </S.CardHeader>
-                      {!item.usedAt && (
-                        <S.CopyButton type="button" onClick={() => void copyCode(item.code)}>
-                          Скопировать код
-                        </S.CopyButton>
-                      )}
+                      <S.CardActions>
+                        {!item.usedAt && (
+                          <S.ActionButton type="button" onClick={() => void copyCode(item.code)}>
+                            Скопировать
+                          </S.ActionButton>
+                        )}
+                        <S.DangerButton
+                          type="button"
+                          disabled={deletingCode === item.code}
+                          onClick={() => void handleDeleteInvitation(item)}
+                        >
+                          {deletingCode === item.code ? 'Удаление…' : 'Удалить'}
+                        </S.DangerButton>
+                      </S.CardActions>
                     </S.Card>
                   ))}
                 </S.List>
@@ -170,6 +231,16 @@ export function UsersView() {
                           {user.isActive ? USER_ROLE_LABELS[user.role] : 'отключён'}
                         </S.Badge>
                       </S.CardHeader>
+                      <S.CardActions>
+                        <S.DangerButton
+                          type="button"
+                          disabled={deletingUserId === user.id || user.id === currentUser?.id}
+                          title={user.id === currentUser?.id ? 'Нельзя удалить свой аккаунт' : undefined}
+                          onClick={() => void handleDeleteUser(user)}
+                        >
+                          {deletingUserId === user.id ? 'Удаление…' : 'Удалить'}
+                        </S.DangerButton>
+                      </S.CardActions>
                     </S.Card>
                   ))}
                 </S.List>
