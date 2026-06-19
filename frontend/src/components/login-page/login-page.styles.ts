@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const Page = styled.div`
   min-height: 100dvh;
@@ -78,6 +78,7 @@ export const Error = styled.p`
 `;
 
 export const Hint = styled.p`
+  display: flex;
   margin: 1rem 0 0;
   font-size: 0.78rem;
   color: ${({ theme }) => theme.colors.textFaint};
