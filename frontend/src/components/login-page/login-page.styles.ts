@@ -82,6 +82,7 @@ export const Hint = styled.p`
   font-size: 0.78rem;
   color: ${({ theme }) => theme.colors.textFaint};
   line-height: 1.45;
+  justify-content: center;
 `;
 
 export const Footer = styled.div`
