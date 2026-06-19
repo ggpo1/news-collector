@@ -13,6 +13,16 @@ namespace NewsCollector.Infrastructure.Ai;
 
 public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
 {
+    private const string SystemPrompt =
+        """
+        Ты профессиональный редактор новостей.
+        Перепиши новость своими словами: сохрани факты и смысл, улучши читаемость, используй нейтральный информационный стиль на русском языке.
+        Не добавляй факты, которых нет в исходнике. Не используй markdown.
+
+        Верни ТОЛЬКО валидный JSON в формате:
+        {"title":"...","summary":"краткое описание в 1-2 предложения","content":"полный переписанный текст"}
+        """;
+
     private readonly NewsCollectorDbContext _db;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly OllamaOptions _options;
@@ -55,8 +65,8 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
             throw new InvalidOperationException("У новости нет текста для переписывания. Сначала загрузите полный текст.");
         }
 
-        var prompt = BuildPrompt(news, sourceText);
-        var rawResponse = await GenerateAsync(prompt);
+        var userMessage = BuildUserMessage(news, sourceText);
+        var rawResponse = await ChatAsync(userMessage);
 
         try
         {
@@ -69,13 +79,16 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         }
     }
 
-    private async Task<string> GenerateAsync(string prompt)
+    private async Task<string> ChatAsync(string userMessage)
     {
         var client = _httpClientFactory.CreateClient("Ollama");
 
-        var request = new OllamaGenerateRequest(
+        var request = new OllamaChatRequest(
             _options.Model,
-            prompt,
+            [
+                new OllamaChatMessage("system", SystemPrompt),
+                new OllamaChatMessage("user", userMessage)
+            ],
             Stream: false,
             Format: "json");
 
@@ -84,7 +97,7 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         HttpResponseMessage response;
         try
         {
-            response = await client.PostAsJsonAsync("/api/generate", request, timeoutCts.Token);
+            response = await client.PostAsJsonAsync("/api/chat", request, timeoutCts.Token);
         }
         catch (TaskCanceledException ex) when (!timeoutCts.IsCancellationRequested)
         {
@@ -121,13 +134,14 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
                 $"Ollama вернула ошибку {(int)response.StatusCode}. Проверьте, что модель '{_options.Model}' установлена.");
         }
 
-        var payload = await response.Content.ReadFromJsonAsync<OllamaGenerateResponse>(timeoutCts.Token);
-        if (string.IsNullOrWhiteSpace(payload?.Response))
+        var payload = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(timeoutCts.Token);
+        var content = payload?.Message?.Content;
+        if (string.IsNullOrWhiteSpace(content))
         {
             throw new InvalidOperationException("Ollama вернула пустой ответ.");
         }
 
-        return payload.Response;
+        return content;
     }
 
     private static string BuildSourceText(NewsRewriteSource news)
@@ -145,16 +159,9 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         return news.Title.Trim();
     }
 
-    private static string BuildPrompt(NewsRewriteSource news, string sourceText)
+    private static string BuildUserMessage(NewsRewriteSource news, string sourceText)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("Ты профессиональный редактор новостей.");
-        builder.AppendLine("Перепиши новость своими словами: сохрани факты и смысл, улучши читаемость, используй нейтральный информационный стиль на русском языке.");
-        builder.AppendLine("Не добавляй факты, которых нет в исходнике. Не используй markdown.");
-        builder.AppendLine();
-        builder.AppendLine("Верни ТОЛЬКО валидный JSON в формате:");
-        builder.AppendLine("{\"title\":\"...\",\"summary\":\"краткое описание в 1-2 предложения\",\"content\":\"полный переписанный текст\"}");
-        builder.AppendLine();
         builder.AppendLine($"Источник: {news.SourceName}");
         builder.AppendLine($"Заголовок: {news.Title}");
 
@@ -175,12 +182,16 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         string? Content,
         string SourceName);
 
-    private sealed record OllamaGenerateRequest(
+    private sealed record OllamaChatRequest(
         [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("prompt")] string Prompt,
+        [property: JsonPropertyName("messages")] OllamaChatMessage[] Messages,
         [property: JsonPropertyName("stream")] bool Stream,
         [property: JsonPropertyName("format")] string Format);
 
-    private sealed record OllamaGenerateResponse(
-        [property: JsonPropertyName("response")] string Response);
+    private sealed record OllamaChatMessage(
+        [property: JsonPropertyName("role")] string Role,
+        [property: JsonPropertyName("content")] string Content);
+
+    private sealed record OllamaChatResponse(
+        [property: JsonPropertyName("message")] OllamaChatMessage? Message);
 }
