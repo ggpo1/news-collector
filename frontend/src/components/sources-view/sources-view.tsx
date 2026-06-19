@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { deleteSource } from '../../api/client';
 import type { Source } from '../../api/types';
+import { EmptyState } from '../ui/empty-state';
+import { LoadingState } from '../ui/loading-state';
 import { SourceForm } from '../source-form/source-form';
 import { SourcesList } from '../sources-list/sources-list';
 import * as S from './sources-view.styles';
@@ -8,11 +10,10 @@ import * as S from './sources-view.styles';
 interface SourcesViewProps {
   sources: Source[];
   loading: boolean;
-  error: string | null;
   onChanged: () => void;
 }
 
-export function SourcesView({ sources, loading, error, onChanged }: SourcesViewProps) {
+export function SourcesView({ sources, loading, onChanged }: SourcesViewProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingSource, setEditingSource] = useState<Source | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -55,26 +56,28 @@ export function SourcesView({ sources, loading, error, onChanged }: SourcesViewP
       <S.Root>
         <S.Toolbar>
           <S.AddButton type="button" onClick={openCreateForm}>
-            Добавить источник
+            + Добавить источник
           </S.AddButton>
         </S.Toolbar>
 
-        <SourcesList
-          items={sources}
-          loading={loading}
-          error={error}
-          deletingId={deletingId}
-          onEdit={openEditForm}
-          onDelete={(source) => void handleDelete(source)}
-        />
+        {loading ? (
+          <LoadingState label="Загрузка источников…" />
+        ) : sources.length === 0 ? (
+          <EmptyState>
+            Источников пока нет. Добавьте RSS-фид, чтобы worker начал собирать новости.
+          </EmptyState>
+        ) : (
+          <SourcesList
+            items={sources}
+            deletingId={deletingId}
+            onEdit={openEditForm}
+            onDelete={(source) => void handleDelete(source)}
+          />
+        )}
       </S.Root>
 
       {formOpen && (
-        <SourceForm
-          source={editingSource}
-          onClose={closeForm}
-          onSaved={onChanged}
-        />
+        <SourceForm source={editingSource} onClose={closeForm} onSaved={onChanged} />
       )}
     </>
   );

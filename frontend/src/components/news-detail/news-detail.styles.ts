@@ -1,23 +1,33 @@
 import styled from 'styled-components';
+import { mediaUp } from '../../styles/media';
 
 export const Panel = styled.aside`
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
+  border-radius: ${({ theme }) => theme.radii.lg};
   background: ${({ theme }) => theme.colors.surface};
-  padding: 1.25rem;
-  min-height: 320px;
-  position: sticky;
-  top: 1rem;
+  padding: 1rem;
+  min-height: 280px;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+
+  ${mediaUp('md')} {
+    padding: 1.25rem;
+  }
+
+  ${mediaUp('lg')} {
+    min-height: 320px;
+  }
 `;
 
 export const Placeholder = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 280px;
+  min-height: 240px;
   color: ${({ theme }) => theme.colors.textMuted};
   text-align: center;
   padding: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
 `;
 
 export const Header = styled.header`
@@ -35,19 +45,28 @@ export const Meta = styled.div`
 
 export const Title = styled.h2`
   margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.35;
+  font-size: 1.15rem;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+
+  ${mediaUp('md')} {
+    font-size: 1.25rem;
+  }
 `;
 
 export const Content = styled.div`
   font-size: 0.95rem;
-  line-height: 1.65;
+  line-height: 1.7;
   color: ${({ theme }) => theme.colors.text};
   white-space: pre-wrap;
 `;
 
 export const ExternalLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   font-size: 0.9rem;
+  font-weight: 600;
   color: ${({ theme }) => theme.colors.accent};
   text-decoration: none;
 
@@ -57,31 +76,39 @@ export const ExternalLink = styled.a`
 `;
 
 export const State = styled.div<{ $error?: boolean }>`
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   text-align: center;
   color: ${({ theme, $error }) => ($error ? theme.colors.danger : theme.colors.textMuted)};
 `;
 
 export const Actions = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-  margin-top: 1rem;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+
+  ${mediaUp('sm')} {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
 `;
 
 export const FetchButton = styled.button`
-  padding: 0.5rem 1rem;
-  border: 1px solid ${({ theme }) => theme.colors.accent};
-  border-radius: ${({ theme }) => theme.radii.sm};
-  background: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 12%, transparent);
-  color: ${({ theme }) => theme.colors.accent};
+  min-height: 2.75rem;
+  padding: 0.55rem 1rem;
+  border-radius: ${({ theme }) => theme.radii.md};
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
+  border: 1px solid ${({ theme }) => theme.colors.accent};
+  background: ${({ theme }) => theme.colors.accentMuted};
+  color: ${({ theme }) => theme.colors.accent};
+  transition: background ${({ theme }) => theme.transitions.fast};
 
   &:hover:not(:disabled) {
-    background: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 22%, transparent);
+    background: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 24%, transparent);
   }
 
   &:disabled {
@@ -91,18 +118,28 @@ export const FetchButton = styled.button`
 `;
 
 export const RewriteButton = styled.button`
-  padding: 0.5rem 1rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 1rem;
+  border-radius: ${({ theme }) => theme.radii.md};
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.sm};
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
+  transition:
+    background ${({ theme }) => theme.transitions.fast},
+    border-color ${({ theme }) => theme.transitions.fast},
+    color ${({ theme }) => theme.transitions.fast};
 
   &:hover:not(:disabled) {
     border-color: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 50%, ${({ theme }) => theme.colors.border});
     color: ${({ theme }) => theme.colors.accent};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
   }
 `;
 
@@ -115,7 +152,7 @@ export const FetchError = styled.p`
 export const RelatedSection = styled.section`
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  border-top: 1px solid ${({ theme }) => theme.colors.borderSubtle};
 `;
 
 export const RelatedTitle = styled.h3`
@@ -141,8 +178,8 @@ export const RelatedList = styled.ul`
 export const RelatedItem = styled.li`
   padding: 0.75rem 0.85rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.sm};
-  background: color-mix(in srgb, ${({ theme }) => theme.colors.bg} 35%, ${({ theme }) => theme.colors.surface});
+  border-radius: ${({ theme }) => theme.radii.md};
+  background: ${({ theme }) => theme.colors.surfaceMuted};
 `;
 
 export const RelatedMeta = styled.div`
@@ -157,7 +194,7 @@ export const RelatedMeta = styled.div`
 export const RelatedBadge = styled.span`
   padding: 0.08rem 0.4rem;
   border-radius: ${({ theme }) => theme.radii.pill};
-  background: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 15%, transparent);
+  background: ${({ theme }) => theme.colors.accentMuted};
   color: ${({ theme }) => theme.colors.accent};
   font-weight: 600;
 `;

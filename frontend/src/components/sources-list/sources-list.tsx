@@ -3,8 +3,6 @@ import * as S from './sources-list.styles';
 
 interface SourcesListProps {
   items: Source[];
-  loading: boolean;
-  error: string | null;
   deletingId: string | null;
   onEdit: (source: Source) => void;
   onDelete: (source: Source) => void;
@@ -29,26 +27,7 @@ function formatSourceType(type: SourceType | number): string {
   return ['Rss', 'Html', 'Api'][type] ?? String(type);
 }
 
-export function SourcesList({
-  items,
-  loading,
-  error,
-  deletingId,
-  onEdit,
-  onDelete,
-}: SourcesListProps) {
-  if (loading) {
-    return <S.State>Загрузка источников…</S.State>;
-  }
-
-  if (error) {
-    return <S.State $error>{error}</S.State>;
-  }
-
-  if (items.length === 0) {
-    return <S.State>Источников пока нет. Добавьте первый RSS-фид.</S.State>;
-  }
-
+export function SourcesList({ items, deletingId, onEdit, onDelete }: SourcesListProps) {
   return (
     <S.List>
       {items.map((source) => (

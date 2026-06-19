@@ -9,7 +9,8 @@ export const Filters = styled.div`
 
 export const FilterButton = styled.button<{ $active?: boolean }>`
   border: 1px solid ${({ theme }) => theme.colors.border};
-  padding: 0.35rem 0.85rem;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.95rem;
   border-radius: ${({ theme }) => theme.radii.pill};
   font-size: 0.82rem;
   font-weight: 600;

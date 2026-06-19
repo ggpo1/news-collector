@@ -1,27 +1,39 @@
+import { NavIcon } from './nav-icon';
 import * as S from './app-nav.styles';
 
 export type AppSection = 'news' | 'links' | 'rewrites' | 'sources';
 
+const NAV_ITEMS: { id: AppSection; label: string }[] = [
+  { id: 'news', label: 'Новости' },
+  { id: 'links', label: 'Связи' },
+  { id: 'rewrites', label: 'Переписи' },
+  { id: 'sources', label: 'Источники' },
+];
+
 interface AppNavProps {
   value: AppSection;
   onChange: (section: AppSection) => void;
+  variant: 'sidebar' | 'bottom';
 }
 
-export function AppNav({ value, onChange }: AppNavProps) {
+export function AppNav({ value, onChange, variant }: AppNavProps) {
+  const Root = variant === 'sidebar' ? S.SidebarNav : S.BottomNav;
+
   return (
-    <S.Nav aria-label="Разделы приложения">
-      <S.NavButton type="button" $active={value === 'news'} onClick={() => onChange('news')}>
-        Новости
-      </S.NavButton>
-      <S.NavButton type="button" $active={value === 'links'} onClick={() => onChange('links')}>
-        Связи
-      </S.NavButton>
-      <S.NavButton type="button" $active={value === 'rewrites'} onClick={() => onChange('rewrites')}>
-        Переписи
-      </S.NavButton>
-      <S.NavButton type="button" $active={value === 'sources'} onClick={() => onChange('sources')}>
-        Источники
-      </S.NavButton>
-    </S.Nav>
+    <Root aria-label="Разделы приложения">
+      {NAV_ITEMS.map((item) => (
+        <S.NavButton
+          key={item.id}
+          type="button"
+          $active={value === item.id}
+          $variant={variant}
+          aria-current={value === item.id ? 'page' : undefined}
+          onClick={() => onChange(item.id)}
+        >
+          <NavIcon section={item.id} />
+          <S.NavLabel $hideOnMobile={variant === 'bottom'}>{item.label}</S.NavLabel>
+        </S.NavButton>
+      ))}
+    </Root>
   );
 }

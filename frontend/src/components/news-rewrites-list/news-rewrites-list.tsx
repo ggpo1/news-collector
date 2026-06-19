@@ -1,6 +1,8 @@
-import type { NewsRewrite } from "../../api/types";
-import { SourceTaskCard } from "../source-task-card/source-task-card";
-import * as S from "./news-rewrites-list.styles";
+import type { NewsRewrite } from '../../api/types';
+import { SourceTaskCard } from '../source-task-card/source-task-card';
+import { EmptyState } from '../ui/empty-state';
+import { LoadingState } from '../ui/loading-state';
+import * as S from './news-rewrites-list.styles';
 
 interface NewsRewritesListProps {
   items: NewsRewrite[];
@@ -31,15 +33,19 @@ export function NewsRewritesList({
   onOpenSourceNews,
 }: NewsRewritesListProps) {
   if (loading) {
-    return <S.State>Загрузка переписанных новостей…</S.State>;
+    return <LoadingState label="Загрузка переписей…" />;
   }
 
   if (error) {
-    return <S.State $error>{error}</S.State>;
+    return <EmptyState error>{error}</EmptyState>;
   }
 
   if (items.length === 0) {
-    return <S.State>Переписанных новостей пока нет. Откройте новость и нажмите «Переписать».</S.State>;
+    return (
+      <EmptyState>
+        Переписанных новостей пока нет. Откройте новость и нажмите «Переписать».
+      </EmptyState>
+    );
   }
 
   return (
@@ -50,10 +56,13 @@ export function NewsRewritesList({
         return (
           <li key={item.id}>
             <S.Card type="button" $active={selectedId === item.id} onClick={() => onSelect(item.id)}>
-              <S.Meta>
-                <S.Badge>перепись</S.Badge>
-                <time dateTime={item.updatedAt}>изменено {formatDate(item.updatedAt)}</time>
-              </S.Meta>
+              <S.CardTop>
+                <S.Meta>
+                  <S.Badge>перепись</S.Badge>
+                  <time dateTime={item.updatedAt}>изменено {formatDate(item.updatedAt)}</time>
+                </S.Meta>
+                <S.Chevron aria-hidden="true">›</S.Chevron>
+              </S.CardTop>
               <S.Title>{item.title}</S.Title>
               {preview && <S.Preview>{preview}</S.Preview>}
               <S.TaskWrap>

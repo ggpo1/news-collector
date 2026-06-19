@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { mediaUp } from '../../styles/media';
 
 export const Root = styled.section`
   display: flex;
@@ -8,20 +9,35 @@ export const Root = styled.section`
 
 export const Toolbar = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: stretch;
+
+  ${mediaUp('sm')} {
+    justify-content: flex-end;
+  }
 `;
 
 export const AddButton = styled.button`
-  padding: 0.55rem 1rem;
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.65rem 1.1rem;
   border: 1px solid ${({ theme }) => theme.colors.accent};
-  border-radius: ${({ theme }) => theme.radii.sm};
-  background: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 18%, transparent);
+  border-radius: ${({ theme }) => theme.radii.md};
+  background: ${({ theme }) => theme.colors.accentMuted};
   color: ${({ theme }) => theme.colors.accent};
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background ${({ theme }) => theme.transitions.fast};
+
+  ${mediaUp('sm')} {
+    width: auto;
+  }
 
   &:hover {
-    background: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 28%, transparent);
+    background: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 24%, transparent);
+  }
+
+  &:active {
+    transform: scale(0.99);
   }
 `;

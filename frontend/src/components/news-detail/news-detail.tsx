@@ -3,6 +3,8 @@ import { enrichNewsContent, getNewsById, getRelatedNews } from '../../api/client
 import { formatConfidence, LINK_METHOD_LABELS, LINK_TYPE_LABELS } from '../../api/link-labels';
 import type { NewsItemDetail, RelatedNews } from '../../api/types';
 import { NewsRewriteEditor } from '../news-rewrite-editor/news-rewrite-editor';
+import { EmptyState } from '../ui/empty-state';
+import { LoadingState } from '../ui/loading-state';
 import * as S from './news-detail.styles';
 
 interface NewsDetailProps {
@@ -131,7 +133,7 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
   if (loading) {
     return (
       <S.Panel>
-        <S.State>Загрузка…</S.State>
+        <LoadingState />
       </S.Panel>
     );
   }
@@ -139,7 +141,7 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
   if (error) {
     return (
       <S.Panel>
-        <S.State $error>{error}</S.State>
+        <EmptyState error>{error}</EmptyState>
       </S.Panel>
     );
   }

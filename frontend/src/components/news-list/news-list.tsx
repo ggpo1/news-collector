@@ -1,4 +1,6 @@
 import type { NewsItemList } from '../../api/types';
+import { EmptyState } from '../ui/empty-state';
+import { LoadingState } from '../ui/loading-state';
 import * as S from './news-list.styles';
 
 interface NewsListProps {
@@ -22,26 +24,33 @@ function formatDate(value: string | null): string {
 
 export function NewsList({ items, loading, error, selectedId, onSelect }: NewsListProps) {
   if (loading) {
-    return <S.State>Загрузка новостей…</S.State>;
+    return <LoadingState label="Загрузка новостей…" />;
   }
 
   if (error) {
-    return <S.State $error>{error}</S.State>;
+    return <EmptyState error>{error}</EmptyState>;
   }
 
   if (items.length === 0) {
-    return <S.State>Новостей пока нет</S.State>;
+    return <EmptyState>Новостей пока нет. Worker подтянет их при следующем опросе источника.</EmptyState>;
   }
 
   return (
     <S.List>
       {items.map((item) => (
         <li key={item.id}>
-          <S.Card type="button" $active={selectedId === item.id} onClick={() => onSelect(item.id)}>
-            <S.Meta>
-              <time dateTime={item.publishedAt ?? undefined}>{formatDate(item.publishedAt)}</time>
-              {item.hasContent && <S.Badge>полный текст</S.Badge>}
-            </S.Meta>
+          <S.Card
+            type="button"
+            $active={selectedId === item.id}
+            onClick={() => onSelect(item.id)}
+          >
+            <S.CardTop>
+              <S.Meta>
+                <time dateTime={item.publishedAt ?? undefined}>{formatDate(item.publishedAt)}</time>
+                {item.hasContent && <S.Badge>полный текст</S.Badge>}
+              </S.Meta>
+              <S.Chevron aria-hidden="true">›</S.Chevron>
+            </S.CardTop>
             <S.Title>{item.title}</S.Title>
             {item.summary && <S.Summary>{item.summary}</S.Summary>}
           </S.Card>

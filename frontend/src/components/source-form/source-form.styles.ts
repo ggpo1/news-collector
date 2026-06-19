@@ -5,22 +5,35 @@ export const Overlay = styled.div`
   inset: 0;
   z-index: 1000;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 0;
   background: color-mix(in srgb, ${({ theme }) => theme.colors.bg} 55%, transparent);
   backdrop-filter: blur(4px);
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    align-items: center;
+    padding: 1.5rem;
+  }
 `;
 
 export const Dialog = styled.div`
-  width: min(560px, 100%);
-  max-height: min(90vh, 800px);
+  width: 100%;
+  max-height: 92dvh;
   display: flex;
   flex-direction: column;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
+  border-radius: ${({ theme }) => theme.radii.lg} ${({ theme }) => theme.radii.lg} 0 0;
   background: ${({ theme }) => theme.colors.surface};
-  box-shadow: 0 24px 48px color-mix(in srgb, ${({ theme }) => theme.colors.bg} 70%, transparent);
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    width: min(560px, 100%);
+    max-height: min(90vh, 800px);
+    border-radius: ${({ theme }) => theme.radii.lg};
+    padding-bottom: 0;
+  }
 `;
 
 export const Header = styled.header`

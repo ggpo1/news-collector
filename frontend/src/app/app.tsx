@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import * as S from './app.styles';
-import { AppNav, type AppSection } from '../components/app-nav/app-nav';
+import type { AppSection } from '../components/app-nav/app-nav';
+import { AppShell } from '../components/app-shell/app-shell';
+import { MasterDetailLayout } from '../components/master-detail-layout/master-detail-layout';
 import { NewsDetail } from '../components/news-detail/news-detail';
 import { NewsLinksView } from '../components/news-links-view/news-links-view';
 import { NewsList } from '../components/news-list/news-list';
@@ -11,11 +12,23 @@ import { SourcesView } from '../components/sources-view/sources-view';
 import { useNews } from '../hooks/use-news/use-news';
 import { useSources } from '../hooks/use-sources/use-sources';
 
-const SECTION_SUBTITLES: Record<AppSection, string> = {
-  news: 'Новости по выбранному источнику',
-  links: 'Связи между новостями на одну тему',
-  rewrites: 'Сохранённые переписанные версии новостей',
-  sources: 'RSS-источники и настройки сбора новостей',
+const SECTION_META: Record<AppSection, { title: string; subtitle: string }> = {
+  news: {
+    title: 'Новости',
+    subtitle: 'Лента по выбранному источнику',
+  },
+  links: {
+    title: 'Связи',
+    subtitle: 'Новости на одну тему из разных источников',
+  },
+  rewrites: {
+    title: 'Переписи',
+    subtitle: 'Сохранённые AI-версии новостей',
+  },
+  sources: {
+    title: 'Источники',
+    subtitle: 'RSS-фиды и настройки сбора',
+  },
 };
 
 export default function App() {
@@ -39,54 +52,62 @@ export default function App() {
     setSelectedNewsId(null);
   }, [selectedSourceId, page]);
 
+  useEffect(() => {
+    setSelectedNewsId(null);
+  }, [section]);
+
   const handleOpenSourceNews = (sourceNewsId: string, sourceId: string) => {
     setSelectedSourceId(sourceId);
     setSelectedNewsId(sourceNewsId);
     setSection('news');
   };
 
+  const meta = SECTION_META[section];
+
   return (
-    <S.Layout>
-      <S.Header>
-        <div>
-          <S.Title>News Collector</S.Title>
-          <S.Subtitle>{SECTION_SUBTITLES[section]}</S.Subtitle>
-        </div>
-        <S.HeaderActions>
-          <AppNav value={section} onChange={setSection} />
-          {section === 'news' && (
-            <SourceSelect
-              sources={activeSources}
-              value={selectedSourceId}
-              loading={sourcesLoading}
-              onChange={setSelectedSourceId}
-            />
-          )}
-        </S.HeaderActions>
-      </S.Header>
-
-      {sourcesError && section === 'news' && <S.ErrorBanner>{sourcesError}</S.ErrorBanner>}
-
+    <AppShell
+      section={section}
+      sectionTitle={meta.title}
+      sectionSubtitle={meta.subtitle}
+      onSectionChange={setSection}
+      error={section === 'news' ? sourcesError : section === 'sources' ? sourcesError : null}
+      toolbar={
+        section === 'news' ? (
+          <SourceSelect
+            sources={activeSources}
+            value={selectedSourceId}
+            loading={sourcesLoading}
+            onChange={setSelectedSourceId}
+          />
+        ) : undefined
+      }
+    >
       {section === 'news' && (
-        <S.Grid>
-          <S.ListColumn>
-            <NewsList
-              items={items}
-              loading={loading}
-              error={error}
-              selectedId={selectedNewsId}
-              onSelect={setSelectedNewsId}
-            />
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              totalCount={totalCount}
-              onPageChange={setPage}
-            />
-          </S.ListColumn>
-
-          <NewsDetail newsId={selectedNewsId} onContentLoaded={() => void reload()} />
-        </S.Grid>
+        <MasterDetailLayout
+          detailOpen={Boolean(selectedNewsId)}
+          onBack={() => setSelectedNewsId(null)}
+          backLabel="К списку новостей"
+          list={
+            <>
+              <NewsList
+                items={items}
+                loading={loading}
+                error={error}
+                selectedId={selectedNewsId}
+                onSelect={setSelectedNewsId}
+              />
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                onPageChange={setPage}
+              />
+            </>
+          }
+          detail={
+            <NewsDetail newsId={selectedNewsId} onContentLoaded={() => void reload()} />
+          }
+        />
       )}
 
       {section === 'links' && <NewsLinksView />}
@@ -99,10 +120,9 @@ export default function App() {
         <SourcesView
           sources={sources}
           loading={sourcesLoading}
-          error={sourcesError}
           onChanged={() => void reloadSources()}
         />
       )}
-    </S.Layout>
+    </AppShell>
   );
 }

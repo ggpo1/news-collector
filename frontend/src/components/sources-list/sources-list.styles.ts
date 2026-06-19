@@ -1,29 +1,32 @@
 import styled, { css } from 'styled-components';
+import { mediaUp } from '../../styles/media';
 
 export const List = styled.ul`
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 0.75rem;
-`;
 
-export const State = styled.div<{ $error?: boolean }>`
-  padding: 2rem 1rem;
-  text-align: center;
-  color: ${({ theme, $error }) => ($error ? theme.colors.danger : theme.colors.textMuted)};
-  border: 1px dashed
-    ${({ theme, $error }) =>
-      $error ? `color-mix(in srgb, ${theme.colors.danger} 40%, transparent)` : theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
+  ${mediaUp('md')} {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  ${mediaUp('xl')} {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 `;
 
 export const Card = styled.article`
-  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
+  border-radius: ${({ theme }) => theme.radii.lg};
   background: ${({ theme }) => theme.colors.surface};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
 `;
 
 export const CardHeader = styled.div`
@@ -44,12 +47,13 @@ export const Meta = styled.div`
   flex-wrap: wrap;
   gap: 0.45rem;
   margin-top: 0.45rem;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
 export const Badge = styled.span<{ $muted?: boolean }>`
-  padding: 0.1rem 0.45rem;
+  flex-shrink: 0;
+  padding: 0.12rem 0.5rem;
   border-radius: ${({ theme }) => theme.radii.pill};
   font-size: 0.72rem;
   font-weight: 600;
@@ -61,14 +65,14 @@ export const Badge = styled.span<{ $muted?: boolean }>`
           color: ${theme.colors.textMuted};
         `
       : css`
-          background: color-mix(in srgb, ${theme.colors.accent} 15%, transparent);
+          background: ${theme.colors.accentMuted};
           color: ${theme.colors.accent};
         `}
 `;
 
 export const Url = styled.a`
   display: block;
-  margin-top: 0.55rem;
+  margin-top: 0.75rem;
   font-size: 0.85rem;
   color: ${({ theme }) => theme.colors.accent};
   word-break: break-all;
@@ -82,18 +86,26 @@ export const Url = styled.a`
 export const Actions = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 0.85rem;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
 `;
 
 export const ActionButton = styled.button`
-  padding: 0.35rem 0.7rem;
+  flex: 1;
+  min-height: 2.65rem;
+  padding: 0.45rem 0.75rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.sm};
+  border-radius: ${({ theme }) => theme.radii.md};
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
+
+  ${mediaUp('sm')} {
+    flex: initial;
+  }
 
   &:hover:not(:disabled) {
     background: ${({ theme }) => theme.colors.surfaceHover};

@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { deleteNewsRewrite, getNewsById } from '../../api/client';
 import type { NewsItemDetail, NewsRewrite } from '../../api/types';
 import { useNewsRewrites } from '../../hooks/use-news-rewrites/use-news-rewrites';
+import { MasterDetailLayout } from '../master-detail-layout/master-detail-layout';
 import { NewsRewriteEditor } from '../news-rewrite-editor/news-rewrite-editor';
 import { NewsRewritesList } from '../news-rewrites-list/news-rewrites-list';
 import { Pagination } from '../pagination/pagination';
 import { RewrittenNewsDetail } from '../rewritten-news-detail/rewritten-news-detail';
-import * as S from './news-rewrites-view.styles';
 
 interface NewsRewritesViewProps {
   onOpenSourceNews?: (sourceNewsId: string, sourceId: string) => void;
@@ -58,31 +58,37 @@ export function NewsRewritesView({ onOpenSourceNews }: NewsRewritesViewProps) {
 
   return (
     <>
-      <S.Grid>
-        <S.ListColumn>
-          <NewsRewritesList
-            items={items}
-            loading={loading}
-            error={error}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
+      <MasterDetailLayout
+        detailOpen={Boolean(selectedId)}
+        onBack={() => setSelectedId(null)}
+        backLabel="К списку переписей"
+        list={
+          <>
+            <NewsRewritesList
+              items={items}
+              loading={loading}
+              error={error}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onOpenSourceNews={onOpenSourceNews}
+            />
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              onPageChange={setPage}
+            />
+          </>
+        }
+        detail={
+          <RewrittenNewsDetail
+            rewrite={selectedRewrite}
+            onEdit={(rewrite) => void openEditor(rewrite)}
+            onDelete={handleDelete}
             onOpenSourceNews={onOpenSourceNews}
           />
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            totalCount={totalCount}
-            onPageChange={setPage}
-          />
-        </S.ListColumn>
-
-        <RewrittenNewsDetail
-          rewrite={selectedRewrite}
-          onEdit={(rewrite) => void openEditor(rewrite)}
-          onDelete={handleDelete}
-          onOpenSourceNews={onOpenSourceNews}
-        />
-      </S.Grid>
+        }
+      />
 
       {editorOpen && editorSourceNews && (
         <NewsRewriteEditor

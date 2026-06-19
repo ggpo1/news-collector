@@ -1,5 +1,7 @@
 import { formatConfidence, LINK_METHOD_LABELS, LINK_TYPE_LABELS } from '../../api/link-labels';
 import type { LinkType, NewsLink } from '../../api/types';
+import { EmptyState } from '../ui/empty-state';
+import { LoadingState } from '../ui/loading-state';
 import * as S from './news-links-list.styles';
 
 interface NewsLinksListProps {
@@ -31,15 +33,15 @@ function badgeVariant(linkType: LinkType): 'topic' | 'duplicate' | 'related' | u
 
 export function NewsLinksList({ items, loading, error, selectedId, onSelect }: NewsLinksListProps) {
   if (loading) {
-    return <S.State>Загрузка связей…</S.State>;
+    return <LoadingState label="Загрузка связей…" />;
   }
 
   if (error) {
-    return <S.State $error>{error}</S.State>;
+    return <EmptyState error>{error}</EmptyState>;
   }
 
   if (items.length === 0) {
-    return <S.State>Связей пока нет. Topic Linker создаёт их автоматически.</S.State>;
+    return <EmptyState>Связей пока нет. Topic Linker создаёт их автоматически.</EmptyState>;
   }
 
   return (
@@ -47,12 +49,15 @@ export function NewsLinksList({ items, loading, error, selectedId, onSelect }: N
       {items.map((item) => (
         <li key={item.id}>
           <S.Card type="button" $active={selectedId === item.id} onClick={() => onSelect(item.id)}>
-            <S.Meta>
+            <S.CardTop>
+              <S.Meta>
               <S.Badge $variant={badgeVariant(item.linkType)}>{LINK_TYPE_LABELS[item.linkType]}</S.Badge>
               <span>{formatConfidence(item.confidence)}</span>
               <span>{LINK_METHOD_LABELS[item.linkMethod]}</span>
               <time dateTime={item.createdAt}>{formatDate(item.createdAt)}</time>
-            </S.Meta>
+              </S.Meta>
+              <S.Chevron aria-hidden="true">›</S.Chevron>
+            </S.CardTop>
             <S.Pair>
               <S.NewsLine>
                 <S.Source>{item.newsLow.sourceName}</S.Source>

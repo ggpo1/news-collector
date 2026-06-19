@@ -1,12 +1,15 @@
 import styled from 'styled-components';
 
 export const Panel = styled.aside`
-  position: sticky;
-  top: 1.5rem;
-  padding: 1.25rem;
+  padding: 1rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
+  border-radius: ${({ theme }) => theme.radii.lg};
   background: ${({ theme }) => theme.colors.surface};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    padding: 1.25rem;
+  }
 `;
 
 export const Placeholder = styled.p`
