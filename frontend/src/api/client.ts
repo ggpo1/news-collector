@@ -37,6 +37,10 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
 }
 
 async function readApiError(response: Response): Promise<string> {
+  if (response.status === 504) {
+    return 'Превышено время ожидания ответа (504). Модель ещё генерирует текст — попробуйте снова или выберите модель полегче (например llama3.2).';
+  }
+
   try {
     const body = (await response.json()) as { error?: string };
     if (body.error) {

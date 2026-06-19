@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Dtos;
@@ -81,6 +82,7 @@ public sealed class NewsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/ai-rewrite")]
+    [RequestTimeout("AiRewrite")]
     [ProducesResponseType(typeof(AiNewsRewriteResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

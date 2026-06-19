@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NewsCollector.Api.Auth;
@@ -62,6 +63,10 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+builder.Services.AddRequestTimeouts(options =>
+{
+    options.AddPolicy("AiRewrite", TimeSpan.FromMinutes(30));
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -104,6 +109,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseRequestTimeouts();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<ApiVisitTrackingMiddleware>();

@@ -40,7 +40,7 @@ services:
         Password=${POSTGRES_PASSWORD:-news}
       Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
       Ollama__Model: ${OLLAMA_MODEL:-llama3.2}
-      Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-600}
+      Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-1800}
       Auth__JwtSecret: ${AUTH_JWT_SECRET:-change-this-secret-in-production-min-32-characters-long}
       Auth__JwtExpirationMinutes: ${AUTH_JWT_EXPIRATION_MINUTES:-480}
       Auth__SeedChiefEditorLogin: ${AUTH_SEED_CHIEF_LOGIN:-chief}
