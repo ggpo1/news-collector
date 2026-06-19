@@ -30,9 +30,6 @@ public class NewsRewriteConfiguration : IEntityTypeConfiguration<NewsRewrite>
 
         builder.HasIndex(r => r.SourceNewsId);
 
-        builder.Property(r => r.AuthorId)
-            .IsRequired(false);
-
         builder.HasIndex(r => r.AuthorId);
 
         builder.HasIndex(r => new { r.SourceNewsId, r.AuthorId })
