@@ -60,6 +60,71 @@ public sealed class AuthService : IAuthService
         return user is null ? null : MapCurrentUser(user);
     }
 
+    public async Task<RegisterResult> RegisterAsync(
+        RegisterRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!InvitationCodeService.TryParseCode(request.InvitationCode, out var invitationCode))
+        {
+            return new RegisterResult(RegisterStatus.InvalidInvitation, null);
+        }
+
+        var login = request.Login.Trim().ToLowerInvariant();
+        var displayName = request.DisplayName.Trim();
+
+        if (string.IsNullOrWhiteSpace(login)
+            || string.IsNullOrWhiteSpace(displayName)
+            || string.IsNullOrWhiteSpace(request.Password))
+        {
+            return new RegisterResult(RegisterStatus.InvalidInput, null);
+        }
+
+        if (request.Password.Length < 6)
+        {
+            return new RegisterResult(RegisterStatus.InvalidInput, null);
+        }
+
+        if (await _db.Users.AnyAsync(u => u.Login == login, cancellationToken))
+        {
+            return new RegisterResult(RegisterStatus.LoginExists, null);
+        }
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+        var invitation = await _db.InvitationCodes
+            .FirstOrDefaultAsync(c => c.Code == invitationCode && c.UsedAt == null, cancellationToken);
+
+        if (invitation is null)
+        {
+            return new RegisterResult(RegisterStatus.InvalidInvitation, null);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Login = login,
+            DisplayName = displayName,
+            PasswordHash = _passwordHasher.Hash(request.Password),
+            Role = invitation.Role,
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        invitation.UsedAt = now;
+        invitation.UsedByUserId = user.Id;
+
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        var currentUser = MapCurrentUser(user);
+        var token = CreateToken(user);
+
+        return new RegisterResult(RegisterStatus.Success, new LoginResponseDto(token, currentUser));
+    }
+
     private string CreateToken(User user)
     {
         if (string.IsNullOrWhiteSpace(_options.JwtSecret))

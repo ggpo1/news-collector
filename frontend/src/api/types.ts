@@ -130,6 +130,32 @@ export interface UpdateUserPayload {
   password: string | null;
 }
 
+export interface ValidateInvitationResponse {
+  role: UserRole;
+}
+
+export interface RegisterPayload {
+  invitationCode: string;
+  login: string;
+  password: string;
+  displayName: string;
+}
+
+export interface InvitationCode {
+  code: string;
+  role: UserRole;
+  createdAt: string;
+  createdByUserId: string;
+  createdByLogin: string;
+  usedAt: string | null;
+  usedByUserId: string | null;
+  usedByLogin: string | null;
+}
+
+export interface CreateInvitationCodePayload {
+  role: UserRole;
+}
+
 export interface NewsRewrite {
   id: string;
   sourceNewsId: string;

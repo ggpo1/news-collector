@@ -22,6 +22,8 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
 
+    public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NewsCollectorDbContext).Assembly);

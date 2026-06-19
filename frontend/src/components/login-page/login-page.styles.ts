@@ -83,3 +83,26 @@ export const Hint = styled.p`
   color: ${({ theme }) => theme.colors.textFaint};
   line-height: 1.45;
 `;
+
+export const Footer = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+`;
+
+export const LinkButton = styled.button`
+  border: none;
+  background: none;
+  padding: 0;
+  color: ${({ theme }) => theme.colors.accent};
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: wait;
+  }
+`;

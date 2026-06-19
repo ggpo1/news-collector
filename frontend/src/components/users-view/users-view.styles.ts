@@ -9,9 +9,11 @@ export const Root = styled.section`
 
 export const Toolbar = styled.div`
   display: flex;
-  justify-content: stretch;
+  flex-direction: column;
+  gap: 0.6rem;
 
   ${mediaUp('sm')} {
+    flex-direction: row;
     justify-content: flex-end;
   }
 `;
@@ -169,4 +171,54 @@ export const Error = styled.p`
   margin: 0 0 0.75rem;
   color: ${({ theme }) => theme.colors.danger};
   font-size: 0.85rem;
+`;
+
+export const Section = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+export const SectionTitle = styled.h2`
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+export const Code = styled.p`
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  word-break: break-all;
+`;
+
+export const CodeBlock = styled.pre`
+  margin: 0.75rem 0 0;
+  padding: 0.85rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  background: ${({ theme }) => theme.colors.bg};
+  font-size: 0.82rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+`;
+
+export const CopyButton = styled.button`
+  margin-top: 0.75rem;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.82rem;
+  cursor: pointer;
+`;
+
+export const Hint = styled.p`
+  margin: 0;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+  line-height: 1.45;
 `;

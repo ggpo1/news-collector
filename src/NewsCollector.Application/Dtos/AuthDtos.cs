@@ -32,3 +32,35 @@ public sealed record UpdateUserRequest(
     UserRole Role,
     bool IsActive,
     string? Password);
+
+public sealed record ValidateInvitationRequest(string Code);
+
+public sealed record ValidateInvitationResponse(UserRole Role);
+
+public sealed record RegisterRequest(
+    string InvitationCode,
+    string Login,
+    string Password,
+    string DisplayName);
+
+public enum RegisterStatus
+{
+    Success,
+    InvalidInvitation,
+    LoginExists,
+    InvalidInput
+}
+
+public sealed record RegisterResult(RegisterStatus Status, LoginResponseDto? Response);
+
+public sealed record CreateInvitationCodeRequest(UserRole Role);
+
+public sealed record InvitationCodeDto(
+    Guid Code,
+    UserRole Role,
+    DateTimeOffset CreatedAt,
+    Guid CreatedByUserId,
+    string CreatedByLogin,
+    DateTimeOffset? UsedAt,
+    Guid? UsedByUserId,
+    string? UsedByLogin);

@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddSingleton<PasswordHasherService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IInvitationCodeService, InvitationCodeService>();
         services.AddScoped<AuthDataSeeder>();
 
         return services;

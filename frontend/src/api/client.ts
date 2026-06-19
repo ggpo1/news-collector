@@ -8,6 +8,10 @@ import type {
   CurrentUser,
   LinkType,
   LoginResponse,
+  InvitationCode,
+  CreateInvitationCodePayload,
+  RegisterPayload,
+  ValidateInvitationResponse,
   NewsItemDetail,
   NewsItemList,
   NewsLink,
@@ -105,6 +109,43 @@ export function login(loginName: string, password: string): Promise<LoginRespons
     }
 
     return response.json() as Promise<LoginResponse>;
+  });
+}
+
+async function postAnonymous<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Visitor-Id': getVisitorId(),
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readApiError(response));
+  }
+
+  return response.json() as Promise<T>;
+}
+
+export function validateInvitation(code: string): Promise<ValidateInvitationResponse> {
+  return postAnonymous<ValidateInvitationResponse>('/api/auth/validate-invitation', { code });
+}
+
+export function register(payload: RegisterPayload): Promise<LoginResponse> {
+  return postAnonymous<LoginResponse>('/api/auth/register', payload);
+}
+
+export function getInvitationCodes(): Promise<InvitationCode[]> {
+  return request<InvitationCode[]>('/api/invitation-codes');
+}
+
+export function createInvitationCode(payload: CreateInvitationCodePayload): Promise<InvitationCode> {
+  return request<InvitationCode>('/api/invitation-codes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   });
 }
 
