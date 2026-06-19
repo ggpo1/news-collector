@@ -100,6 +100,21 @@ using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<AuthDataSeeder>();
     await seeder.SeedAsync();
+
+    var ollamaOptions = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<OllamaOptions>>().Value;
+    var startupLogger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+    startupLogger.LogInformation(
+        "Ollama configured: BaseUrl={BaseUrl}, Model={Model}, TimeoutSeconds={TimeoutSeconds}",
+        ollamaOptions.BaseUrl,
+        ollamaOptions.Model,
+        ollamaOptions.TimeoutSeconds);
+
+    if (ollamaOptions.TimeoutSeconds < 1800)
+    {
+        startupLogger.LogWarning(
+            "Ollama TimeoutSeconds={TimeoutSeconds} is below 1800. Large CPU models (e.g. deepseek-r1:14b) often need 30+ minutes.",
+            ollamaOptions.TimeoutSeconds);
+    }
 }
 
 if (app.Environment.IsDevelopment())

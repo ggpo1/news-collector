@@ -120,6 +120,8 @@ services:
     restart: unless-stopped
     ports:
       - "${OLLAMA_PORT:-11435}:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
     volumes:
       - ollama_data:/root/.ollama
     logging:

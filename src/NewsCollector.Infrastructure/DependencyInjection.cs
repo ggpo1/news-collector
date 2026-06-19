@@ -78,7 +78,8 @@ public static class DependencyInjection
         {
             var options = serviceProvider.GetRequiredService<IOptions<OllamaOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
-            client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+            // Per-request timeout is enforced in OllamaAiNewsRewriteService; avoid HttpClient default 100s cap.
+            client.Timeout = Timeout.InfiniteTimeSpan;
         });
 
         services.AddScoped<IAiNewsRewriteService, OllamaAiNewsRewriteService>();

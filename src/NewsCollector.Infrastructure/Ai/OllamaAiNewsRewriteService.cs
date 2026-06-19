@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -66,7 +67,7 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         }
 
         var userMessage = BuildUserMessage(news, sourceText);
-        var rawResponse = await ChatAsync(userMessage);
+        var rawResponse = await ChatAsync(newsId, userMessage);
 
         try
         {
@@ -79,7 +80,7 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         }
     }
 
-    private async Task<string> ChatAsync(string userMessage)
+    private async Task<string> ChatAsync(Guid newsId, string userMessage)
     {
         var client = _httpClientFactory.CreateClient("Ollama");
 
@@ -90,9 +91,19 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
                 new OllamaChatMessage("user", userMessage)
             ],
             Stream: false,
-            Format: "json");
+            Format: "json",
+            KeepAlive: "30m");
 
         using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.TimeoutSeconds));
+        var stopwatch = Stopwatch.StartNew();
+
+        _logger.LogInformation(
+            "Ollama /api/chat started: NewsId={NewsId}, Model={Model}, BaseUrl={BaseUrl}, TimeoutSeconds={TimeoutSeconds}, UserMessageLength={UserMessageLength}",
+            newsId,
+            _options.Model,
+            _options.BaseUrl,
+            _options.TimeoutSeconds,
+            userMessage.Length);
 
         HttpResponseMessage response;
         try
@@ -101,24 +112,38 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         }
         catch (TaskCanceledException ex) when (!timeoutCts.IsCancellationRequested)
         {
-            _logger.LogError(ex, "Ollama request was canceled before completion at {BaseUrl}", _options.BaseUrl);
+            _logger.LogError(
+                ex,
+                "Ollama request canceled externally after {ElapsedSeconds}s (NewsId={NewsId})",
+                stopwatch.Elapsed.TotalSeconds,
+                newsId);
             throw new InvalidOperationException(
-                "Запрос к Ollama был прерван. Проверьте таймауты nginx и OLLAMA_TIMEOUT_SECONDS.",
+                "Запрос к Ollama был прерван (nginx/браузер). Проверьте proxy_read_timeout и OLLAMA_TIMEOUT_SECONDS.",
                 ex);
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogError(ex, "Ollama request timed out after {TimeoutSeconds}s at {BaseUrl}", _options.TimeoutSeconds, _options.BaseUrl);
+            _logger.LogError(
+                ex,
+                "Ollama request timed out after {TimeoutSeconds}s, elapsed {ElapsedSeconds}s (NewsId={NewsId})",
+                _options.TimeoutSeconds,
+                stopwatch.Elapsed.TotalSeconds,
+                newsId);
             throw new InvalidOperationException(
-                $"Ollama не ответила за {_options.TimeoutSeconds} секунд. Увеличьте OLLAMA_TIMEOUT_SECONDS или выберите модель полегче.",
+                $"Ollama не ответила за {_options.TimeoutSeconds} секунд. Увеличьте OLLAMA_TIMEOUT_SECONDS (рекомендуется 1800+) или выберите модель полегче.",
                 ex);
         }
         catch (Exception ex) when (ex is HttpRequestException)
         {
-            _logger.LogError(ex, "Ollama request failed at {BaseUrl}", _options.BaseUrl);
+            _logger.LogError(
+                ex,
+                "Ollama connection failed after {ElapsedSeconds}s at {BaseUrl} (NewsId={NewsId})",
+                stopwatch.Elapsed.TotalSeconds,
+                _options.BaseUrl,
+                newsId);
             throw new InvalidOperationException(
                 $"Не удалось подключиться к Ollama ({_options.BaseUrl}). " +
-                "В Docker используйте OLLAMA_BASE_URL=http://ollama:11434 или запустите Ollama на хосте с OLLAMA_HOST=0.0.0.0:11434.",
+                "В Docker используйте OLLAMA_BASE_URL=http://ollama:11434.",
                 ex);
         }
 
@@ -126,20 +151,36 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         {
             var body = await response.Content.ReadAsStringAsync(timeoutCts.Token);
             _logger.LogWarning(
-                "Ollama returned {StatusCode}: {Body}",
+                "Ollama returned {StatusCode} after {ElapsedSeconds}s (NewsId={NewsId}): {Body}",
                 (int)response.StatusCode,
+                stopwatch.Elapsed.TotalSeconds,
+                newsId,
                 body);
 
+            var timeoutHint = response.StatusCode == System.Net.HttpStatusCode.InternalServerError
+                ? " Часто это обрыв по таймауту API (OLLAMA_TIMEOUT_SECONDS, nginx proxy_read_timeout)."
+                : string.Empty;
+
             throw new InvalidOperationException(
-                $"Ollama вернула ошибку {(int)response.StatusCode}. Проверьте, что модель '{_options.Model}' установлена.");
+                $"Ollama вернула ошибку {(int)response.StatusCode}.{timeoutHint} Модель: '{_options.Model}'.");
         }
 
         var payload = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(timeoutCts.Token);
         var content = payload?.Message?.Content;
         if (string.IsNullOrWhiteSpace(content))
         {
+            _logger.LogWarning(
+                "Ollama returned empty message after {ElapsedSeconds}s (NewsId={NewsId})",
+                stopwatch.Elapsed.TotalSeconds,
+                newsId);
             throw new InvalidOperationException("Ollama вернула пустой ответ.");
         }
+
+        _logger.LogInformation(
+            "Ollama /api/chat completed in {ElapsedSeconds}s (NewsId={NewsId}, ResponseLength={ResponseLength})",
+            stopwatch.Elapsed.TotalSeconds,
+            newsId,
+            content.Length);
 
         return content;
     }
@@ -186,7 +227,8 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         [property: JsonPropertyName("model")] string Model,
         [property: JsonPropertyName("messages")] OllamaChatMessage[] Messages,
         [property: JsonPropertyName("stream")] bool Stream,
-        [property: JsonPropertyName("format")] string Format);
+        [property: JsonPropertyName("format")] string Format,
+        [property: JsonPropertyName("keep_alive")] string KeepAlive);
 
     private sealed record OllamaChatMessage(
         [property: JsonPropertyName("role")] string Role,
