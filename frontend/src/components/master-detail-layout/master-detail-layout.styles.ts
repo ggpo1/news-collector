@@ -5,7 +5,9 @@ export const DesktopGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
   gap: 1.25rem;
-  align-items: start;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
 
   ${mediaUp('xl')} {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
@@ -13,22 +15,32 @@ export const DesktopGrid = styled.div`
   }
 `;
 
-export const ListColumn = styled.section`
+export const ListColumn = styled.section<{ $sticky?: boolean }>`
   min-width: 0;
+
+  ${({ $sticky }) =>
+    $sticky &&
+    `
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  `}
 `;
 
 export const DetailColumn = styled.aside`
   min-width: 0;
-  position: sticky;
-  top: 1.5rem;
-  max-height: calc(100dvh - 3rem);
-  overflow: auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 `;
 
 export const MobileDetail = styled.section`
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - ${({ theme }) => theme.layout.headerHeight} - ${({ theme }) => theme.layout.bottomNavHeight} - 2rem);
+  flex: 1;
+  min-height: 0;
 `;
 
 export const BackBar = styled.button`
@@ -59,4 +71,6 @@ export const BackIcon = styled.span`
 export const MobileDetailBody = styled.div`
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 `;

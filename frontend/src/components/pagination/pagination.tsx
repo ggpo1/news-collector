@@ -5,15 +5,22 @@ interface PaginationProps {
   totalPages: number;
   totalCount: number;
   onPageChange: (page: number) => void;
+  embedded?: boolean;
 }
 
-export function Pagination({ page, totalPages, totalCount, onPageChange }: PaginationProps) {
+export function Pagination({
+  page,
+  totalPages,
+  totalCount,
+  onPageChange,
+  embedded = false,
+}: PaginationProps) {
   if (totalPages <= 1) {
     return null;
   }
 
   return (
-    <S.Root aria-label="Пагинация">
+    <S.Root $embedded={embedded} aria-label="Пагинация">
       <S.Info>
         Страница {page} из {totalPages} · всего {totalCount}
       </S.Info>

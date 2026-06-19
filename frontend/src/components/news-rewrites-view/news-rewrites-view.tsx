@@ -62,7 +62,7 @@ export function NewsRewritesView({ onOpenSourceNews }: NewsRewritesViewProps) {
         detailOpen={Boolean(selectedId)}
         onBack={() => setSelectedId(null)}
         backLabel="К списку переписей"
-        list={
+        listBody={
           <>
             <NewsRewritesList
               items={items}

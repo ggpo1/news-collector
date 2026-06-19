@@ -1,9 +1,13 @@
 import type { ReactNode } from 'react';
 import { useMediaQuery } from '../../hooks/use-media-query/use-media-query';
+import { ScrollableListPanel } from '../scrollable-list-panel/scrollable-list-panel';
 import * as S from './master-detail-layout.styles';
 
 interface MasterDetailLayoutProps {
-  list: ReactNode;
+  listBody: ReactNode;
+  listHeader?: ReactNode;
+  listFooter?: ReactNode;
+  stickyList?: boolean;
   detail: ReactNode;
   detailOpen: boolean;
   onBack: () => void;
@@ -11,18 +15,34 @@ interface MasterDetailLayoutProps {
 }
 
 export function MasterDetailLayout({
-  list,
+  listBody,
+  listHeader,
+  listFooter,
+  stickyList = false,
   detail,
   detailOpen,
   onBack,
   backLabel = 'Назад к списку',
 }: MasterDetailLayoutProps) {
   const isDesktop = useMediaQuery('lg');
+  const useStickyPanel = stickyList && (listHeader !== undefined || listFooter !== undefined);
+
+  const listContent = useStickyPanel ? (
+    <ScrollableListPanel header={listHeader} footer={listFooter}>
+      {listBody}
+    </ScrollableListPanel>
+  ) : (
+    <>
+      {listHeader}
+      {listBody}
+      {listFooter}
+    </>
+  );
 
   if (isDesktop) {
     return (
       <S.DesktopGrid>
-        <S.ListColumn>{list}</S.ListColumn>
+        <S.ListColumn $sticky={useStickyPanel}>{listContent}</S.ListColumn>
         <S.DetailColumn>{detail}</S.DetailColumn>
       </S.DesktopGrid>
     );
@@ -40,5 +60,5 @@ export function MasterDetailLayout({
     );
   }
 
-  return <S.ListColumn>{list}</S.ListColumn>;
+  return <S.ListColumn $sticky={useStickyPanel}>{listContent}</S.ListColumn>;
 }

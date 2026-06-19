@@ -5,6 +5,7 @@ import { NewsDetail } from '../components/news-detail/news-detail';
 import { NewsList } from '../components/news-list/news-list';
 import { Pagination } from '../components/pagination/pagination';
 import { SourceSelect } from '../components/source-select/source-select';
+import * as SectionS from '../components/section-page/section-page.styles';
 import { useNews } from '../hooks/use-news/use-news';
 import { useSources } from '../hooks/use-sources/use-sources';
 import * as S from './news-page.styles';
@@ -40,41 +41,43 @@ export function NewsPage() {
   }, [selectedSourceId, page]);
 
   return (
-    <>
-      <S.Toolbar>
-        <SourceSelect
-          sources={activeSources}
-          value={selectedSourceId}
-          loading={sourcesLoading}
-          onChange={setSelectedSourceId}
-        />
-      </S.Toolbar>
-
-      {sourcesError && <S.ErrorBanner role="alert">{sourcesError}</S.ErrorBanner>}
-
+    <SectionS.SectionPage>
       <MasterDetailLayout
+        stickyList
         detailOpen={Boolean(selectedNewsId)}
         onBack={() => setSelectedNewsId(null)}
         backLabel="К списку новостей"
-        list={
+        listHeader={
           <>
-            <NewsList
-              items={items}
-              loading={loading}
-              error={error}
-              selectedId={selectedNewsId}
-              onSelect={setSelectedNewsId}
+            <SourceSelect
+              sources={activeSources}
+              value={selectedSourceId}
+              loading={sourcesLoading}
+              onChange={setSelectedSourceId}
             />
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              totalCount={totalCount}
-              onPageChange={setPage}
-            />
+            {sourcesError && <S.ErrorBanner role="alert">{sourcesError}</S.ErrorBanner>}
           </>
+        }
+        listBody={
+          <NewsList
+            items={items}
+            loading={loading}
+            error={error}
+            selectedId={selectedNewsId}
+            onSelect={setSelectedNewsId}
+          />
+        }
+        listFooter={
+          <Pagination
+            embedded
+            page={page}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPageChange={setPage}
+          />
         }
         detail={<NewsDetail newsId={selectedNewsId} onContentLoaded={() => void reload()} />}
       />
-    </>
+    </SectionS.SectionPage>
   );
 }

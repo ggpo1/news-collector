@@ -63,7 +63,7 @@ export function AppShell({ section, sectionTitle, sectionSubtitle, children }: A
             <S.PageSubtitle>{sectionSubtitle}</S.PageSubtitle>
           </S.PageHeader>
 
-          {children}
+          <S.PageBody>{children}</S.PageBody>
         </S.Content>
 
         <AppNav section={section} variant="bottom" />

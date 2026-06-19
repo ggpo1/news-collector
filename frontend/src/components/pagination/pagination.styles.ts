@@ -1,15 +1,20 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { mediaDown, mediaUp } from '../../styles/media';
 
-export const Root = styled.nav`
+export const Root = styled.nav<{ $embedded?: boolean }>`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+
+  ${({ $embedded, theme }) =>
+    !$embedded &&
+    css`
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid ${theme.colors.borderSubtle};
+    `}
 `;
 
 export const Info = styled.span`

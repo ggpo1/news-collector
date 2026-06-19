@@ -3,7 +3,9 @@ import { mediaUp } from '../../styles/media';
 
 export const Shell = styled.div`
   min-height: 100dvh;
+  height: 100dvh;
   display: flex;
+  overflow: hidden;
 `;
 
 export const Sidebar = styled.aside`
@@ -97,6 +99,7 @@ export const MobileLogout = styled.button`
 export const Main = styled.main`
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding-bottom: calc(${({ theme }) => theme.layout.bottomNavHeight} + env(safe-area-inset-bottom, 0px));
@@ -150,6 +153,10 @@ export const MobileSubtitle = styled.p`
 
 export const Content = styled.div`
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   width: 100%;
   max-width: ${({ theme }) => theme.layout.maxContentWidth};
   margin: 0 auto;
@@ -164,8 +171,17 @@ export const Content = styled.div`
   }
 `;
 
+export const PageBody = styled.div`
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+`;
+
 export const PageHeader = styled.header`
   display: none;
+  flex-shrink: 0;
   margin-bottom: 1.25rem;
 
   ${mediaUp('lg')} {
