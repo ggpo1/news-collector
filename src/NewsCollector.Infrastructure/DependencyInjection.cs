@@ -49,9 +49,10 @@ public static class DependencyInjection
 
     public static IServiceCollection AddCollectorServices(this IServiceCollection services)
     {
-        services.AddHttpClient<IRssFeedReader, RssFeedReader>(client =>
+        services.AddHttpClient<IRssFeedReader, RssFeedReader>((serviceProvider, client) =>
         {
-            client.Timeout = TimeSpan.FromSeconds(30);
+            var options = serviceProvider.GetRequiredService<IOptions<CollectorOptions>>().Value;
+            client.Timeout = TimeSpan.FromSeconds(options.RssFetchTimeoutSeconds);
             client.DefaultRequestHeaders.UserAgent.ParseAdd(
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
             client.DefaultRequestHeaders.Accept.ParseAdd("application/rss+xml, application/xml, text/xml, */*");

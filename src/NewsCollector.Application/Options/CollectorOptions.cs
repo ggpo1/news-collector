@@ -6,6 +6,8 @@ public sealed class CollectorOptions
 
     public int PollingIntervalSeconds { get; set; } = 60;
 
+    public int RssFetchTimeoutSeconds { get; set; } = 120;
+
     public int ContentEnrichmentBatchSize { get; set; } = 10;
 
     public int ContentEnrichmentDelayMs { get; set; } = 500;

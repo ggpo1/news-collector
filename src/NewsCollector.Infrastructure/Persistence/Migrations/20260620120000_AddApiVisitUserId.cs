@@ -11,29 +11,31 @@ namespace NewsCollector.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<Guid>(
-                name: "UserId",
-                table: "api_visits",
-                type: "uuid",
-                nullable: true);
+            // Idempotent: column may already exist if migration was partially applied manually.
+            migrationBuilder.Sql("""
+                ALTER TABLE api_visits
+                ADD COLUMN IF NOT EXISTS "UserId" uuid;
 
-            migrationBuilder.CreateIndex(
-                name: "IX_api_visits_UserId",
-                table: "api_visits",
-                column: "UserId");
+                CREATE INDEX IF NOT EXISTS "IX_api_visits_UserId"
+                ON api_visits ("UserId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_api_visits_UserId_RequestedAt",
-                table: "api_visits",
-                columns: new[] { "UserId", "RequestedAt" });
+                CREATE INDEX IF NOT EXISTS "IX_api_visits_UserId_RequestedAt"
+                ON api_visits ("UserId", "RequestedAt");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_api_visits_users_UserId",
-                table: "api_visits",
-                column: "UserId",
-                principalTable: "users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                DO $EF$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM pg_constraint
+                        WHERE conname = 'FK_api_visits_users_UserId'
+                    ) THEN
+                        ALTER TABLE api_visits
+                        ADD CONSTRAINT "FK_api_visits_users_UserId"
+                        FOREIGN KEY ("UserId") REFERENCES users ("Id")
+                        ON DELETE SET NULL;
+                    END IF;
+                END $EF$;
+                """);
         }
 
         /// <inheritdoc />

@@ -44,9 +44,28 @@ public sealed class NewsIngestionService : INewsIngestionService
             {
                 totalNew += await CollectFromSourceAsync(source, cancellationToken);
             }
+            catch (Exception ex) when (IsRssTimeout(ex))
+            {
+                _logger.LogWarning(
+                    "RSS fetch timed out for source {SourceName} ({SourceId}); will retry after fetch interval",
+                    source.Name,
+                    source.Id);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "RSS HTTP error for source {SourceName} ({SourceId}); will retry after fetch interval",
+                    source.Name,
+                    source.Id);
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to collect news from source {SourceName} ({SourceId})", source.Name, source.Id);
+                _logger.LogError(
+                    ex,
+                    "Failed to collect news from source {SourceName} ({SourceId}); will retry after fetch interval",
+                    source.Name,
+                    source.Id);
             }
         }
 
@@ -55,58 +74,64 @@ public sealed class NewsIngestionService : INewsIngestionService
 
     private async Task<int> CollectFromSourceAsync(Source source, CancellationToken cancellationToken)
     {
-        if (source.Type != SourceType.Rss)
-        {
-            _logger.LogWarning("Source type {SourceType} is not supported yet for {SourceName}", source.Type, source.Name);
-            return 0;
-        }
-
-        _logger.LogInformation("Collecting news from {SourceName}", source.Name);
-
-        var feedItems = FeedItemDeduplicator.Deduplicate(await _rssFeedReader.ReadAsync(source.Url, cancellationToken));
         var fetchedAt = DateTimeOffset.UtcNow;
 
-        if (feedItems.Count == 0)
+        try
         {
-            await UpdateSourceFetchTimestampAsync(source, fetchedAt, cancellationToken);
-            return 0;
+            if (source.Type != SourceType.Rss)
+            {
+                _logger.LogWarning("Source type {SourceType} is not supported yet for {SourceName}", source.Type, source.Name);
+                return 0;
+            }
+
+            _logger.LogInformation("Collecting news from {SourceName}", source.Name);
+
+            var feedItems = FeedItemDeduplicator.Deduplicate(await _rssFeedReader.ReadAsync(source.Url, cancellationToken));
+
+            if (feedItems.Count == 0)
+            {
+                return 0;
+            }
+
+            var externalIds = feedItems.Select(i => i.ExternalId).ToList();
+            var urls = feedItems.Select(i => i.Url).ToList();
+
+            var existingKeys = await _db.NewsItems
+                .AsNoTracking()
+                .Where(n => n.SourceId == source.Id
+                    && (externalIds.Contains(n.ExternalId) || urls.Contains(n.Url)))
+                .Select(n => new { n.ExternalId, n.Url })
+                .ToListAsync(cancellationToken);
+
+            var existingExternalIds = existingKeys
+                .Select(x => x.ExternalId)
+                .ToHashSet(StringComparer.Ordinal);
+
+            var existingUrls = existingKeys
+                .Select(x => x.Url)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var candidates = feedItems
+                .Where(item => !existingExternalIds.Contains(item.ExternalId) && !existingUrls.Contains(item.Url))
+                .Select(item => MapNewsItem(item, source.Id, fetchedAt))
+                .ToList();
+
+            var insertedCount = await InsertNewsItemsAsync(candidates, cancellationToken);
+
+            _logger.LogInformation(
+                "Collected {NewCount} new items from {SourceName} ({TotalInFeed} in feed, {SkippedDuplicates} skipped as duplicates)",
+                insertedCount,
+                source.Name,
+                feedItems.Count,
+                feedItems.Count - candidates.Count);
+
+            return insertedCount;
         }
-
-        var externalIds = feedItems.Select(i => i.ExternalId).ToList();
-        var urls = feedItems.Select(i => i.Url).ToList();
-
-        var existingKeys = await _db.NewsItems
-            .AsNoTracking()
-            .Where(n => n.SourceId == source.Id
-                && (externalIds.Contains(n.ExternalId) || urls.Contains(n.Url)))
-            .Select(n => new { n.ExternalId, n.Url })
-            .ToListAsync(cancellationToken);
-
-        var existingExternalIds = existingKeys
-            .Select(x => x.ExternalId)
-            .ToHashSet(StringComparer.Ordinal);
-
-        var existingUrls = existingKeys
-            .Select(x => x.Url)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var candidates = feedItems
-            .Where(item => !existingExternalIds.Contains(item.ExternalId) && !existingUrls.Contains(item.Url))
-            .Select(item => MapNewsItem(item, source.Id, fetchedAt))
-            .ToList();
-
-        var insertedCount = await InsertNewsItemsAsync(candidates, cancellationToken);
-
-        await UpdateSourceFetchTimestampAsync(source, fetchedAt, cancellationToken);
-
-        _logger.LogInformation(
-            "Collected {NewCount} new items from {SourceName} ({TotalInFeed} in feed, {SkippedDuplicates} skipped as duplicates)",
-            insertedCount,
-            source.Name,
-            feedItems.Count,
-            feedItems.Count - candidates.Count);
-
-        return insertedCount;
+        finally
+        {
+            // Back off failing/slow feeds: respect FetchIntervalMinutes before the next attempt.
+            await UpdateSourceFetchTimestampAsync(source, fetchedAt, cancellationToken);
+        }
     }
 
     private static NewsItem MapNewsItem(ParsedFeedItem item, Guid sourceId, DateTimeOffset fetchedAt) =>
@@ -192,4 +217,10 @@ public sealed class NewsIngestionService : INewsIngestionService
 
     private static bool IsUniqueViolation(DbUpdateException exception) =>
         exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
+
+    private static bool IsRssTimeout(Exception exception) =>
+        exception is TaskCanceledException or OperationCanceledException
+            && (exception.InnerException is TimeoutException
+                || exception.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase)
+                || exception.Message.Contains("canceled", StringComparison.OrdinalIgnoreCase));
 }

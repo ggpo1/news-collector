@@ -12,6 +12,10 @@ namespace NewsCollector.Infrastructure.Feeds;
 
 public sealed class RssFeedReader : IRssFeedReader
 {
+    private const int MaxFeedBytes = 10 * 1024 * 1024;
+    private const int MaxSummaryChars = 4_000;
+    private const int MaxRawPayloadChars = 8_000;
+
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
     private readonly HttpClient _httpClient;
@@ -29,11 +33,19 @@ public sealed class RssFeedReader : IRssFeedReader
     {
         _logger.LogDebug("Fetching RSS feed from {FeedUrl}", feedUrl);
 
-        await using var stream = await _httpClient.GetStreamAsync(feedUrl, cancellationToken);
+        using var response = await _httpClient.GetAsync(
+            feedUrl,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+        response.EnsureSuccessStatusCode();
 
-        using var reader = XmlReader.Create(stream, new XmlReaderSettings
+        await using var networkStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var feedStream = await ReadLimitedStreamAsync(networkStream, MaxFeedBytes, cancellationToken);
+
+        // SyndicationFeed.Load is synchronous; async XmlReader on a live network stream can hang indefinitely.
+        using var reader = XmlReader.Create(feedStream, new XmlReaderSettings
         {
-            Async = true,
+            Async = false,
             DtdProcessing = DtdProcessing.Prohibit
         });
 
@@ -49,8 +61,42 @@ public sealed class RssFeedReader : IRssFeedReader
             }
         }
 
-        _logger.LogDebug("Parsed {ItemCount} items from {FeedUrl}", items.Count, feedUrl);
+        _logger.LogInformation(
+            "Parsed {ItemCount} items from {FeedUrl} ({FeedBytes} bytes)",
+            items.Count,
+            feedUrl,
+            feedStream.Length);
+
         return items;
+    }
+
+    private static async Task<MemoryStream> ReadLimitedStreamAsync(
+        Stream stream,
+        int maxBytes,
+        CancellationToken cancellationToken)
+    {
+        var buffer = new byte[16 * 1024];
+        var memory = new MemoryStream();
+
+        while (true)
+        {
+            var read = await stream.ReadAsync(buffer, cancellationToken);
+            if (read == 0)
+            {
+                break;
+            }
+
+            var nextLength = memory.Length + read;
+            if (nextLength > maxBytes)
+            {
+                throw new InvalidOperationException($"RSS feed exceeds {maxBytes} bytes.");
+            }
+
+            memory.Write(buffer, 0, read);
+        }
+
+        memory.Position = 0;
+        return memory;
     }
 
     private static ParsedFeedItem? MapItem(SyndicationItem item)
@@ -67,7 +113,9 @@ public sealed class RssFeedReader : IRssFeedReader
             return null;
         }
 
-        var summary = ExtractText(item.Summary) ?? ExtractTextFromContent(item.Content);
+        var summary = Truncate(
+            ExtractText(item.Summary) ?? ExtractTextFromContent(item.Content),
+            MaxSummaryChars);
         var externalId = !string.IsNullOrWhiteSpace(item.Id)
             ? item.Id.Trim()
             : url.Trim();
@@ -76,7 +124,7 @@ public sealed class RssFeedReader : IRssFeedReader
             ? item.PublishDate.ToUniversalTime()
             : (DateTimeOffset?)null;
 
-        var rawPayload = JsonSerializer.Serialize(new
+        var rawPayload = Truncate(JsonSerializer.Serialize(new
         {
             item.Id,
             Title = item.Title?.Text,
@@ -84,7 +132,7 @@ public sealed class RssFeedReader : IRssFeedReader
             Url = url,
             PublishedAt = publishedAt,
             Authors = item.Authors.Select(a => a.Name).ToArray()
-        }, JsonOptions);
+        }, JsonOptions), MaxRawPayloadChars) ?? "{}";
 
         return new ParsedFeedItem(externalId, title, summary, url, publishedAt, rawPayload);
     }
@@ -107,6 +155,16 @@ public sealed class RssFeedReader : IRssFeedReader
         }
 
         return null;
+    }
+
+    private static string? Truncate(string? value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length <= maxLength)
+        {
+            return value;
+        }
+
+        return value[..maxLength];
     }
 
     public static string ComputeContentHash(string title, string? summary)

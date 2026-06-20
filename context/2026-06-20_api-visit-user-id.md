@@ -12,6 +12,8 @@
 
 **Важно:** у миграции должен быть файл `20260620120000_AddApiVisitUserId.Designer.cs` с атрибутом `[Migration(...)]` — без него EF Core не видит миграцию и `MigrateAsync()` её пропускает.
 
+`Up()` идемпотентный (`IF NOT EXISTS`) — если колонка уже добавлена вручную, миграция только допишет индексы/FK и запись в `__EFMigrationsHistory`.
+
 ## Поведение
 - Авторизованный запрос → `UserId` заполнен
 - Анонимные эндпоинты (`/api/auth/login`, `register`, `validate-invitation`) → `UserId` = NULL

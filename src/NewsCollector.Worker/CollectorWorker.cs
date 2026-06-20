@@ -53,13 +53,10 @@ public sealed class CollectorWorker : BackgroundService
             var newItemsCount = await ingestionService.CollectPendingSourcesAsync(cancellationToken);
             var enrichedCount = await enrichmentService.EnrichPendingArticlesAsync(cancellationToken);
 
-            if (newItemsCount > 0 || enrichedCount > 0)
-            {
-                _logger.LogInformation(
-                    "Cycle completed: {NewItemsCount} new RSS items, {EnrichedCount} articles with full text",
-                    newItemsCount,
-                    enrichedCount);
-            }
+            _logger.LogInformation(
+                "Cycle completed: {NewItemsCount} new RSS items, {EnrichedCount} articles with full text",
+                newItemsCount,
+                enrichedCount);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

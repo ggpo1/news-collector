@@ -86,6 +86,7 @@ services:
         Database=${POSTGRES_DB:-news_collector};
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
+      Collector__RssFetchTimeoutSeconds: ${RSS_FETCH_TIMEOUT_SECONDS:-120}
     logging:
       driver: json-file
       options:
