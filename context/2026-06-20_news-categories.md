@@ -38,7 +38,7 @@ Ollama: те же `OLLAMA_*`, что у API.
 docker compose up -d --build worker news-categorizer
 ```
 
-Миграция: `AddCategories` (применяет worker/api при `RunMigrations=true`).
+Миграция: `AddCategories` (применяет worker/api/news-categorizer при `RunMigrations=true`).
 
 ## SQL
 ```sql

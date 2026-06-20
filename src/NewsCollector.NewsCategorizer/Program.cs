@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using NewsCollector.Application.Options;
 using NewsCollector.Infrastructure;
+using NewsCollector.Infrastructure.Persistence;
 using NewsCollector.NewsCategorizer;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -12,4 +14,14 @@ builder.Services.AddPersistence(connectionString);
 builder.Services.AddNewsCategorization(builder.Configuration);
 builder.Services.AddHostedService<NewsCategorizerWorker>();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+
+var runMigrations = builder.Configuration.GetValue("RunMigrations", builder.Environment.IsDevelopment());
+if (runMigrations)
+{
+    using var scope = host.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<NewsCollectorDbContext>();
+    await db.Database.MigrateAsync();
+}
+
+await host.RunAsync();
