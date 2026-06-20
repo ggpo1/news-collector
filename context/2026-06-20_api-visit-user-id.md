@@ -10,6 +10,8 @@
 - Индекс `(UserId, RequestedAt)` для выборок по пользователю
 - Миграция: `AddApiVisitUserId`
 
+**Важно:** у миграции должен быть файл `20260620120000_AddApiVisitUserId.Designer.cs` с атрибутом `[Migration(...)]` — без него EF Core не видит миграцию и `MigrateAsync()` её пропускает.
+
 ## Поведение
 - Авторизованный запрос → `UserId` заполнен
 - Анонимные эндпоинты (`/api/auth/login`, `register`, `validate-invitation`) → `UserId` = NULL
