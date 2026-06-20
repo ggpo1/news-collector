@@ -6,6 +6,8 @@ public class NewsItem
 
     public Guid SourceId { get; set; }
 
+    public Guid? CategoryId { get; set; }
+
     public required string ExternalId { get; set; }
 
     public required string Title { get; set; }
@@ -29,6 +31,8 @@ public class NewsItem
     public DateTimeOffset CreatedAt { get; set; }
 
     public Source Source { get; set; } = null!;
+
+    public Category? Category { get; set; }
 
     public ICollection<NewsLink> LinksAsLow { get; set; } = [];
 

@@ -4,6 +4,7 @@ public sealed record NewsItemDetailDto(
     Guid Id,
     Guid SourceId,
     string SourceName,
+    string? CategoryName,
     string ExternalId,
     string Title,
     string? Summary,

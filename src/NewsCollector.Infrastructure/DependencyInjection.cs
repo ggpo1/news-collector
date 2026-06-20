@@ -71,6 +71,16 @@ public static class DependencyInjection
         return services;
     }
 
+    public static IServiceCollection AddNewsCategorization(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<NewsCategorizerOptions>(configuration.GetSection(NewsCategorizerOptions.SectionName));
+        services.AddAiRewrite(configuration);
+        services.AddScoped<INewsCategorizationService, NewsCategorizationService>();
+        return services;
+    }
+
     public static IServiceCollection AddAiRewrite(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<OllamaOptions>(configuration.GetSection(OllamaOptions.SectionName));

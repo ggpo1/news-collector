@@ -82,6 +82,16 @@ export const Badge = styled.span`
   font-weight: 600;
 `;
 
+export const CategoryBadge = styled.span`
+  padding: 0.12rem 0.5rem;
+  border-radius: ${({ theme }) => theme.radii.pill};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surfaceMuted};
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.7rem;
+  font-weight: 600;
+`;
+
 export const Title = styled.h2`
   margin: 0.45rem 0 0;
   font-size: 1rem;

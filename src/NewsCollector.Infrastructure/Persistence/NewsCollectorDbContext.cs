@@ -14,6 +14,8 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<NewsItem> NewsItems => Set<NewsItem>();
 
+    public DbSet<Category> Categories => Set<Category>();
+
     public DbSet<NewsLink> NewsLinks => Set<NewsLink>();
 
     public DbSet<ApiVisit> ApiVisits => Set<ApiVisit>();

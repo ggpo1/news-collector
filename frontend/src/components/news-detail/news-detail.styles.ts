@@ -43,6 +43,16 @@ export const Meta = styled.div`
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
+export const CategoryBadge = styled.span`
+  padding: 0.12rem 0.5rem;
+  border-radius: ${({ theme }) => theme.radii.pill};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surfaceMuted};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.75rem;
+  font-weight: 600;
+`;
+
 export const Title = styled.h2`
   margin: 0;
   font-size: 1.15rem;

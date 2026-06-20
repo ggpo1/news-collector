@@ -30,6 +30,7 @@ export interface NewsItemList {
   id: string;
   sourceId: string;
   sourceName: string;
+  categoryName: string | null;
   title: string;
   summary: string | null;
   url: string;
@@ -42,6 +43,7 @@ export interface NewsItemDetail {
   id: string;
   sourceId: string;
   sourceName: string;
+  categoryName: string | null;
   externalId: string;
   title: string;
   summary: string | null;

@@ -116,6 +116,36 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  news-categorizer:
+    build:
+      context: .
+      dockerfile: Dockerfile.news-categorizer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;
+        Port=5432;
+        Database=${POSTGRES_DB:-news_collector};
+        Username=${POSTGRES_USER:-news};
+        Password=${POSTGRES_PASSWORD:-news}
+      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      Ollama__Model: ${OLLAMA_MODEL:-llama3.2}
+      Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-1800}
+      NewsCategorizer__PollingIntervalSeconds: ${NEWS_CATEGORIZER_INTERVAL_SECONDS:-60}
+      NewsCategorizer__BatchSize: ${NEWS_CATEGORIZER_BATCH_SIZE:-10}
+      NewsCategorizer__DelayBetweenItemsMs: ${NEWS_CATEGORIZER_DELAY_MS:-200}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   ollama:
     image: ollama/ollama:latest
     restart: unless-stopped

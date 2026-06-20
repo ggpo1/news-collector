@@ -52,6 +52,11 @@ public class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
 
         builder.HasIndex(n => n.FetchedAt);
 
+        builder.HasIndex(n => n.CategoryId);
+
+        builder.HasIndex(n => n.FetchedAt)
+            .HasFilter("\"CategoryId\" IS NULL");
+
         builder.HasIndex(n => n.ContentFetchedAt)
             .HasFilter("\"Content\" IS NULL");
 
@@ -59,5 +64,10 @@ public class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
             .WithMany(s => s.NewsItems)
             .HasForeignKey(n => n.SourceId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(n => n.Category)
+            .WithMany(c => c.NewsItems)
+            .HasForeignKey(n => n.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

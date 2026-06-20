@@ -51,6 +51,7 @@ public sealed class NewsQueryService : INewsQueryService
                 n.Id,
                 n.SourceId,
                 n.Source.Name,
+                n.Category != null ? n.Category.Name : null,
                 n.Title,
                 n.Summary,
                 n.Url,
@@ -72,6 +73,7 @@ public sealed class NewsQueryService : INewsQueryService
                 n.Id,
                 n.SourceId,
                 n.Source.Name,
+                n.Category != null ? n.Category.Name : null,
                 n.ExternalId,
                 n.Title,
                 n.Summary,
@@ -92,7 +94,9 @@ public sealed class NewsQueryService : INewsQueryService
         var links = await _db.NewsLinks
             .AsNoTracking()
             .Include(l => l.NewsLow).ThenInclude(n => n.Source)
+            .Include(l => l.NewsLow).ThenInclude(n => n.Category)
             .Include(l => l.NewsHigh).ThenInclude(n => n.Source)
+            .Include(l => l.NewsHigh).ThenInclude(n => n.Category)
             .Where(l => l.NewsIdLow == newsId || l.NewsIdHigh == newsId)
             .ToListAsync(cancellationToken);
 
@@ -109,6 +113,7 @@ public sealed class NewsQueryService : INewsQueryService
                         related.Id,
                         related.SourceId,
                         related.Source.Name,
+                        related.Category?.Name,
                         related.Title,
                         related.Summary,
                         related.Url,
