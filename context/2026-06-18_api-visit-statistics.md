@@ -15,8 +15,9 @@
 | DurationMs | int | длительность обработки |
 | VisitorFingerprint | varchar(64) | SHA-256 отпечаток посетителя |
 | UserAgent | varchar(512)? | UA (обрезанный) |
+| UserId | uuid? | FK → `users`, пользователь из JWT (NULL для анонимных запросов) |
 
-Индексы: `RequestedAt`, `(VisitorFingerprint, RequestedAt)`, `(Path, RequestedAt)`.
+Индексы: `RequestedAt`, `(VisitorFingerprint, RequestedAt)`, `(Path, RequestedAt)`, `(UserId, RequestedAt)`.
 
 ## Отпечаток посетителя
 1. **С фронта** — заголовок `X-Visitor-Id` (UUID в `localStorage`), хеш `sha256("cid:{uuid}")`. Стабилен для браузера, даже за NAT.

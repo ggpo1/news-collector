@@ -38,5 +38,12 @@ public class ApiVisitConfiguration : IEntityTypeConfiguration<ApiVisit>
         builder.HasIndex(v => new { v.VisitorFingerprint, v.RequestedAt });
 
         builder.HasIndex(v => new { v.Path, v.RequestedAt });
+
+        builder.HasIndex(v => new { v.UserId, v.RequestedAt });
+
+        builder.HasOne(v => v.User)
+            .WithMany()
+            .HasForeignKey(v => v.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

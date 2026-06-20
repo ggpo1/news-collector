@@ -22,4 +22,8 @@ public class ApiVisit
     public required string VisitorFingerprint { get; set; }
 
     public string? UserAgent { get; set; }
+
+    public Guid? UserId { get; set; }
+
+    public User? User { get; set; }
 }

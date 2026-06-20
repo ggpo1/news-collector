@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -52,7 +53,8 @@ public sealed class ApiVisitTrackingMiddleware
                     context.Response.StatusCode,
                     (int)stopwatch.ElapsedMilliseconds,
                     VisitorFingerprintBuilder.Build(context),
-                    VisitorFingerprintBuilder.GetTruncatedUserAgent(context)),
+                    VisitorFingerprintBuilder.GetTruncatedUserAgent(context),
+                    ResolveUserId(context)),
                 CancellationToken.None);
         }
         catch (Exception ex)
@@ -66,6 +68,12 @@ public sealed class ApiVisitTrackingMiddleware
         var value = path.Value;
         return value is not null
             && value.StartsWith("/api/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static Guid? ResolveUserId(HttpContext context)
+    {
+        var value = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(value, out var id) ? id : null;
     }
 
     private static string? Truncate(string? value, int maxLength)

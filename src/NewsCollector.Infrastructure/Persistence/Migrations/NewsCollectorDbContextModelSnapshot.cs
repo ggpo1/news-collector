@@ -55,6 +55,9 @@ namespace NewsCollector.Infrastructure.Persistence.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("VisitorFingerprint")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -64,7 +67,11 @@ namespace NewsCollector.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("RequestedAt");
 
+                    b.HasIndex("UserId");
+
                     b.HasIndex("Path", "RequestedAt");
+
+                    b.HasIndex("UserId", "RequestedAt");
 
                     b.HasIndex("VisitorFingerprint", "RequestedAt");
 
@@ -370,6 +377,16 @@ namespace NewsCollector.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("NewsCollector.Domain.Entities.ApiVisit", b =>
+                {
+                    b.HasOne("NewsCollector.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("NewsCollector.Domain.Entities.InvitationCode", b =>

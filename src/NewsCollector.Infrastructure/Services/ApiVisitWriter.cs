@@ -26,7 +26,8 @@ public sealed class ApiVisitWriter : IApiVisitWriter
             StatusCode = entry.StatusCode,
             DurationMs = entry.DurationMs,
             VisitorFingerprint = entry.VisitorFingerprint,
-            UserAgent = entry.UserAgent
+            UserAgent = entry.UserAgent,
+            UserId = entry.UserId
         });
 
         await _db.SaveChangesAsync(cancellationToken);

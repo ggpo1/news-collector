@@ -8,4 +8,5 @@ public sealed record ApiVisitEntry(
     int StatusCode,
     int DurationMs,
     string VisitorFingerprint,
-    string? UserAgent);
+    string? UserAgent,
+    Guid? UserId);
