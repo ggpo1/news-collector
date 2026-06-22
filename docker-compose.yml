@@ -156,6 +156,7 @@ services:
       OLLAMA_KEEP_ALIVE: 30m
     volumes:
       - ollama_data:/root/.ollama
+    gpus: all
     logging:
       driver: json-file
       options:
