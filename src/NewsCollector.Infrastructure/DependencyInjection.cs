@@ -82,6 +82,16 @@ public static class DependencyInjection
         return services;
     }
 
+    public static IServiceCollection AddNewsToneAnalysis(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<NewsToneAnalyzerOptions>(configuration.GetSection(NewsToneAnalyzerOptions.SectionName));
+        services.AddAiRewrite(configuration);
+        services.AddScoped<INewsToneAnalysisService, NewsToneAnalysisService>();
+        return services;
+    }
+
     public static IServiceCollection AddAiRewrite(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<OllamaOptions>(configuration.GetSection(OllamaOptions.SectionName));

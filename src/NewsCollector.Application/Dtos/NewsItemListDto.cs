@@ -5,6 +5,7 @@ public sealed record NewsItemListDto(
     Guid SourceId,
     string SourceName,
     string? CategoryName,
+    decimal? ToneCoefficient,
     string Title,
     string? Summary,
     string Url,

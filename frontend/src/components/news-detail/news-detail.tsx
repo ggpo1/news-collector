@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { enrichNewsContent, getNewsById, getRelatedNews } from '../../api/client';
 import { formatConfidence, LINK_METHOD_LABELS, LINK_TYPE_LABELS } from '../../api/link-labels';
+import { formatToneCoefficient } from '../../api/tone';
 import type { NewsItemDetail, RelatedNews } from '../../api/types';
 import { NewsRewriteEditor } from '../news-rewrite-editor/news-rewrite-editor';
 import { EmptyState } from '../ui/empty-state';
@@ -162,6 +163,13 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
             <S.CategoryBadge>{item.categoryName}</S.CategoryBadge>
           ) : (
             <S.CategoryBadge $muted>без категории</S.CategoryBadge>
+          )}
+          {formatToneCoefficient(item.toneCoefficient) ? (
+            <S.ToneBadge $value={item.toneCoefficient}>
+              тон {formatToneCoefficient(item.toneCoefficient)}
+            </S.ToneBadge>
+          ) : (
+            <S.ToneBadge $muted>тон —</S.ToneBadge>
           )}
           <time dateTime={item.publishedAt ?? undefined}>{formatDate(item.publishedAt)}</time>
         </S.Meta>

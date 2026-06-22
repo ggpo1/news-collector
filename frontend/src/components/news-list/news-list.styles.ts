@@ -93,6 +93,34 @@ export const CategoryBadge = styled.span<{ $muted?: boolean }>`
   font-weight: 600;
 `;
 
+function toneColor(value: number | null | undefined, theme: { colors: { danger: string; textMuted: string; accent: string } }) {
+  if (value === null || value === undefined) {
+    return theme.colors.textMuted;
+  }
+
+  if (value <= -0.2) {
+    return theme.colors.danger;
+  }
+
+  if (value >= 0.2) {
+    return theme.colors.accent;
+  }
+
+  return theme.colors.textMuted;
+}
+
+export const ToneBadge = styled.span<{ $value?: number | null; $muted?: boolean }>`
+  padding: 0.12rem 0.5rem;
+  border-radius: ${({ theme }) => theme.radii.pill};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme, $value, $muted }) =>
+    $muted ? theme.colors.textFaint : toneColor($value, theme)};
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+`;
+
 export const Title = styled.h2`
   margin: 0.45rem 0 0;
   font-size: 1rem;

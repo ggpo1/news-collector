@@ -1,4 +1,5 @@
 import type { NewsItemList } from '../../api/types';
+import { formatToneCoefficient } from '../../api/tone';
 import { EmptyState } from '../ui/empty-state';
 import { LoadingState } from '../ui/loading-state';
 import * as S from './news-list.styles';
@@ -51,6 +52,13 @@ export function NewsList({ items, loading, error, selectedId, onSelect }: NewsLi
                   <S.CategoryBadge>{item.categoryName}</S.CategoryBadge>
                 ) : (
                   <S.CategoryBadge $muted>без категории</S.CategoryBadge>
+                )}
+                {formatToneCoefficient(item.toneCoefficient) ? (
+                  <S.ToneBadge $value={item.toneCoefficient}>
+                    тон {formatToneCoefficient(item.toneCoefficient)}
+                  </S.ToneBadge>
+                ) : (
+                  <S.ToneBadge $muted>тон —</S.ToneBadge>
                 )}
                 {item.hasContent && <S.Badge>полный текст</S.Badge>}
               </S.Meta>

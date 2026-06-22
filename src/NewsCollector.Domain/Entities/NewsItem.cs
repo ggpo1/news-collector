@@ -30,6 +30,13 @@ public class NewsItem
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>
+    /// Sentiment tone from -1 (negative) to +1 (positive). Null until analyzed.
+    /// </summary>
+    public decimal? ToneCoefficient { get; set; }
+
+    public DateTimeOffset? ToneAnalyzedAt { get; set; }
+
     public Source Source { get; set; } = null!;
 
     public Category? Category { get; set; }

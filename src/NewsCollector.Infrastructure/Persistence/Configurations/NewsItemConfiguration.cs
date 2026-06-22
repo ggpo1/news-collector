@@ -42,6 +42,12 @@ public class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
         builder.Property(n => n.CreatedAt)
             .IsRequired();
 
+        builder.Property(n => n.ToneCoefficient)
+            .HasPrecision(4, 3);
+
+        builder.HasIndex(n => n.FetchedAt)
+            .HasFilter("\"ToneCoefficient\" IS NULL");
+
         builder.HasIndex(n => new { n.SourceId, n.ExternalId })
             .IsUnique();
 
