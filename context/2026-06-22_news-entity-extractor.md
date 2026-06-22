@@ -42,4 +42,7 @@ SELECT COUNT(*) FROM news WHERE "EntitiesExtractedAt" IS NOT NULL;
 ```
 
 ## Следующий шаг (frontend)
-Страница с force-directed graph (D3 / vis-network) на данных `/api/entities/graph` с фильтром по периоду и типу.
+Страница **Карта** (`/map`) — force-directed граф на canvas:
+- фильтры: период (1/7/30 дней), тип сущности, мин. вес связи
+- zoom/pan, клик по узлу → панель соседей
+- API: `GET /api/entities/graph`

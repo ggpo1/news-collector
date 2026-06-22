@@ -7,6 +7,7 @@ export const PATHS = {
   news: '/news',
   links: '/links',
   rewrites: '/rewrites',
+  map: '/map',
   sources: '/sources',
   users: '/users',
 } as const;
@@ -15,6 +16,7 @@ export const SECTION_PATHS: Record<AppSection, string> = {
   news: PATHS.news,
   links: PATHS.links,
   rewrites: PATHS.rewrites,
+  map: PATHS.map,
   sources: PATHS.sources,
   users: PATHS.users,
 };

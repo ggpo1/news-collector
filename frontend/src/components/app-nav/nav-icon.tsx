@@ -56,6 +56,20 @@ export function NavIcon({ section }: NavIconProps) {
           />
         </svg>
       );
+    case 'map':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="6.5" cy="17.5" r="2.25" fill="none" stroke="currentColor" strokeWidth="1.75" />
+          <circle cx="17.5" cy="6.5" r="2.25" fill="none" stroke="currentColor" strokeWidth="1.75" />
+          <circle cx="12" cy="12" r="2.25" fill="none" stroke="currentColor" strokeWidth="1.75" />
+          <path
+            d="M8.4 15.8 10.2 13.4M13.8 10.6l1.8-2.4M8.7 16.1l3.3-1.1M13.3 7.9l3.3-1.1"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
     case 'sources':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">

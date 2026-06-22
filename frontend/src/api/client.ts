@@ -25,6 +25,7 @@ import type {
   UpdateUserPayload,
   UserAccount,
 } from './types';
+import type { EntityGraph, NamedEntityDetail } from './entities';
 import { getVisitorId } from './visitor-id';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
@@ -322,4 +323,55 @@ export function updateNewsRewrite(id: string, payload: UpdateNewsRewritePayload)
 
 export function deleteNewsRewrite(id: string): Promise<void> {
   return requestVoid(`/api/news-rewrites/${id}`, { method: 'DELETE' });
+}
+
+export function getEntityGraph(params: {
+  from?: string;
+  to?: string;
+  type?: string;
+  minWeight?: number;
+  maxNodes?: number;
+}): Promise<EntityGraph> {
+  const search = new URLSearchParams();
+
+  if (params.from) {
+    search.set('from', params.from);
+  }
+
+  if (params.to) {
+    search.set('to', params.to);
+  }
+
+  if (params.type) {
+    search.set('type', params.type);
+  }
+
+  if (params.minWeight !== undefined) {
+    search.set('minWeight', String(params.minWeight));
+  }
+
+  if (params.maxNodes !== undefined) {
+    search.set('maxNodes', String(params.maxNodes));
+  }
+
+  const query = search.toString();
+  return request<EntityGraph>(query ? `/api/entities/graph?${query}` : '/api/entities/graph');
+}
+
+export function getEntityDetail(
+  id: string,
+  params?: { from?: string; to?: string },
+): Promise<NamedEntityDetail> {
+  const search = new URLSearchParams();
+
+  if (params?.from) {
+    search.set('from', params.from);
+  }
+
+  if (params?.to) {
+    search.set('to', params.to);
+  }
+
+  const query = search.toString();
+  return request<NamedEntityDetail>(query ? `/api/entities/${id}?${query}` : `/api/entities/${id}`);
 }

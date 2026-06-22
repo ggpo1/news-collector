@@ -4,6 +4,7 @@ import { LoginPage } from '../components/login-page/login-page';
 import { RegisterDetailsPage } from '../components/login-page/register-details-page';
 import { RegisterPage } from '../components/login-page/register-page';
 import { UsersView } from '../components/users-view/users-view';
+import { EntityMapPage } from '../pages/entity-map-page';
 import { NewsPage } from '../pages/news-page';
 import { RewritesPage } from '../pages/rewrites-page';
 import { SourcesPage } from '../pages/sources-page';
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="news" element={<NewsPage />} />
         <Route path="links" element={<NewsLinksView />} />
         <Route path="rewrites" element={<RewritesPage />} />
+        <Route path="map" element={<EntityMapPage />} />
         <Route
           path="sources"
           element={
