@@ -182,6 +182,34 @@ export const RewriteButton = styled.button`
   }
 `;
 
+export const SecondDayButton = styled(RewriteButton)`
+  border-color: color-mix(in srgb, ${({ theme }) => theme.colors.success} 45%, ${({ theme }) => theme.colors.border});
+  color: ${({ theme }) => theme.colors.success};
+
+  &:hover:not(:disabled) {
+    border-color: ${({ theme }) => theme.colors.success};
+    color: ${({ theme }) => theme.colors.success};
+    background: color-mix(in srgb, ${({ theme }) => theme.colors.success} 10%, transparent);
+  }
+`;
+
+export const AnglesSection = styled.section`
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+`;
+
+export const AnglesTitle = styled.h3`
+  margin: 0 0 0.85rem;
+  font-size: 0.95rem;
+`;
+
+export const AnglesError = styled.p`
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.danger};
+`;
+
 export const FetchError = styled.p`
   margin: 0.75rem 0 0;
   font-size: 0.85rem;

@@ -116,6 +116,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IAiNewsRewriteService, OllamaAiNewsRewriteService>();
+        services.AddScoped<ISecondDayAngleService, SecondDayAngleService>();
         return services;
     }
 

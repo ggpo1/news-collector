@@ -204,3 +204,45 @@ export interface AiNewsRewriteResult {
   summary: string | null;
   content: string;
 }
+
+export interface SecondDayAngles {
+  newsId: string;
+  newsTitle: string;
+  historicalParallels: HistoricalParallel[];
+  stakeholders: StakeholderAngle[];
+  numberContradictions: NumberContradiction[];
+  suggestedAngles: SuggestedAngle[];
+}
+
+export interface HistoricalParallel {
+  newsId: string;
+  title: string;
+  sourceName: string;
+  publishedAt: string | null;
+  parallelSummary: string;
+  structuralSimilarity: string;
+}
+
+export interface StakeholderAngle {
+  name: string;
+  entityType: string;
+  role: string;
+  reason: string;
+}
+
+export interface NumberContradiction {
+  metric: string;
+  values: SourceValue[];
+  factCheckAngle: string;
+}
+
+export interface SourceValue {
+  sourceName: string;
+  value: string;
+}
+
+export interface SuggestedAngle {
+  title: string;
+  rationale: string;
+  angleType: string;
+}

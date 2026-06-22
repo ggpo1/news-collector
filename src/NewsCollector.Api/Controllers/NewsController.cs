@@ -16,15 +16,18 @@ public sealed class NewsController : ControllerBase
     private readonly INewsQueryService _newsQueryService;
     private readonly IArticleContentEnrichmentService _contentEnrichmentService;
     private readonly IAiNewsRewriteService _aiNewsRewriteService;
+    private readonly ISecondDayAngleService _secondDayAngleService;
 
     public NewsController(
         INewsQueryService newsQueryService,
         IArticleContentEnrichmentService contentEnrichmentService,
-        IAiNewsRewriteService aiNewsRewriteService)
+        IAiNewsRewriteService aiNewsRewriteService,
+        ISecondDayAngleService secondDayAngleService)
     {
         _newsQueryService = newsQueryService;
         _contentEnrichmentService = contentEnrichmentService;
         _aiNewsRewriteService = aiNewsRewriteService;
+        _secondDayAngleService = secondDayAngleService;
     }
 
     [HttpGet]
@@ -100,6 +103,24 @@ public sealed class NewsController : ControllerBase
         try
         {
             var result = await _aiNewsRewriteService.RewriteAsync(id, cancellationToken);
+            return result is null ? NotFound() : Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("{id:guid}/second-day-angles")]
+    [RequestTimeout("AiRewrite")]
+    [ProducesResponseType(typeof(SecondDayAnglesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GenerateSecondDayAngles(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _secondDayAngleService.GenerateAsync(id, cancellationToken);
             return result is null ? NotFound() : Ok(result);
         }
         catch (InvalidOperationException ex)

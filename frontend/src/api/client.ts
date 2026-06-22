@@ -19,6 +19,7 @@ import type {
   NewsRewrite,
   PagedResult,
   RelatedNews,
+  SecondDayAngles,
   Source,
   UpdateNewsRewritePayload,
   UpdateSourcePayload,
@@ -263,6 +264,12 @@ export function enrichNewsContent(id: string): Promise<ArticleEnrichmentResult> 
 
 export function aiRewriteNews(id: string): Promise<AiNewsRewriteResult> {
   return request<AiNewsRewriteResult>(`/api/news/${id}/ai-rewrite`, {
+    method: 'POST',
+  });
+}
+
+export function generateSecondDayAngles(id: string): Promise<SecondDayAngles> {
+  return request<SecondDayAngles>(`/api/news/${id}/second-day-angles`, {
     method: 'POST',
   });
 }

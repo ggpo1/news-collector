@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { enrichNewsContent, getNewsById, getRelatedNews } from '../../api/client';
+import { enrichNewsContent, generateSecondDayAngles, getNewsById, getRelatedNews } from '../../api/client';
 import { formatConfidence, LINK_METHOD_LABELS, LINK_TYPE_LABELS } from '../../api/link-labels';
 import { formatToneCoefficient } from '../../api/tone';
-import type { NewsItemDetail, RelatedNews } from '../../api/types';
+import type { NewsItemDetail, RelatedNews, SecondDayAngles } from '../../api/types';
 import { NewsRewriteEditor } from '../news-rewrite-editor/news-rewrite-editor';
+import { SecondDayAnglesPanel } from '../second-day-angles/second-day-angles-panel';
 import { EmptyState } from '../ui/empty-state';
 import { LoadingState } from '../ui/loading-state';
 import * as S from './news-detail.styles';
@@ -33,6 +34,9 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
   const [related, setRelated] = useState<RelatedNews[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [anglesLoading, setAnglesLoading] = useState(false);
+  const [anglesError, setAnglesError] = useState<string | null>(null);
+  const [angles, setAngles] = useState<SecondDayAngles | null>(null);
 
   const loadItem = useCallback(async (id: string) => {
     setLoading(true);
@@ -56,6 +60,8 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
       setEnrichError(null);
       setRelated([]);
       setEditorOpen(false);
+      setAngles(null);
+      setAnglesError(null);
       return;
     }
 
@@ -120,6 +126,25 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
       setEnrichError(err instanceof Error ? err.message : 'Не удалось загрузить полный текст');
     } finally {
       setEnriching(false);
+    }
+  };
+
+  const handleGenerateAngles = async () => {
+    if (!newsId) {
+      return;
+    }
+
+    setAnglesLoading(true);
+    setAnglesError(null);
+
+    try {
+      const result = await generateSecondDayAngles(newsId);
+      setAngles(result);
+    } catch (err) {
+      setAngles(null);
+      setAnglesError(err instanceof Error ? err.message : 'Не удалось сгенерировать углы');
+    } finally {
+      setAnglesLoading(false);
     }
   };
 
@@ -195,10 +220,26 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
         <S.RewriteButton type="button" onClick={() => setEditorOpen(true)}>
           Переписать
         </S.RewriteButton>
+        <S.SecondDayButton
+          type="button"
+          disabled={anglesLoading}
+          onClick={() => void handleGenerateAngles()}
+        >
+          {anglesLoading ? 'Анализируем углы…' : 'Углы на 2-й день'}
+        </S.SecondDayButton>
         <S.ExternalLink href={item.url} target="_blank" rel="noreferrer">
           Открыть оригинал →
         </S.ExternalLink>
       </S.Actions>
+
+      {(angles || anglesError || anglesLoading) && (
+        <S.AnglesSection>
+          <S.AnglesTitle>Генератор «второго дня»</S.AnglesTitle>
+          {anglesError && <S.AnglesError>{anglesError}</S.AnglesError>}
+          {anglesLoading && <LoadingState label="Собираем параллели, игроков и противоречия…" />}
+          {angles && !anglesLoading ? <SecondDayAnglesPanel data={angles} /> : null}
+        </S.AnglesSection>
+      )}
 
       <S.RelatedSection>
         <S.RelatedTitle>Связанные новости</S.RelatedTitle>
