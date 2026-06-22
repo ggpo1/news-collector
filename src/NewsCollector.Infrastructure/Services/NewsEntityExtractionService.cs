@@ -65,6 +65,7 @@ public sealed class NewsEntityExtractionService : INewsEntityExtractionService
 
         var processedCount = 0;
         var extractedAt = DateTimeOffset.UtcNow;
+        var entityCache = new Dictionary<string, NamedEntity>(StringComparer.Ordinal);
 
         foreach (var item in pendingItems)
         {
@@ -74,7 +75,7 @@ public sealed class NewsEntityExtractionService : INewsEntityExtractionService
             {
                 var rawResponse = await ChatAsync(item.Id, BuildUserMessage(item), cancellationToken);
                 var extracted = OllamaEntityResponseParser.ParseEntities(rawResponse, _options.MaxEntitiesPerNews);
-                await PersistMentionsAsync(item, extracted, extractedAt, cancellationToken);
+                await PersistMentionsAsync(item, extracted, extractedAt, entityCache, cancellationToken);
                 item.EntitiesExtractedAt = extractedAt;
                 processedCount++;
 
@@ -112,6 +113,7 @@ public sealed class NewsEntityExtractionService : INewsEntityExtractionService
         NewsItem item,
         IReadOnlyList<ExtractedEntity> extracted,
         DateTimeOffset extractedAt,
+        Dictionary<string, NamedEntity> entityCache,
         CancellationToken cancellationToken)
     {
         if (extracted.Count == 0)
@@ -121,16 +123,29 @@ public sealed class NewsEntityExtractionService : INewsEntityExtractionService
 
         var normalizedKeys = extracted
             .Select(entity => EntityNormalization.CreateNormalizedKey(entity.Name, entity.Type))
+            .Distinct()
             .ToList();
 
-        var existingEntities = await _db.NamedEntities
-            .Where(entity => normalizedKeys.Contains(entity.NormalizedKey))
-            .ToDictionaryAsync(entity => entity.NormalizedKey, cancellationToken);
+        var missingKeys = normalizedKeys
+            .Where(key => !entityCache.ContainsKey(key))
+            .ToList();
+
+        if (missingKeys.Count > 0)
+        {
+            var entitiesFromDb = await _db.NamedEntities
+                .Where(entity => missingKeys.Contains(entity.NormalizedKey))
+                .ToListAsync(cancellationToken);
+
+            foreach (var entity in entitiesFromDb)
+            {
+                entityCache[entity.NormalizedKey] = entity;
+            }
+        }
 
         foreach (var entity in extracted)
         {
             var normalizedKey = EntityNormalization.CreateNormalizedKey(entity.Name, entity.Type);
-            if (!existingEntities.TryGetValue(normalizedKey, out var namedEntity))
+            if (!entityCache.TryGetValue(normalizedKey, out var namedEntity))
             {
                 namedEntity = new NamedEntity
                 {
@@ -143,7 +158,7 @@ public sealed class NewsEntityExtractionService : INewsEntityExtractionService
                 };
 
                 _db.NamedEntities.Add(namedEntity);
-                existingEntities[normalizedKey] = namedEntity;
+                entityCache[normalizedKey] = namedEntity;
             }
             else if (!string.Equals(namedEntity.Name, entity.Name, StringComparison.Ordinal))
             {
