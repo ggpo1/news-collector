@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { mediaUp } from '../../styles/media';
+import { mediaUp } from '../styles/media';
 
 export const FiltersRow = styled.div`
   display: flex;
