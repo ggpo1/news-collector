@@ -22,6 +22,10 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<NewsRewrite> NewsRewrites => Set<NewsRewrite>();
 
+    public DbSet<NamedEntity> NamedEntities => Set<NamedEntity>();
+
+    public DbSet<NewsEntityMention> NewsEntityMentions => Set<NewsEntityMention>();
+
     public DbSet<User> Users => Set<User>();
 
     public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();

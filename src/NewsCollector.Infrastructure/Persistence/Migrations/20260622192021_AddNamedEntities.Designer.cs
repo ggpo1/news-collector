@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NewsCollector.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NewsCollector.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(NewsCollectorDbContext))]
-    partial class NewsCollectorDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260622192021_AddNamedEntities")]
+    partial class AddNamedEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -394,18 +397,7 @@ namespace NewsCollector.Infrastructure.Persistence.Migrations
                     b.HasIndex("ContentFetchedAt")
                         .HasFilter("\"Content\" IS NULL");
 
-                    b.HasIndex("FetchedAt");
-
                     b.HasIndex("FetchedAt")
-                        .HasDatabaseName("IX_news_FetchedAt_TonePending")
-                        .HasFilter("\"ToneCoefficient\" IS NULL");
-
-                    b.HasIndex("FetchedAt")
-                        .HasDatabaseName("IX_news_FetchedAt_CategoryPending")
-                        .HasFilter("\"CategoryId\" IS NULL");
-
-                    b.HasIndex("FetchedAt")
-                        .HasDatabaseName("IX_news_FetchedAt_EntitiesPending")
                         .HasFilter("\"EntitiesExtractedAt\" IS NULL");
 
                     b.HasIndex("SourceId", "ExternalId")

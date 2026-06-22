@@ -46,6 +46,7 @@ public class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
             .HasPrecision(4, 3);
 
         builder.HasIndex(n => n.FetchedAt)
+            .HasDatabaseName("IX_news_FetchedAt_TonePending")
             .HasFilter("\"ToneCoefficient\" IS NULL");
 
         builder.HasIndex(n => new { n.SourceId, n.ExternalId })
@@ -61,7 +62,12 @@ public class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
         builder.HasIndex(n => n.CategoryId);
 
         builder.HasIndex(n => n.FetchedAt)
+            .HasDatabaseName("IX_news_FetchedAt_CategoryPending")
             .HasFilter("\"CategoryId\" IS NULL");
+
+        builder.HasIndex(n => n.FetchedAt)
+            .HasDatabaseName("IX_news_FetchedAt_EntitiesPending")
+            .HasFilter("\"EntitiesExtractedAt\" IS NULL");
 
         builder.HasIndex(n => n.ContentFetchedAt)
             .HasFilter("\"Content\" IS NULL");

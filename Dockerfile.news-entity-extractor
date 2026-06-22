@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY ["src/NewsCollector.Application/NewsCollector.Application.csproj", "NewsCollector.Application/"]
+COPY ["src/NewsCollector.NewsEntityExtractor/NewsCollector.NewsEntityExtractor.csproj", "NewsCollector.NewsEntityExtractor/"]
+COPY ["src/NewsCollector.Infrastructure/NewsCollector.Infrastructure.csproj", "NewsCollector.Infrastructure/"]
+COPY ["src/NewsCollector.Domain/NewsCollector.Domain.csproj", "NewsCollector.Domain/"]
+
+RUN dotnet restore "NewsCollector.NewsEntityExtractor/NewsCollector.NewsEntityExtractor.csproj"
+
+COPY src/ .
+WORKDIR /src/NewsCollector.NewsEntityExtractor
+RUN dotnet publish "NewsCollector.NewsEntityExtractor.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
+WORKDIR /app
+
+RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+USER appuser
+
+COPY --from=build /app/publish .
+
+ENTRYPOINT ["dotnet", "NewsCollector.NewsEntityExtractor.dll"]

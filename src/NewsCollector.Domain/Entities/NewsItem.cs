@@ -37,6 +37,8 @@ public class NewsItem
 
     public DateTimeOffset? ToneAnalyzedAt { get; set; }
 
+    public DateTimeOffset? EntitiesExtractedAt { get; set; }
+
     public Source Source { get; set; } = null!;
 
     public Category? Category { get; set; }
@@ -46,4 +48,6 @@ public class NewsItem
     public ICollection<NewsLink> LinksAsHigh { get; set; } = [];
 
     public ICollection<NewsRewrite> Rewrites { get; set; } = [];
+
+    public ICollection<NewsEntityMention> EntityMentions { get; set; } = [];
 }

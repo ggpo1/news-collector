@@ -124,7 +124,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      ollama:
+      ollama-categorizer:
         condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
@@ -135,9 +135,9 @@ services:
         Database=${POSTGRES_DB:-news_collector};
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
-      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      Ollama__Model: ${OLLAMA_MODEL:-llama3.2}
-      Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-1800}
+      Ollama__BaseUrl: ${OLLAMA_CATEGORIZER_BASE_URL:-http://ollama-categorizer:11434}
+      Ollama__Model: ${OLLAMA_CATEGORIZER_MODEL:-llama3.2:3b}
+      Ollama__TimeoutSeconds: ${OLLAMA_CATEGORIZER_TIMEOUT_SECONDS:-600}
       NewsCategorizer__PollingIntervalSeconds: ${NEWS_CATEGORIZER_INTERVAL_SECONDS:-60}
       NewsCategorizer__BatchSize: ${NEWS_CATEGORIZER_BATCH_SIZE:-10}
       NewsCategorizer__DelayBetweenItemsMs: ${NEWS_CATEGORIZER_DELAY_MS:-200}
@@ -155,7 +155,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      ollama:
+      ollama-tone:
         condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
@@ -166,12 +166,44 @@ services:
         Database=${POSTGRES_DB:-news_collector};
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
-      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      Ollama__Model: ${OLLAMA_MODEL:-llama3.2}
-      Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-1800}
+      Ollama__BaseUrl: ${OLLAMA_TONE_BASE_URL:-http://ollama-tone:11434}
+      Ollama__Model: ${OLLAMA_TONE_MODEL:-llama3.2:3b}
+      Ollama__TimeoutSeconds: ${OLLAMA_TONE_TIMEOUT_SECONDS:-600}
       NewsToneAnalyzer__PollingIntervalSeconds: ${NEWS_TONE_ANALYZER_INTERVAL_SECONDS:-60}
       NewsToneAnalyzer__BatchSize: ${NEWS_TONE_ANALYZER_BATCH_SIZE:-10}
       NewsToneAnalyzer__DelayBetweenItemsMs: ${NEWS_TONE_ANALYZER_DELAY_MS:-200}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  news-entity-extractor:
+    build:
+      context: .
+      dockerfile: Dockerfile.news-entity-extractor
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama-ner:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      RunMigrations: ${RUN_MIGRATIONS:-true}
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;
+        Port=5432;
+        Database=${POSTGRES_DB:-news_collector};
+        Username=${POSTGRES_USER:-news};
+        Password=${POSTGRES_PASSWORD:-news}
+      Ollama__BaseUrl: ${OLLAMA_NER_BASE_URL:-http://ollama-ner:11434}
+      Ollama__Model: ${OLLAMA_NER_MODEL:-llama3.2:3b}
+      Ollama__TimeoutSeconds: ${OLLAMA_NER_TIMEOUT_SECONDS:-600}
+      NewsEntityExtractor__PollingIntervalSeconds: ${NEWS_ENTITY_EXTRACTOR_INTERVAL_SECONDS:-60}
+      NewsEntityExtractor__BatchSize: ${NEWS_ENTITY_EXTRACTOR_BATCH_SIZE:-5}
+      NewsEntityExtractor__DelayBetweenItemsMs: ${NEWS_ENTITY_EXTRACTOR_DELAY_MS:-500}
+      NewsEntityExtractor__MaxEntitiesPerNews: ${NEWS_ENTITY_EXTRACTOR_MAX_ENTITIES:-20}
     logging:
       driver: json-file
       options:
@@ -194,6 +226,102 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  ollama-ner:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_NER_PORT:-11436}:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
+    volumes:
+      - ollama_ner_data:/root/.ollama
+    gpus: all
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  ollama-ner-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama-ner:
+        condition: service_started
+    environment:
+      OLLAMA_HOST: http://ollama-ner:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      until ollama pull ${OLLAMA_NER_MODEL:-llama3.2:3b}; do
+        echo "Waiting for ollama-ner and pulling ${OLLAMA_NER_MODEL:-llama3.2:3b}...";
+        sleep 5;
+      done
+    restart: "no"
+
+  ollama-categorizer:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_CATEGORIZER_PORT:-11437}:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
+    volumes:
+      - ollama_categorizer_data:/root/.ollama
+    gpus: all
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  ollama-categorizer-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama-categorizer:
+        condition: service_started
+    environment:
+      OLLAMA_HOST: http://ollama-categorizer:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      until ollama pull ${OLLAMA_CATEGORIZER_MODEL:-llama3.2:3b}; do
+        echo "Waiting for ollama-categorizer and pulling ${OLLAMA_CATEGORIZER_MODEL:-llama3.2:3b}...";
+        sleep 5;
+      done
+    restart: "no"
+
+  ollama-tone:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_TONE_PORT:-11438}:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
+    volumes:
+      - ollama_tone_data:/root/.ollama
+    gpus: all
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  ollama-tone-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama-tone:
+        condition: service_started
+    environment:
+      OLLAMA_HOST: http://ollama-tone:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      until ollama pull ${OLLAMA_TONE_MODEL:-llama3.2:3b}; do
+        echo "Waiting for ollama-tone and pulling ${OLLAMA_TONE_MODEL:-llama3.2:3b}...";
+        sleep 5;
+      done
+    restart: "no"
+
 volumes:
   postgres_data:
   ollama_data:
+  ollama_ner_data:
+  ollama_categorizer_data:
+  ollama_tone_data:

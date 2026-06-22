@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<INewsLinkQueryService, NewsLinkQueryService>();
         services.AddScoped<INewsRewriteService, NewsRewriteService>();
         services.AddScoped<ICategoryQueryService, CategoryQueryService>();
+        services.AddScoped<INewsEntityGraphQueryService, NewsEntityGraphQueryService>();
         services.AddScoped<IApiVisitWriter, ApiVisitWriter>();
 
         services.AddSingleton<PasswordHasherService>();
@@ -89,6 +90,16 @@ public static class DependencyInjection
         services.Configure<NewsToneAnalyzerOptions>(configuration.GetSection(NewsToneAnalyzerOptions.SectionName));
         services.AddAiRewrite(configuration);
         services.AddScoped<INewsToneAnalysisService, NewsToneAnalysisService>();
+        return services;
+    }
+
+    public static IServiceCollection AddNewsEntityExtraction(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<NewsEntityExtractorOptions>(configuration.GetSection(NewsEntityExtractorOptions.SectionName));
+        services.AddAiRewrite(configuration);
+        services.AddScoped<INewsEntityExtractionService, NewsEntityExtractionService>();
         return services;
     }
 
