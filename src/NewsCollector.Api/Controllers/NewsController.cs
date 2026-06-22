@@ -34,6 +34,8 @@ public sealed class NewsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] Guid? sourceId = null,
+        [FromQuery] Guid? categoryId = null,
+        [FromQuery] bool? uncategorized = null,
         [FromQuery] bool? hasContent = null,
         CancellationToken cancellationToken = default)
     {
@@ -47,10 +49,17 @@ public sealed class NewsController : ControllerBase
             return BadRequest(new { error = $"pageSize must be between 1 and {MaxPageSize}" });
         }
 
+        if (categoryId.HasValue && uncategorized == true)
+        {
+            return BadRequest(new { error = "Use either categoryId or uncategorized, not both" });
+        }
+
         var result = await _newsQueryService.GetPagedAsync(
             page,
             pageSize,
             sourceId,
+            categoryId,
+            uncategorized,
             hasContent,
             cancellationToken);
 

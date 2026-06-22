@@ -5,7 +5,7 @@ interface SourceSelectProps {
   sources: Source[];
   value: string | null;
   loading: boolean;
-  onChange: (sourceId: string) => void;
+  onChange: (sourceId: string | null) => void;
 }
 
 export function SourceSelect({ sources, value, loading, onChange }: SourceSelectProps) {
@@ -14,11 +14,17 @@ export function SourceSelect({ sources, value, loading, onChange }: SourceSelect
       <S.Label>Источник</S.Label>
       <S.Select
         value={value ?? ''}
-        disabled={loading || sources.length === 0}
-        onChange={(e) => onChange(e.target.value)}
+        disabled={loading}
+        onChange={(e) => {
+          const next = e.target.value;
+          onChange(next === '' ? null : next);
+        }}
       >
+        <option value="">Все источники</option>
         {sources.length === 0 ? (
-          <option value="">Нет источников</option>
+          <option value="" disabled>
+            Нет активных источников
+          </option>
         ) : (
           sources.map((source) => (
             <option key={source.id} value={source.id}>

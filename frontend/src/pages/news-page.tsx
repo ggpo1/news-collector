@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import {
+  CategorySelect,
+  UNCATEGORIZED_FILTER,
+} from '../components/category-select/category-select';
 import { MasterDetailLayout } from '../components/master-detail-layout/master-detail-layout';
 import { NewsDetail } from '../components/news-detail/news-detail';
 import { NewsList } from '../components/news-list/news-list';
 import { Pagination } from '../components/pagination/pagination';
 import { SourceSelect } from '../components/source-select/source-select';
 import * as SectionS from '../components/section-page/section-page.styles';
+import { useCategories } from '../hooks/use-categories/use-categories';
 import { useNews } from '../hooks/use-news/use-news';
 import { useSources } from '../hooks/use-sources/use-sources';
 import * as S from './news-page.styles';
@@ -19,26 +24,31 @@ export function NewsPage() {
   const location = useLocation();
   const locationState = (location.state as NewsLocationState | null) ?? null;
   const { sources, loading: sourcesLoading, error: sourcesError } = useSources();
+  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
   const activeSources = sources.filter((source) => source.isActive);
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(
     locationState?.sourceId ?? null,
   );
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(
     locationState?.newsId ?? null,
   );
 
-  const { items, page, totalPages, totalCount, loading, error, setPage, reload } =
-    useNews(selectedSourceId);
+  const uncategorized = categoryFilter === UNCATEGORIZED_FILTER;
+  const selectedCategoryId =
+    categoryFilter && !uncategorized ? categoryFilter : null;
 
-  useEffect(() => {
-    if (activeSources.length > 0 && !selectedSourceId) {
-      setSelectedSourceId(activeSources[0].id);
-    }
-  }, [activeSources, selectedSourceId]);
+  const { items, page, totalPages, totalCount, loading, error, setPage, reload } = useNews({
+    sourceId: selectedSourceId,
+    categoryId: selectedCategoryId,
+    uncategorized,
+  });
 
   useEffect(() => {
     setSelectedNewsId(null);
-  }, [selectedSourceId, page]);
+  }, [selectedSourceId, categoryFilter, page]);
+
+  const filterError = sourcesError ?? categoriesError;
 
   return (
     <SectionS.SectionPage>
@@ -49,13 +59,21 @@ export function NewsPage() {
         backLabel="К списку новостей"
         listHeader={
           <>
-            <SourceSelect
-              sources={activeSources}
-              value={selectedSourceId}
-              loading={sourcesLoading}
-              onChange={setSelectedSourceId}
-            />
-            {sourcesError && <S.ErrorBanner role="alert">{sourcesError}</S.ErrorBanner>}
+            <S.FiltersRow>
+              <SourceSelect
+                sources={activeSources}
+                value={selectedSourceId}
+                loading={sourcesLoading}
+                onChange={setSelectedSourceId}
+              />
+              <CategorySelect
+                categories={categories}
+                value={categoryFilter}
+                loading={categoriesLoading}
+                onChange={setCategoryFilter}
+              />
+            </S.FiltersRow>
+            {filterError && <S.ErrorBanner role="alert">{filterError}</S.ErrorBanner>}
           </>
         }
         listBody={

@@ -18,17 +18,27 @@ public sealed class NewsQueryService : INewsQueryService
         int page,
         int pageSize,
         Guid? sourceId = null,
+        Guid? categoryId = null,
+        bool? uncategorized = null,
         bool? hasContent = null,
         CancellationToken cancellationToken = default)
     {
         var query = _db.NewsItems
             .AsNoTracking()
-            .Include(n => n.Source)
             .AsQueryable();
 
         if (sourceId.HasValue)
         {
             query = query.Where(n => n.SourceId == sourceId.Value);
+        }
+
+        if (uncategorized == true)
+        {
+            query = query.Where(n => n.CategoryId == null);
+        }
+        else if (categoryId.HasValue)
+        {
+            query = query.Where(n => n.CategoryId == categoryId.Value);
         }
 
         if (hasContent == true)
@@ -67,7 +77,6 @@ public sealed class NewsQueryService : INewsQueryService
     {
         return await _db.NewsItems
             .AsNoTracking()
-            .Include(n => n.Source)
             .Where(n => n.Id == id)
             .Select(n => new NewsItemDetailDto(
                 n.Id,

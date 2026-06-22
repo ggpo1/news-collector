@@ -8,6 +8,8 @@ public interface INewsQueryService
         int page,
         int pageSize,
         Guid? sourceId = null,
+        Guid? categoryId = null,
+        bool? uncategorized = null,
         bool? hasContent = null,
         CancellationToken cancellationToken = default);
 

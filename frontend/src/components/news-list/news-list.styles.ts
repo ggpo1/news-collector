@@ -82,12 +82,13 @@ export const Badge = styled.span`
   font-weight: 600;
 `;
 
-export const CategoryBadge = styled.span`
+export const CategoryBadge = styled.span<{ $muted?: boolean }>`
   padding: 0.12rem 0.5rem;
   border-radius: ${({ theme }) => theme.radii.pill};
   border: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surfaceMuted};
-  color: ${({ theme }) => theme.colors.textMuted};
+  background: ${({ theme, $muted }) =>
+    $muted ? theme.colors.surface : theme.colors.surfaceMuted};
+  color: ${({ theme, $muted }) => ($muted ? theme.colors.textFaint : theme.colors.textMuted)};
   font-size: 0.7rem;
   font-weight: 600;
 `;

@@ -1,5 +1,12 @@
 export type SourceType = 'Rss' | 'Html' | 'Api';
 
+export interface Category {
+  id: string;
+  slug: string;
+  name: string;
+  sortOrder: number;
+}
+
 export interface Source {
   id: string;
   name: string;

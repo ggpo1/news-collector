@@ -4,7 +4,13 @@ import type { NewsItemList } from '../../api/types';
 
 const PAGE_SIZE = 20;
 
-export function useNews(sourceId: string | null) {
+export interface NewsFilters {
+  sourceId: string | null;
+  categoryId: string | null;
+  uncategorized: boolean;
+}
+
+export function useNews({ sourceId, categoryId, uncategorized }: NewsFilters) {
   const [items, setItems] = useState<NewsItemList[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -13,15 +19,16 @@ export function useNews(sourceId: string | null) {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!sourceId) {
-      setItems([]);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
-      const result = await getNews({ page, pageSize: PAGE_SIZE, sourceId });
+      const result = await getNews({
+        page,
+        pageSize: PAGE_SIZE,
+        sourceId: sourceId ?? undefined,
+        categoryId: uncategorized ? undefined : (categoryId ?? undefined),
+        uncategorized: uncategorized || undefined,
+      });
       setItems(result.items);
       setTotalPages(result.totalPages);
       setTotalCount(result.totalCount);
@@ -31,11 +38,11 @@ export function useNews(sourceId: string | null) {
     } finally {
       setLoading(false);
     }
-  }, [page, sourceId]);
+  }, [page, sourceId, categoryId, uncategorized]);
 
   useEffect(() => {
     setPage(1);
-  }, [sourceId]);
+  }, [sourceId, categoryId, uncategorized]);
 
   useEffect(() => {
     void load();

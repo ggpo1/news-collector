@@ -47,7 +47,11 @@ export function NewsList({ items, loading, error, selectedId, onSelect }: NewsLi
             <S.CardTop>
               <S.Meta>
                 <time dateTime={item.publishedAt ?? undefined}>{formatDate(item.publishedAt)}</time>
-                {item.categoryName && <S.CategoryBadge>{item.categoryName}</S.CategoryBadge>}
+                {item.categoryName ? (
+                  <S.CategoryBadge>{item.categoryName}</S.CategoryBadge>
+                ) : (
+                  <S.CategoryBadge $muted>без категории</S.CategoryBadge>
+                )}
                 {item.hasContent && <S.Badge>полный текст</S.Badge>}
               </S.Meta>
               <S.Chevron aria-hidden="true">›</S.Chevron>

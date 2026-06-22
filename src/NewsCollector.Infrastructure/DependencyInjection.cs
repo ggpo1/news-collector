@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<INewsQueryService, NewsQueryService>();
         services.AddScoped<INewsLinkQueryService, NewsLinkQueryService>();
         services.AddScoped<INewsRewriteService, NewsRewriteService>();
+        services.AddScoped<ICategoryQueryService, CategoryQueryService>();
         services.AddScoped<IApiVisitWriter, ApiVisitWriter>();
 
         services.AddSingleton<PasswordHasherService>();

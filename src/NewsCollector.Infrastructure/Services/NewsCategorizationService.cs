@@ -62,7 +62,9 @@ public sealed class NewsCategorizationService : INewsCategorizationService
 
         var pendingItems = await _db.NewsItems
             .Where(n => n.CategoryId == null)
-            .OrderByDescending(n => n.FetchedAt)
+            .OrderByDescending(n => n.PublishedAt ?? n.FetchedAt)
+            .ThenByDescending(n => n.FetchedAt)
+            .ThenByDescending(n => n.CreatedAt)
             .Take(_options.BatchSize)
             .ToListAsync(cancellationToken);
 

@@ -158,7 +158,11 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
       <S.Header>
         <S.Meta>
           <span>{item.sourceName}</span>
-          {item.categoryName && <S.CategoryBadge>{item.categoryName}</S.CategoryBadge>}
+          {item.categoryName ? (
+            <S.CategoryBadge>{item.categoryName}</S.CategoryBadge>
+          ) : (
+            <S.CategoryBadge $muted>без категории</S.CategoryBadge>
+          )}
           <time dateTime={item.publishedAt ?? undefined}>{formatDate(item.publishedAt)}</time>
         </S.Meta>
         <S.Title>{item.title}</S.Title>

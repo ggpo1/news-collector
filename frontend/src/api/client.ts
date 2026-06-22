@@ -2,6 +2,7 @@ import { clearAuthToken, getAuthToken } from './auth-storage';
 import type {
   AiNewsRewriteResult,
   ArticleEnrichmentResult,
+  Category,
   CreateNewsRewritePayload,
   CreateSourcePayload,
   CreateUserPayload,
@@ -213,10 +214,16 @@ export function deleteSource(id: string): Promise<void> {
   return requestVoid(`/api/sources/${id}`, { method: 'DELETE' });
 }
 
+export function getCategories(): Promise<Category[]> {
+  return request<Category[]>('/api/categories');
+}
+
 export function getNews(params: {
   page: number;
   pageSize: number;
   sourceId?: string;
+  categoryId?: string;
+  uncategorized?: boolean;
   hasContent?: boolean;
 }): Promise<PagedResult<NewsItemList>> {
   const search = new URLSearchParams({
@@ -226,6 +233,14 @@ export function getNews(params: {
 
   if (params.sourceId) {
     search.set('sourceId', params.sourceId);
+  }
+
+  if (params.categoryId) {
+    search.set('categoryId', params.categoryId);
+  }
+
+  if (params.uncategorized) {
+    search.set('uncategorized', 'true');
   }
 
   if (params.hasContent !== undefined) {

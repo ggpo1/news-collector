@@ -1,4 +1,18 @@
 import styled from 'styled-components';
+import { mediaUp } from '../../styles/media';
+
+export const FiltersRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  ${mediaUp('sm')} {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+  }
+`;
 
 export const ErrorBanner = styled.p`
   margin: 0;
