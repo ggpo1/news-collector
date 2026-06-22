@@ -26,7 +26,7 @@
 docker compose up -d --build news-tone-analyzer api frontend
 ```
 
-Миграция: `AddNewsToneCoefficient`.
+`Up()` идемпотентный (`IF NOT EXISTS`) — если колонки уже добавлены вручную, миграция допишет индекс и запись в `__EFMigrationsHistory`.
 
 ## API
 `toneCoefficient` в `NewsItemListDto` / `NewsItemDetailDto`.

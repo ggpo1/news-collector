@@ -11,25 +11,17 @@ namespace NewsCollector.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<decimal>(
-                name: "ToneCoefficient",
-                table: "news",
-                type: "numeric(4,3)",
-                precision: 4,
-                scale: 3,
-                nullable: true);
+            migrationBuilder.Sql("""
+                ALTER TABLE news
+                ADD COLUMN IF NOT EXISTS "ToneCoefficient" numeric(4,3);
 
-            migrationBuilder.AddColumn<DateTimeOffset>(
-                name: "ToneAnalyzedAt",
-                table: "news",
-                type: "timestamp with time zone",
-                nullable: true);
+                ALTER TABLE news
+                ADD COLUMN IF NOT EXISTS "ToneAnalyzedAt" timestamp with time zone;
 
-            migrationBuilder.CreateIndex(
-                name: "IX_news_FetchedAt_ToneCoefficient",
-                table: "news",
-                column: "FetchedAt",
-                filter: "\"ToneCoefficient\" IS NULL");
+                CREATE INDEX IF NOT EXISTS "IX_news_FetchedAt_ToneCoefficient"
+                ON news ("FetchedAt")
+                WHERE "ToneCoefficient" IS NULL;
+                """);
         }
 
         /// <inheritdoc />
