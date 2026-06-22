@@ -249,12 +249,15 @@ services:
         condition: service_started
     environment:
       OLLAMA_HOST: http://ollama-ner:11434
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      until ollama pull ${OLLAMA_NER_MODEL:-llama3.2:3b}; do
-        echo "Waiting for ollama-ner and pulling ${OLLAMA_NER_MODEL:-llama3.2:3b}...";
-        sleep 5;
-      done
+      OLLAMA_NER_MODEL: ${OLLAMA_NER_MODEL}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        until ollama pull "$${OLLAMA_NER_MODEL:-llama3.2:3b}"; do
+          echo "Waiting for ollama-ner, pulling $${OLLAMA_NER_MODEL:-llama3.2:3b}..."
+          sleep 5
+        done
     restart: "no"
 
   ollama-categorizer:
@@ -280,12 +283,15 @@ services:
         condition: service_started
     environment:
       OLLAMA_HOST: http://ollama-categorizer:11434
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      until ollama pull ${OLLAMA_CATEGORIZER_MODEL:-llama3.2:3b}; do
-        echo "Waiting for ollama-categorizer and pulling ${OLLAMA_CATEGORIZER_MODEL:-llama3.2:3b}...";
-        sleep 5;
-      done
+      OLLAMA_CATEGORIZER_MODEL: ${OLLAMA_CATEGORIZER_MODEL}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        until ollama pull "$${OLLAMA_CATEGORIZER_MODEL:-llama3.2:3b}"; do
+          echo "Waiting for ollama-categorizer, pulling $${OLLAMA_CATEGORIZER_MODEL:-llama3.2:3b}..."
+          sleep 5
+        done
     restart: "no"
 
   ollama-tone:
@@ -311,12 +317,15 @@ services:
         condition: service_started
     environment:
       OLLAMA_HOST: http://ollama-tone:11434
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      until ollama pull ${OLLAMA_TONE_MODEL:-llama3.2:3b}; do
-        echo "Waiting for ollama-tone and pulling ${OLLAMA_TONE_MODEL:-llama3.2:3b}...";
-        sleep 5;
-      done
+      OLLAMA_TONE_MODEL: ${OLLAMA_TONE_MODEL}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        until ollama pull "$${OLLAMA_TONE_MODEL:-llama3.2:3b}"; do
+          echo "Waiting for ollama-tone, pulling $${OLLAMA_TONE_MODEL:-llama3.2:3b}..."
+          sleep 5
+        done
     restart: "no"
 
 volumes:
