@@ -7,13 +7,13 @@ import { useEntityGraph, type EntityGraphPeriod } from '../hooks/use-entity-grap
 export function EntityMapPage() {
   const [period, setPeriod] = useState<EntityGraphPeriod>('7d');
   const [entityType, setEntityType] = useState<NamedEntityType | ''>('');
-  const [minWeight, setMinWeight] = useState(2);
+  const [minWeight, setMinWeight] = useState(5);
 
   const { graph, loading, error, reload } = useEntityGraph({
     period,
     entityType,
     minWeight,
-    maxNodes: 150,
+    maxNodes: 60,
   });
 
   return (

@@ -261,6 +261,12 @@ export const ErrorBanner = styled.div`
   font-size: 0.9rem;
 `;
 
+export const DenseHint = styled.p`
+  margin: 0 1rem 0.5rem;
+  font-size: 0.82rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
 export const LoadingOverlay = styled.div`
   position: absolute;
   inset: 0;

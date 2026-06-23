@@ -1,22 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ENTITY_TYPE_COLORS, ENTITY_TYPE_OPTIONS, entityTypeLabel } from '../../api/entity-labels';
 import type { EntityGraph, EntityGraphNode, NamedEntityType } from '../../api/entities';
 import { LoadingState } from '../ui/loading-state';
+import {
+  buildSimulation,
+  runLayout,
+  type GraphSimulation,
+  type SimNode,
+} from './entity-graph-layout';
 import * as S from './entity-graph.styles';
-
-interface SimNode extends EntityGraphNode {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-}
-
-interface SimLink {
-  source: SimNode;
-  target: SimNode;
-  weight: number;
-}
 
 interface EntityGraphViewProps {
   graph: EntityGraph | null;
@@ -29,37 +21,6 @@ interface EntityGraphViewProps {
   onEntityTypeChange: (type: NamedEntityType | '') => void;
   onMinWeightChange: (weight: number) => void;
   onReload: () => void;
-}
-
-function buildSimulation(nodes: EntityGraphNode[], edges: EntityGraph['edges'], width: number, height: number) {
-  const maxMentions = Math.max(...nodes.map((node) => node.mentionCount), 1);
-  const simNodes: SimNode[] = nodes.map((node, index) => {
-    const angle = (index / nodes.length) * Math.PI * 2;
-    const spread = Math.min(width, height) * 0.3;
-    return {
-      ...node,
-      x: width / 2 + Math.cos(angle) * spread,
-      y: height / 2 + Math.sin(angle) * spread,
-      vx: 0,
-      vy: 0,
-      radius: 6 + (node.mentionCount / maxMentions) * 14,
-    };
-  });
-
-  const nodeById = new Map(simNodes.map((node) => [node.id, node]));
-  const simLinks: SimLink[] = edges
-    .map((edge) => {
-      const source = nodeById.get(edge.sourceId);
-      const target = nodeById.get(edge.targetId);
-      if (!source || !target) {
-        return null;
-      }
-
-      return { source, target, weight: edge.weight };
-    })
-    .filter((link): link is SimLink => link !== null);
-
-  return { simNodes, simLinks, maxMentions };
 }
 
 function getNeighbors(
@@ -87,6 +48,25 @@ function getNeighbors(
     .sort((a, b) => b.weight - a.weight);
 }
 
+function buildHighlightSet(
+  activeId: string | null,
+  neighborMap: Map<string, Set<string>> | null,
+): Set<string> | null {
+  if (!activeId || !neighborMap) {
+    return null;
+  }
+
+  const highlights = new Set<string>([activeId]);
+  const neighbors = neighborMap.get(activeId);
+  if (neighbors) {
+    for (const id of neighbors) {
+      highlights.add(id);
+    }
+  }
+
+  return highlights;
+}
+
 export function EntityGraphView({
   graph,
   loading,
@@ -101,12 +81,16 @@ export function EntityGraphView({
 }: EntityGraphViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const simRef = useRef<GraphSimulation | null>(null);
+  const sizeRef = useRef({ width: 800, height: 600 });
   const transformRef = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
   const dragRef = useRef<{ mode: 'pan' | 'node'; nodeId?: string; lastX: number; lastY: number } | null>(null);
-  const simRef = useRef<{ simNodes: SimNode[]; simLinks: SimLink[] } | null>(null);
-  const sizeRef = useRef({ width: 800, height: 600 });
+  const rafRef = useRef<number | null>(null);
+  const hoveredIdRef = useRef<string | null>(null);
+  const selectedIdRef = useRef<string | null>(null);
+  const labelNodeIdsRef = useRef<Set<string>>(new Set());
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const selectedNode = graph?.nodes.find((node) => node.id === selectedId) ?? null;
   const neighbors = useMemo(
@@ -114,17 +98,140 @@ export function EntityGraphView({
     [graph, selectedId],
   );
 
-  useEffect(() => {
+  const labelNodeIds = useMemo(() => {
+    if (!graph) {
+      return new Set<string>();
+    }
+
+    if (graph.nodes.length <= 35) {
+      return new Set(graph.nodes.map((node) => node.id));
+    }
+
+    return new Set(
+      [...graph.nodes]
+        .sort((a, b) => b.mentionCount - a.mentionCount)
+        .slice(0, 20)
+        .map((node) => node.id),
+    );
+  }, [graph]);
+
+  const scheduleDraw = useCallback(() => {
+    if (rafRef.current !== null) {
+      return;
+    }
+
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const canvas = canvasRef.current;
+      const sim = simRef.current;
+      if (!canvas || !sim) {
+        return;
+      }
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        return;
+      }
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const { width, height } = sizeRef.current;
+      const hoveredId = hoveredIdRef.current;
+      const selectedId = selectedIdRef.current;
+      const labelNodeIds = labelNodeIdsRef.current;
+      const activeId = hoveredId ?? selectedId;
+      const highlightIds = buildHighlightSet(activeId, sim.neighborMap);
+      const showLabels = sim.nodes.length <= 50;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+
+      const { scale, offsetX, offsetY } = transformRef.current;
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
+
+      ctx.lineCap = 'round';
+      for (const link of sim.links) {
+        const isActive =
+          activeId &&
+          (link.source.id === activeId ||
+            link.target.id === activeId ||
+            (highlightIds?.has(link.source.id) && highlightIds.has(link.target.id)));
+
+        ctx.beginPath();
+        ctx.moveTo(link.source.x, link.source.y);
+        ctx.lineTo(link.target.x, link.target.y);
+        ctx.strokeStyle = isActive
+          ? 'rgba(91, 154, 255, 0.55)'
+          : 'rgba(139, 156, 179, 0.16)';
+        ctx.lineWidth = isActive
+          ? Math.max(1, Math.min(3.5, link.weight * 0.45))
+          : Math.max(0.6, Math.min(2.5, link.weight * 0.35));
+        ctx.stroke();
+      }
+
+      for (const node of sim.nodes) {
+        const color = ENTITY_TYPE_COLORS[node.type];
+        const isSelected = node.id === selectedId;
+        const isHovered = node.id === hoveredId;
+        const isDimmed = highlightIds !== null && !highlightIds.has(node.id);
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = isDimmed ? 'rgba(92, 109, 132, 0.4)' : color;
+        ctx.fill();
+
+        if (isSelected || isHovered) {
+          ctx.strokeStyle = '#eef2f7';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        const shouldLabel =
+          showLabels &&
+          scale > 0.55 &&
+          (labelNodeIds.has(node.id) || isSelected || isHovered);
+
+        if (shouldLabel) {
+          ctx.fillStyle = isDimmed ? 'rgba(238, 242, 247, 0.55)' : '#eef2f7';
+          ctx.font = `600 ${Math.max(9, node.radius * 0.72)}px IBM Plex Sans, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          const label = node.name.length > 18 ? `${node.name.slice(0, 16)}…` : node.name;
+          ctx.fillText(label, node.x, node.y + node.radius + 3);
+        }
+      }
+
+      ctx.restore();
+    });
+  }, []);
+
+  const layoutSimulation = useCallback(() => {
     if (!graph || graph.nodes.length === 0) {
       simRef.current = null;
       return;
     }
 
     const { width, height } = sizeRef.current;
-    simRef.current = buildSimulation(graph.nodes, graph.edges, width, height);
-    transformRef.current = { scale: 1, offsetX: 0, offsetY: 0 };
-    setSelectedId(null);
+    const simulation = buildSimulation(graph.nodes, graph.edges, width, height);
+    runLayout(simulation, width, height);
+    simRef.current = simulation;
   }, [graph]);
+
+  useEffect(() => {
+    selectedIdRef.current = null;
+    hoveredIdRef.current = null;
+    labelNodeIdsRef.current = labelNodeIds;
+    setSelectedId(null);
+    layoutSimulation();
+    transformRef.current = { scale: 1, offsetX: 0, offsetY: 0 };
+    scheduleDraw();
+  }, [graph, labelNodeIds, layoutSimulation, scheduleDraw]);
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+    scheduleDraw();
+  }, [selectedId, scheduleDraw]);
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -135,163 +242,28 @@ export function EntityGraphView({
 
     const resize = () => {
       const rect = wrap.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       sizeRef.current = { width: rect.width, height: rect.height };
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
       canvas.style.width = `${rect.width}px`;
       canvas.style.height = `${rect.height}px`;
-
-      if (graph && graph.nodes.length > 0) {
-        simRef.current = buildSimulation(graph.nodes, graph.edges, rect.width, rect.height);
-      }
+      layoutSimulation();
+      scheduleDraw();
     };
 
     resize();
     const observer = new ResizeObserver(resize);
     observer.observe(wrap);
-    return () => observer.disconnect();
-  }, [graph]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      return;
-    }
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      return;
-    }
-
-    let frameId = 0;
-    let ticks = 0;
-
-    const draw = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const { width, height } = sizeRef.current;
-      const sim = simRef.current;
-
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, width, height);
-
-      if (!sim) {
-        frameId = requestAnimationFrame(draw);
-        return;
+    return () => {
+      observer.disconnect();
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
       }
-
-      if (ticks < 180) {
-        const centerX = width / 2;
-        const centerY = height / 2;
-
-        for (const node of sim.simNodes) {
-          for (const other of sim.simNodes) {
-            if (node === other) {
-              continue;
-            }
-
-            const dx = node.x - other.x;
-            const dy = node.y - other.y;
-            const dist = Math.max(Math.hypot(dx, dy), 1);
-            const force = 900 / (dist * dist);
-            node.vx += (dx / dist) * force;
-            node.vy += (dy / dist) * force;
-          }
-        }
-
-        for (const link of sim.simLinks) {
-          const dx = link.target.x - link.source.x;
-          const dy = link.target.y - link.source.y;
-          const dist = Math.max(Math.hypot(dx, dy), 1);
-          const force = dist * 0.004 * link.weight;
-          link.source.vx += (dx / dist) * force;
-          link.source.vy += (dy / dist) * force;
-          link.target.vx -= (dx / dist) * force;
-          link.target.vy -= (dy / dist) * force;
-        }
-
-        for (const node of sim.simNodes) {
-          node.vx += (centerX - node.x) * 0.002;
-          node.vy += (centerY - node.y) * 0.002;
-          node.vx *= 0.84;
-          node.vy *= 0.84;
-          node.x += node.vx;
-          node.y += node.vy;
-        }
-
-        ticks += 1;
-      }
-
-      const { scale, offsetX, offsetY } = transformRef.current;
-      const activeId = hoveredId ?? selectedId;
-      const highlightIds = new Set<string>();
-
-      if (activeId && graph) {
-        highlightIds.add(activeId);
-        for (const edge of graph.edges) {
-          if (edge.sourceId === activeId) {
-            highlightIds.add(edge.targetId);
-          } else if (edge.targetId === activeId) {
-            highlightIds.add(edge.sourceId);
-          }
-        }
-      }
-
-      ctx.save();
-      ctx.translate(offsetX, offsetY);
-      ctx.scale(scale, scale);
-
-      for (const link of sim.simLinks) {
-        const isActive =
-          activeId &&
-          (link.source.id === activeId ||
-            link.target.id === activeId ||
-            (highlightIds.has(link.source.id) && highlightIds.has(link.target.id)));
-
-        ctx.beginPath();
-        ctx.moveTo(link.source.x, link.source.y);
-        ctx.lineTo(link.target.x, link.target.y);
-        ctx.strokeStyle = isActive
-          ? 'rgba(91, 154, 255, 0.55)'
-          : 'rgba(139, 156, 179, 0.18)';
-        ctx.lineWidth = Math.max(1, Math.min(4, link.weight * 0.6));
-        ctx.stroke();
-      }
-
-      for (const node of sim.simNodes) {
-        const color = ENTITY_TYPE_COLORS[node.type];
-        const isSelected = node.id === selectedId;
-        const isHovered = node.id === hoveredId;
-        const isDimmed = activeId !== null && !highlightIds.has(node.id);
-
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = isDimmed ? 'rgba(92, 109, 132, 0.45)' : color;
-        ctx.fill();
-
-        if (isSelected || isHovered) {
-          ctx.strokeStyle = '#eef2f7';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-
-        if (scale > 0.65 && node.radius >= 8) {
-          ctx.fillStyle = isDimmed ? 'rgba(238, 242, 247, 0.55)' : '#eef2f7';
-          ctx.font = `600 ${Math.max(10, node.radius * 0.75)}px IBM Plex Sans, sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'top';
-          const label = node.name.length > 22 ? `${node.name.slice(0, 20)}…` : node.name;
-          ctx.fillText(label, node.x, node.y + node.radius + 4);
-        }
-      }
-
-      ctx.restore();
-      frameId = requestAnimationFrame(draw);
     };
-
-    frameId = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(frameId);
-  }, [graph, hoveredId, selectedId]);
+  }, [layoutSimulation, scheduleDraw]);
 
   const screenToWorld = (clientX: number, clientY: number) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -312,8 +284,8 @@ export function EntityGraphView({
       return null;
     }
 
-    for (let i = sim.simNodes.length - 1; i >= 0; i -= 1) {
-      const node = sim.simNodes[i];
+    for (let i = sim.nodes.length - 1; i >= 0; i -= 1) {
+      const node = sim.nodes[i];
       const dist = Math.hypot(node.x - x, node.y - y);
       if (dist <= node.radius + 4) {
         return node;
@@ -330,6 +302,7 @@ export function EntityGraphView({
 
     if (node) {
       dragRef.current = { mode: 'node', nodeId: node.id, lastX: event.clientX, lastY: event.clientY };
+      selectedIdRef.current = node.id;
       setSelectedId(node.id);
       return;
     }
@@ -340,7 +313,11 @@ export function EntityGraphView({
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const world = screenToWorld(event.clientX, event.clientY);
     const hovered = findNodeAt(world.x, world.y);
-    setHoveredId(hovered?.id ?? null);
+    const nextHoveredId = hovered?.id ?? null;
+    if (nextHoveredId !== hoveredIdRef.current) {
+      hoveredIdRef.current = nextHoveredId;
+      scheduleDraw();
+    }
 
     const drag = dragRef.current;
     if (!drag) {
@@ -355,11 +332,12 @@ export function EntityGraphView({
     if (drag.mode === 'pan') {
       transformRef.current.offsetX += dx;
       transformRef.current.offsetY += dy;
+      scheduleDraw();
       return;
     }
 
     const sim = simRef.current;
-    const node = sim?.simNodes.find((item) => item.id === drag.nodeId);
+    const node = sim?.nodes.find((item) => item.id === drag.nodeId);
     if (!node) {
       return;
     }
@@ -367,13 +345,20 @@ export function EntityGraphView({
     const { scale } = transformRef.current;
     node.x += dx / scale;
     node.y += dy / scale;
-    node.vx = 0;
-    node.vy = 0;
+    scheduleDraw();
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
     dragRef.current = null;
     canvasRef.current?.releasePointerCapture(event.pointerId);
+  };
+
+  const handlePointerLeave = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (hoveredIdRef.current !== null) {
+      hoveredIdRef.current = null;
+      scheduleDraw();
+    }
+    handlePointerUp(event);
   };
 
   const handleWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
@@ -393,9 +378,11 @@ export function EntityGraphView({
     transform.offsetX = mouseX - (mouseX - transform.offsetX) * scaleRatio;
     transform.offsetY = mouseY - (mouseY - transform.offsetY) * scaleRatio;
     transform.scale = nextScale;
+    scheduleDraw();
   };
 
   const isEmpty = !loading && graph && graph.nodes.length === 0;
+  const isDense = graph && (graph.nodes.length > 80 || graph.edges.length > 120);
 
   return (
     <S.GraphLayout>
@@ -429,8 +416,8 @@ export function EntityGraphView({
             <S.RangeValue as="div">{minWeight}</S.RangeValue>
             <S.RangeInput
               type="range"
-              min={1}
-              max={10}
+              min={2}
+              max={15}
               value={minWeight}
               onChange={(e) => onMinWeightChange(Number(e.target.value))}
             />
@@ -442,6 +429,11 @@ export function EntityGraphView({
         </S.ControlsBar>
 
         {error && <S.ErrorBanner role="alert">{error}</S.ErrorBanner>}
+        {isDense && !loading && (
+          <S.DenseHint>
+            Граф плотный — увеличьте «Мин. связь» или сузьте период для более читаемой карты.
+          </S.DenseHint>
+        )}
 
         <S.CanvasWrap ref={wrapRef}>
           {loading && (
@@ -460,7 +452,7 @@ export function EntityGraphView({
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
+            onPointerLeave={handlePointerLeave}
             onWheel={handleWheel}
           />
           <S.GraphHint>Колёсико — масштаб · перетаскивание — панорама · клик — детали</S.GraphHint>
@@ -505,7 +497,14 @@ export function EntityGraphView({
                 </S.EmptyOverlay>
               ) : (
                 neighbors.map(({ node, weight }) => (
-                  <S.NeighborItem key={node.id} type="button" onClick={() => setSelectedId(node.id)}>
+                  <S.NeighborItem
+                    key={node.id}
+                    type="button"
+                    onClick={() => {
+                      selectedIdRef.current = node.id;
+                      setSelectedId(node.id);
+                    }}
+                  >
                     <S.NeighborName>{node.name}</S.NeighborName>
                     <S.NeighborWeight>{weight}</S.NeighborWeight>
                   </S.NeighborItem>

@@ -25,8 +25,8 @@ public sealed class EntitiesController : ControllerBase
         [FromQuery] DateTimeOffset? from = null,
         [FromQuery] DateTimeOffset? to = null,
         [FromQuery] NamedEntityType? type = null,
-        [FromQuery] int minWeight = 2,
-        [FromQuery] int maxNodes = 150,
+        [FromQuery] int minWeight = 3,
+        [FromQuery] int maxNodes = 60,
         CancellationToken cancellationToken = default)
     {
         if (minWeight < 1)
@@ -34,9 +34,9 @@ public sealed class EntitiesController : ControllerBase
             return BadRequest(new { error = "minWeight must be >= 1" });
         }
 
-        if (maxNodes is < 10 or > 500)
+        if (maxNodes is < 10 or > 120)
         {
-            return BadRequest(new { error = "maxNodes must be between 10 and 500" });
+            return BadRequest(new { error = "maxNodes must be between 10 and 120" });
         }
 
         var graph = await _entityGraphQueryService.GetCoMentionGraphAsync(

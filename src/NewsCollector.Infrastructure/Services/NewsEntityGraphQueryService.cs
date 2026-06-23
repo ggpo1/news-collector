@@ -30,7 +30,7 @@ public sealed class NewsEntityGraphQueryService : INewsEntityGraphQueryService
             (periodFrom, periodTo) = (periodTo, periodFrom);
         }
 
-        maxNodes = Math.Clamp(maxNodes, 10, 500);
+        maxNodes = Math.Clamp(maxNodes, 10, 120);
         minWeight = Math.Max(minWeight, 1);
 
         var mentions = await LoadMentionsInPeriodAsync(periodFrom, periodTo, entityType, cancellationToken);
@@ -39,10 +39,11 @@ public sealed class NewsEntityGraphQueryService : INewsEntityGraphQueryService
             .ToDictionary(g => g.Key, g => g.Count());
 
         var edgeWeights = BuildCoMentionWeights(mentions);
+        var maxEdges = Math.Min(maxNodes * 2, 100);
         var filteredEdges = edgeWeights
             .Where(pair => pair.Value >= minWeight)
             .OrderByDescending(pair => pair.Value)
-            .Take(maxNodes * 3)
+            .Take(maxEdges)
             .ToList();
 
         var nodeIds = filteredEdges
