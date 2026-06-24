@@ -90,30 +90,46 @@ public sealed class TelegramApiClient : ITelegramApiClient
         var client = _httpClientFactory.CreateClient("Telegram");
         var url = $"https://api.telegram.org/bot{botToken.Trim()}/{method}";
 
-        using var response = await client.PostAsJsonAsync(url, payload, JsonOptions, cancellationToken);
-        var raw = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        TelegramApiResponse? body = null;
+        HttpResponseMessage response;
         try
         {
-            body = JsonSerializer.Deserialize<TelegramApiResponse>(raw, JsonOptions);
+            response = await client.PostAsJsonAsync(url, payload, JsonOptions, cancellationToken);
         }
-        catch (JsonException ex)
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
-            _logger.LogWarning(ex, "Telegram API returned non-JSON response for {Method}", method);
+            _logger.LogError(ex, "Telegram {Method} timed out (proxy or network)", method);
+            throw new InvalidOperationException(
+                "Telegram API не ответила за 60 секунд. " +
+                "Проверьте TELEGRAM_PROXY (http://host.docker.internal:10809), что Xray слушает 0.0.0.0 и api пересобран после добавления прокси в .env.",
+                ex);
         }
 
-        if (!response.IsSuccessStatusCode || body is null || !body.Ok)
+        using (response)
         {
-            var description = body?.Description
-                ?? (string.IsNullOrWhiteSpace(raw) ? response.ReasonPhrase : raw)
-                ?? "Unknown Telegram API error";
+            var raw = await response.Content.ReadAsStringAsync(cancellationToken);
 
-            _logger.LogWarning("Telegram {Method} failed for chat {ChatId}: {Error}", method, payload.GetValueOrDefault("chat_id"), description);
-            throw new InvalidOperationException(description.Trim());
+            TelegramApiResponse? body = null;
+            try
+            {
+                body = JsonSerializer.Deserialize<TelegramApiResponse>(raw, JsonOptions);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Telegram API returned non-JSON response for {Method}", method);
+            }
+
+            if (!response.IsSuccessStatusCode || body is null || !body.Ok)
+            {
+                var description = body?.Description
+                    ?? (string.IsNullOrWhiteSpace(raw) ? response.ReasonPhrase : raw)
+                    ?? "Unknown Telegram API error";
+
+                _logger.LogWarning("Telegram {Method} failed for chat {ChatId}: {Error}", method, payload.GetValueOrDefault("chat_id"), description);
+                throw new InvalidOperationException(description.Trim());
+            }
+
+            return body;
         }
-
-        return body;
     }
 
     private static object ParseChatId(string chatId)

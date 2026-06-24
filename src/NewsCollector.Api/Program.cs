@@ -124,6 +124,19 @@ using (var scope = app.Services.CreateScope())
             "Ollama TimeoutSeconds={TimeoutSeconds} is below 1800. Large CPU models (e.g. deepseek-r1:14b) often need 30+ minutes.",
             ollamaOptions.TimeoutSeconds);
     }
+
+    var telegramProxy = app.Configuration["Telegram:HttpsProxy"]
+        ?? app.Configuration["Telegram:HttpProxy"];
+    if (string.IsNullOrWhiteSpace(telegramProxy))
+    {
+        startupLogger.LogWarning(
+            "Telegram proxy is NOT configured. API cannot reach api.telegram.org without direct access. " +
+            "Set TELEGRAM_PROXY=http://host.docker.internal:10809 in .env and recreate api container.");
+    }
+    else
+    {
+        startupLogger.LogInformation("Telegram HTTP proxy configured: {ProxyUrl}", telegramProxy);
+    }
 }
 
 if (app.Environment.IsDevelopment())
