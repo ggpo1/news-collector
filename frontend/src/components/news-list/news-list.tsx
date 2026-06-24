@@ -9,6 +9,7 @@ interface NewsListProps {
   loading: boolean;
   error: string | null;
   selectedId: string | null;
+  showSource?: boolean;
   onSelect: (id: string) => void;
 }
 
@@ -23,7 +24,14 @@ function formatDate(value: string | null): string {
   }).format(new Date(value));
 }
 
-export function NewsList({ items, loading, error, selectedId, onSelect }: NewsListProps) {
+export function NewsList({
+  items,
+  loading,
+  error,
+  selectedId,
+  showSource = true,
+  onSelect,
+}: NewsListProps) {
   if (loading) {
     return <LoadingState label="Загрузка новостей…" />;
   }
@@ -47,6 +55,7 @@ export function NewsList({ items, loading, error, selectedId, onSelect }: NewsLi
           >
             <S.CardTop>
               <S.Meta>
+                {showSource && <S.SourceName>{item.sourceName}</S.SourceName>}
                 <time dateTime={item.publishedAt ?? undefined}>{formatDate(item.publishedAt)}</time>
                 {item.categoryName ? (
                   <S.CategoryBadge>{item.categoryName}</S.CategoryBadge>

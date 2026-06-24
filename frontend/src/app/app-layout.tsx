@@ -23,6 +23,10 @@ const SECTION_META = {
     title: 'Источники',
     subtitle: 'RSS-фиды и настройки сбора',
   },
+  telegram: {
+    title: 'Telegram',
+    subtitle: 'Боты, каналы и маршрутизация публикаций',
+  },
   users: {
     title: 'Пользователи',
     subtitle: 'Учётные записи редакторов',

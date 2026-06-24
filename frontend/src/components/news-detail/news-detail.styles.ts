@@ -193,6 +193,17 @@ export const SecondDayButton = styled(RewriteButton)`
   }
 `;
 
+export const TelegramButton = styled(RewriteButton)`
+  border-color: color-mix(in srgb, #2aabee 45%, ${({ theme }) => theme.colors.border});
+  color: #2aabee;
+
+  &:hover:not(:disabled) {
+    border-color: #2aabee;
+    color: #2aabee;
+    background: color-mix(in srgb, #2aabee 10%, transparent);
+  }
+`;
+
 export const AnglesSection = styled.section`
   margin-top: 1.5rem;
   padding-top: 1.25rem;

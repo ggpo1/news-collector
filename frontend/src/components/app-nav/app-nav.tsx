@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/auth-context';
 import { NavIcon } from './nav-icon';
 import * as S from './app-nav.styles';
 
-export type AppSection = 'news' | 'links' | 'rewrites' | 'map' | 'sources' | 'users';
+export type AppSection = 'news' | 'links' | 'rewrites' | 'map' | 'sources' | 'telegram' | 'users';
 
 const NAV_ITEMS: { id: AppSection; label: string; chiefOnly?: boolean }[] = [
   { id: 'news', label: 'Новости' },
@@ -11,6 +11,7 @@ const NAV_ITEMS: { id: AppSection; label: string; chiefOnly?: boolean }[] = [
   { id: 'rewrites', label: 'Переписи' },
   { id: 'map', label: 'Карта' },
   { id: 'sources', label: 'Источники', chiefOnly: true },
+  { id: 'telegram', label: 'Telegram', chiefOnly: true },
   { id: 'users', label: 'Пользователи', chiefOnly: true },
 ];
 

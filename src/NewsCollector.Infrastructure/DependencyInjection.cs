@@ -6,10 +6,12 @@ using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Options;
 using NewsCollector.Infrastructure.Auth;
 using NewsCollector.Infrastructure.Ai;
+using NewsCollector.Infrastructure.Docker;
 using NewsCollector.Infrastructure.Feeds;
 using NewsCollector.Infrastructure.Persistence;
 using NewsCollector.Infrastructure.Scraping;
 using NewsCollector.Infrastructure.Services;
+using NewsCollector.Infrastructure.Telegram;
 
 namespace NewsCollector.Infrastructure;
 
@@ -36,6 +38,44 @@ public static class DependencyInjection
         services.AddScoped<IInvitationCodeService, InvitationCodeService>();
         services.AddScoped<AuthDataSeeder>();
 
+        return services;
+    }
+
+    public static IServiceCollection AddTelegram(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<TelegramBotOrchestratorOptions>(
+            configuration.GetSection(TelegramBotOrchestratorOptions.SectionName));
+        services.Configure<TelegramBotWorkerOptions>(
+            configuration.GetSection(TelegramBotWorkerOptions.SectionName));
+
+        services.AddHttpClient("Telegram", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(60);
+        });
+
+        services.AddSingleton<ITelegramBotOrchestrator, DockerCliTelegramBotOrchestrator>();
+        services.AddScoped<ITelegramApiClient, TelegramApiClient>();
+        services.AddScoped<ITelegramBotService, TelegramBotService>();
+        services.AddScoped<ITelegramChannelService, TelegramChannelService>();
+        services.AddScoped<ITelegramDeliveryService, TelegramDeliveryService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddTelegramWorker(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<TelegramBotWorkerOptions>(
+            configuration.GetSection(TelegramBotWorkerOptions.SectionName));
+        services.AddHttpClient("Telegram", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(60);
+        });
+        services.AddScoped<ITelegramApiClient, TelegramApiClient>();
+        services.AddScoped<ITelegramDeliveryService, TelegramDeliveryService>();
         return services;
     }
 

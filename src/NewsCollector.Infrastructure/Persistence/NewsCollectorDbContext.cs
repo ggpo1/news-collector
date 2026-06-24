@@ -30,6 +30,16 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();
 
+    public DbSet<TelegramBot> TelegramBots => Set<TelegramBot>();
+
+    public DbSet<TelegramChannel> TelegramChannels => Set<TelegramChannel>();
+
+    public DbSet<TelegramChannelCategory> TelegramChannelCategories => Set<TelegramChannelCategory>();
+
+    public DbSet<TelegramChannelSource> TelegramChannelSources => Set<TelegramChannelSource>();
+
+    public DbSet<TelegramDelivery> TelegramDeliveries => Set<TelegramDelivery>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NewsCollectorDbContext).Assembly);

@@ -5,6 +5,7 @@ import { formatToneCoefficient } from '../../api/tone';
 import type { NewsItemDetail, RelatedNews, SecondDayAngles } from '../../api/types';
 import { NewsRewriteEditor } from '../news-rewrite-editor/news-rewrite-editor';
 import { SecondDayAnglesPanel } from '../second-day-angles/second-day-angles-panel';
+import { SendToTelegramModal } from '../send-to-telegram-modal/send-to-telegram-modal';
 import { EmptyState } from '../ui/empty-state';
 import { LoadingState } from '../ui/loading-state';
 import * as S from './news-detail.styles';
@@ -37,6 +38,7 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
   const [anglesLoading, setAnglesLoading] = useState(false);
   const [anglesError, setAnglesError] = useState<string | null>(null);
   const [angles, setAngles] = useState<SecondDayAngles | null>(null);
+  const [telegramOpen, setTelegramOpen] = useState(false);
 
   const loadItem = useCallback(async (id: string) => {
     setLoading(true);
@@ -62,6 +64,7 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
       setEditorOpen(false);
       setAngles(null);
       setAnglesError(null);
+      setTelegramOpen(false);
       return;
     }
 
@@ -227,6 +230,9 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
         >
           {anglesLoading ? 'Анализируем углы…' : 'Углы на 2-й день'}
         </S.SecondDayButton>
+        <S.TelegramButton type="button" onClick={() => setTelegramOpen(true)}>
+          Отправить в Telegram
+        </S.TelegramButton>
         <S.ExternalLink href={item.url} target="_blank" rel="noreferrer">
           Открыть оригинал →
         </S.ExternalLink>
@@ -269,6 +275,17 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
         <NewsRewriteEditor
           sourceNews={item}
           onClose={() => setEditorOpen(false)}
+        />
+      )}
+
+      {telegramOpen && (
+        <SendToTelegramModal
+          title={item.title}
+          mode="news"
+          targetId={item.id}
+          sourceId={item.sourceId}
+          categoryId={item.categoryId}
+          onClose={() => setTelegramOpen(false)}
         />
       )}
     </>

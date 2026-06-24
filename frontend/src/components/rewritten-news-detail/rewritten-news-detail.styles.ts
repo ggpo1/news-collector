@@ -110,6 +110,21 @@ export const PrimaryButton = styled.button`
   }
 `;
 
+export const TelegramButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: 1px solid color-mix(in srgb, #2aabee 55%, ${({ theme }) => theme.colors.border});
+  border-radius: ${({ theme }) => theme.radii.sm};
+  background: transparent;
+  color: #2aabee;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, #2aabee 12%, transparent);
+  }
+`;
+
 export const DangerButton = styled.button`
   padding: 0.5rem 1rem;
   border: 1px solid color-mix(in srgb, ${({ theme }) => theme.colors.danger} 55%, ${({ theme }) => theme.colors.border});

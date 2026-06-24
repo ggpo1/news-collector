@@ -26,6 +26,15 @@ builder.Services.AddScoped<IUserContext, HttpUserContext>();
 builder.Services.AddPersistence(connectionString);
 builder.Services.AddContentEnrichment();
 builder.Services.AddAiRewrite(builder.Configuration);
+builder.Services.AddTelegram(builder.Configuration);
+
+var telegramOrchestrator = builder.Configuration.GetSection(TelegramBotOrchestratorOptions.SectionName);
+if (string.IsNullOrWhiteSpace(telegramOrchestrator["WorkerConnectionString"]))
+{
+    builder.Configuration["TelegramBotOrchestrator:WorkerConnectionString"] = connectionString
+        .Replace("Host=localhost", "Host=postgres")
+        .Replace("127.0.0.1", "postgres");
+}
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<NewsCollectorDbContext>();
 

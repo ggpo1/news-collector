@@ -5,6 +5,8 @@ import type {
   Category,
   CreateNewsRewritePayload,
   CreateSourcePayload,
+  CreateTelegramBotPayload,
+  CreateTelegramChannelPayload,
   CreateUserPayload,
   CurrentUser,
   LinkType,
@@ -21,8 +23,13 @@ import type {
   RelatedNews,
   SecondDayAngles,
   Source,
+  TelegramBot,
+  TelegramChannel,
+  TelegramSendResult,
   UpdateNewsRewritePayload,
   UpdateSourcePayload,
+  UpdateTelegramBotPayload,
+  UpdateTelegramChannelPayload,
   UpdateUserPayload,
   UserAccount,
 } from './types';
@@ -381,4 +388,86 @@ export function getEntityDetail(
 
   const query = search.toString();
   return request<NamedEntityDetail>(query ? `/api/entities/${id}?${query}` : `/api/entities/${id}`);
+}
+
+export function getTelegramBots(): Promise<TelegramBot[]> {
+  return request<TelegramBot[]>('/api/telegram/bots');
+}
+
+export function createTelegramBot(payload: CreateTelegramBotPayload): Promise<TelegramBot> {
+  return request<TelegramBot>('/api/telegram/bots', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateTelegramBot(id: string, payload: UpdateTelegramBotPayload): Promise<TelegramBot> {
+  return request<TelegramBot>(`/api/telegram/bots/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteTelegramBot(id: string): Promise<void> {
+  return requestVoid(`/api/telegram/bots/${id}`, { method: 'DELETE' });
+}
+
+export function restartTelegramBot(id: string): Promise<TelegramBot> {
+  return request<TelegramBot>(`/api/telegram/bots/${id}/restart`, { method: 'POST' });
+}
+
+export function getTelegramChannels(params?: {
+  sourceId?: string;
+  categoryId?: string;
+}): Promise<TelegramChannel[]> {
+  const search = new URLSearchParams();
+  if (params?.sourceId) {
+    search.set('sourceId', params.sourceId);
+  }
+  if (params?.categoryId) {
+    search.set('categoryId', params.categoryId);
+  }
+  const query = search.toString();
+  return request<TelegramChannel[]>(query ? `/api/telegram/channels?${query}` : '/api/telegram/channels');
+}
+
+export function createTelegramChannel(payload: CreateTelegramChannelPayload): Promise<TelegramChannel> {
+  return request<TelegramChannel>('/api/telegram/channels', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateTelegramChannel(
+  id: string,
+  payload: UpdateTelegramChannelPayload,
+): Promise<TelegramChannel> {
+  return request<TelegramChannel>(`/api/telegram/channels/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteTelegramChannel(id: string): Promise<void> {
+  return requestVoid(`/api/telegram/channels/${id}`, { method: 'DELETE' });
+}
+
+export function sendNewsToTelegram(newsId: string, channelId: string): Promise<TelegramSendResult> {
+  return request<TelegramSendResult>(`/api/telegram/news/${newsId}/send`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId }),
+  });
+}
+
+export function sendRewriteToTelegram(rewriteId: string, channelId: string): Promise<TelegramSendResult> {
+  return request<TelegramSendResult>(`/api/telegram/rewrites/${rewriteId}/send`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId }),
+  });
 }

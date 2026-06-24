@@ -62,6 +62,11 @@ export const Meta = styled.div`
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
+export const SourceName = styled.span`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
 export const Chevron = styled.span`
   flex-shrink: 0;
   font-size: 1.25rem;

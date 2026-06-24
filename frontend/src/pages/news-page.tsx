@@ -82,6 +82,7 @@ export function NewsPage() {
             loading={loading}
             error={error}
             selectedId={selectedNewsId}
+            showSource={!selectedSourceId}
             onSelect={setSelectedNewsId}
           />
         }

@@ -29,6 +29,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       RunMigrations: ${RUN_MIGRATIONS:-true}
@@ -46,6 +48,15 @@ services:
       Auth__SeedChiefEditorLogin: ${AUTH_SEED_CHIEF_LOGIN:-chief}
       Auth__SeedChiefEditorPassword: ${AUTH_SEED_CHIEF_PASSWORD:-changeme}
       Auth__SeedChiefEditorDisplayName: ${AUTH_SEED_CHIEF_DISPLAY_NAME:-Главный редактор}
+      TelegramBotOrchestrator__Enabled: ${TELEGRAM_ORCHESTRATOR_ENABLED:-true}
+      TelegramBotOrchestrator__DockerImage: ${TELEGRAM_BOT_IMAGE:-news-collector-telegram-bot:latest}
+      TelegramBotOrchestrator__DockerNetwork: ${DOCKER_NETWORK:-news-collector_default}
+      TelegramBotOrchestrator__WorkerConnectionString: >-
+        Host=postgres;
+        Port=5432;
+        Database=${POSTGRES_DB:-news_collector};
+        Username=${POSTGRES_USER:-news};
+        Password=${POSTGRES_PASSWORD:-news}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     logging:
@@ -327,6 +338,14 @@ services:
           sleep 5
         done
     restart: "no"
+
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.telegram-bot
+    image: news-collector-telegram-bot:latest
+    profiles:
+      - telegram-build
 
 volumes:
   postgres_data:

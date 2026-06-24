@@ -9,6 +9,7 @@ export const PATHS = {
   rewrites: '/rewrites',
   map: '/map',
   sources: '/sources',
+  telegram: '/telegram',
   users: '/users',
 } as const;
 
@@ -18,6 +19,7 @@ export const SECTION_PATHS: Record<AppSection, string> = {
   rewrites: PATHS.rewrites,
   map: PATHS.map,
   sources: PATHS.sources,
+  telegram: PATHS.telegram,
   users: PATHS.users,
 };
 

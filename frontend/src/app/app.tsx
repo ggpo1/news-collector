@@ -8,6 +8,7 @@ import { EntityMapPage } from '../pages/entity-map-page';
 import { NewsPage } from '../pages/news-page';
 import { RewritesPage } from '../pages/rewrites-page';
 import { SourcesPage } from '../pages/sources-page';
+import { TelegramPage } from '../pages/telegram-page';
 import { AppLayout } from './app-layout';
 import { ChiefEditorRoute } from './chief-editor-route';
 import { GuestRoute } from './guest-route';
@@ -60,6 +61,14 @@ export default function App() {
           element={
             <ChiefEditorRoute>
               <SourcesPage />
+            </ChiefEditorRoute>
+          }
+        />
+        <Route
+          path="telegram"
+          element={
+            <ChiefEditorRoute>
+              <TelegramPage />
             </ChiefEditorRoute>
           }
         />

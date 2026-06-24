@@ -82,6 +82,19 @@ export function NavIcon({ section }: NavIconProps) {
           />
         </svg>
       );
+    case 'telegram':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M21.5 4.5 3.8 11.1c-.9.35-.88 1.62.03 1.94l4.55 1.43 1.74 5.3c.28.86 1.43 1.05 1.96.34l2.5-3.2 4.65 3.43c.77.57 1.86.14 2.07-.82L22.7 6.2c.22-1.05-.62-1.95-1.7-1.7Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinejoin="round"
+          />
+          <path d="m9.5 13.2 8.7-5.4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
     case 'users':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">

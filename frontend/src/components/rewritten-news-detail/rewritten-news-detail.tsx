@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { NewsRewrite } from '../../api/types';
+import { SendToTelegramModal } from '../send-to-telegram-modal/send-to-telegram-modal';
 import { SourceTaskCard } from '../source-task-card/source-task-card';
 import * as S from './rewritten-news-detail.styles';
 
@@ -25,6 +26,7 @@ export function RewrittenNewsDetail({
 }: RewrittenNewsDetailProps) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [telegramOpen, setTelegramOpen] = useState(false);
 
   if (!rewrite) {
     return (
@@ -75,6 +77,9 @@ export function RewrittenNewsDetail({
       {error && <S.Error>{error}</S.Error>}
 
       <S.Actions>
+        <S.TelegramButton type="button" onClick={() => setTelegramOpen(true)}>
+          Отправить в Telegram
+        </S.TelegramButton>
         <S.PrimaryButton type="button" onClick={() => onEdit(rewrite)}>
           Редактировать
         </S.PrimaryButton>
@@ -82,6 +87,16 @@ export function RewrittenNewsDetail({
           {deleting ? 'Удаление…' : 'Удалить'}
         </S.DangerButton>
       </S.Actions>
+
+      {telegramOpen && (
+        <SendToTelegramModal
+          title={rewrite.title}
+          mode="rewrite"
+          targetId={rewrite.id}
+          sourceId={rewrite.sourceNewsSourceId}
+          onClose={() => setTelegramOpen(false)}
+        />
+      )}
     </S.Panel>
   );
 }

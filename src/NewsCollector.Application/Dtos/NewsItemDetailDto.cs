@@ -4,6 +4,7 @@ public sealed record NewsItemDetailDto(
     Guid Id,
     Guid SourceId,
     string SourceName,
+    Guid? CategoryId,
     string? CategoryName,
     decimal? ToneCoefficient,
     DateTimeOffset? ToneAnalyzedAt,

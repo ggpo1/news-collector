@@ -51,6 +51,7 @@ export interface NewsItemDetail {
   id: string;
   sourceId: string;
   sourceName: string;
+  categoryId: string | null;
   categoryName: string | null;
   toneCoefficient: number | null;
   toneAnalyzedAt: string | null;
@@ -245,4 +246,61 @@ export interface SuggestedAngle {
   title: string;
   rationale: string;
   angleType: string;
+}
+
+export interface TelegramBot {
+  id: string;
+  name: string;
+  botTokenMasked: string;
+  isActive: boolean;
+  containerStatus: string;
+  containerName: string | null;
+  containerError: string | null;
+  channelCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TelegramChannel {
+  id: string;
+  telegramBotId: string;
+  botName: string;
+  name: string;
+  chatId: string;
+  isActive: boolean;
+  categoryIds: string[];
+  sourceIds: string[];
+  categoryNames: string[];
+  sourceNames: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTelegramBotPayload {
+  name: string;
+  botToken: string;
+  isActive: boolean;
+}
+
+export interface UpdateTelegramBotPayload {
+  name: string;
+  botToken?: string | null;
+  isActive: boolean;
+}
+
+export interface CreateTelegramChannelPayload {
+  telegramBotId: string;
+  name: string;
+  chatId: string;
+  isActive: boolean;
+  categoryIds: string[];
+  sourceIds: string[];
+}
+
+export interface UpdateTelegramChannelPayload extends CreateTelegramChannelPayload {}
+
+export interface TelegramSendResult {
+  deliveryId: string;
+  status: string;
+  message: string;
 }

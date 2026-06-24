@@ -83,6 +83,7 @@ public sealed class NewsQueryService : INewsQueryService
                 n.Id,
                 n.SourceId,
                 n.Source.Name,
+                n.CategoryId,
                 n.Category != null ? n.Category.Name : null,
                 n.ToneCoefficient,
                 n.ToneAnalyzedAt,
