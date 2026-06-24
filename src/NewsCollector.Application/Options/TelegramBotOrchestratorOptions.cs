@@ -11,4 +11,12 @@ public sealed class TelegramBotOrchestratorOptions
     public string DockerNetwork { get; set; } = "news-collector_default";
 
     public string WorkerConnectionString { get; set; } = string.Empty;
+
+    /// <summary>
+    /// HTTP proxy for Telegram bot worker containers (e.g. http://host.docker.internal:10809).
+    /// .NET HttpClient supports HTTP proxy; SOCKS5 requires HTTP inbound on Xray instead.
+    /// </summary>
+    public string? WorkerHttpProxy { get; set; }
+
+    public string? WorkerHttpsProxy { get; set; }
 }

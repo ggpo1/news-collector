@@ -49,11 +49,14 @@ public static class DependencyInjection
             configuration.GetSection(TelegramBotOrchestratorOptions.SectionName));
         services.Configure<TelegramBotWorkerOptions>(
             configuration.GetSection(TelegramBotWorkerOptions.SectionName));
+        services.Configure<TelegramOptions>(
+            configuration.GetSection(TelegramOptions.SectionName));
 
         services.AddHttpClient("Telegram", client =>
         {
             client.Timeout = TimeSpan.FromSeconds(60);
-        });
+        })
+        .ConfigureTelegramProxy(configuration);
 
         services.AddSingleton<ITelegramBotOrchestrator, DockerCliTelegramBotOrchestrator>();
         services.AddScoped<ITelegramApiClient, TelegramApiClient>();
@@ -70,10 +73,13 @@ public static class DependencyInjection
     {
         services.Configure<TelegramBotWorkerOptions>(
             configuration.GetSection(TelegramBotWorkerOptions.SectionName));
+        services.Configure<TelegramOptions>(
+            configuration.GetSection(TelegramOptions.SectionName));
         services.AddHttpClient("Telegram", client =>
         {
             client.Timeout = TimeSpan.FromSeconds(60);
-        });
+        })
+        .ConfigureTelegramProxy(configuration);
         services.AddScoped<ITelegramApiClient, TelegramApiClient>();
         services.AddScoped<ITelegramDeliveryService, TelegramDeliveryService>();
         return services;

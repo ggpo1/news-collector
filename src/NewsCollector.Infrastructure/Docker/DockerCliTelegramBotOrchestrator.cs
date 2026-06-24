@@ -42,6 +42,8 @@ public sealed class DockerCliTelegramBotOrchestrator : ITelegramBotOrchestrator
             var runArgs =
                 $"run -d --pull never --name {containerName} --restart unless-stopped " +
                 $"--network {_options.DockerNetwork} " +
+                $"--add-host=host.docker.internal:host-gateway " +
+                BuildWorkerProxyEnvArgs() +
                 $"-e TelegramBot__BotId={botId} " +
                 $"-e TelegramBot__PollingIntervalSeconds=5 " +
                 $"-e ConnectionStrings__DefaultConnection={Quote(_options.WorkerConnectionString)} " +
@@ -139,4 +141,25 @@ public sealed class DockerCliTelegramBotOrchestrator : ITelegramBotOrchestrator
     }
 
     private static string Quote(string value) => $"\"{value.Replace("\"", "\\\"")}\"";
+
+    private string BuildWorkerProxyEnvArgs()
+    {
+        if (string.IsNullOrWhiteSpace(_options.WorkerHttpProxy)
+            && string.IsNullOrWhiteSpace(_options.WorkerHttpsProxy))
+        {
+            return string.Empty;
+        }
+
+        var httpProxy = _options.WorkerHttpProxy ?? _options.WorkerHttpsProxy!;
+        var httpsProxy = _options.WorkerHttpsProxy ?? _options.WorkerHttpProxy!;
+        const string noProxy = "postgres,localhost,127.0.0.1,::1";
+
+        return
+            $"-e HTTP_PROXY={Quote(httpProxy)} " +
+            $"-e HTTPS_PROXY={Quote(httpsProxy)} " +
+            $"-e NO_PROXY={Quote(noProxy)} " +
+            $"-e Telegram__HttpProxy={Quote(httpProxy)} " +
+            $"-e Telegram__HttpsProxy={Quote(httpsProxy)} " +
+            $"-e Telegram__NoProxy={Quote(noProxy)} ";
+    }
 }

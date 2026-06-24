@@ -70,6 +70,8 @@ services:
         Database=${POSTGRES_DB:-news_collector};
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
+      TelegramBotOrchestrator__WorkerHttpProxy: ${TELEGRAM_WORKER_HTTP_PROXY:-}
+      TelegramBotOrchestrator__WorkerHttpsProxy: ${TELEGRAM_WORKER_HTTPS_PROXY:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     logging:
