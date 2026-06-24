@@ -107,9 +107,9 @@ export function EditorialDashboardView({
       {loading && !dashboard ? <LoadingState label="Собираем редакционный обзор…" /> : null}
 
       {dashboard && (
-        <>
-          <S.TabbedBlock>
-            <S.TabList role="tablist" aria-label="Приоритетные поводы">
+        <S.Grid>
+          <S.TabbedSection>
+            <S.TabList role="tablist" aria-label="Развивается тема и всплески сущностей">
               <S.TabButton
                 type="button"
                 role="tab"
@@ -136,77 +136,31 @@ export function EditorialDashboardView({
               </S.TabButton>
             </S.TabList>
 
-            <S.TabPanel
-              role="tabpanel"
-              id="dashboard-panel-topics"
-              aria-labelledby="dashboard-tab-topics"
-              hidden={activeTab !== 'topics'}
-            >
-              <TopicSection
-                hint="3+ источника за выбранное окно, связаны по заголовку/смыслу"
-                empty="Пока нет тем с тремя и более источниками. Topic-linker связывает материалы автоматически."
-                items={dashboard.developingTopics}
-                renderItem={(topic) => (
-                  <S.Card
-                    key={topic.clusterKey}
-                    type="button"
-                    onClick={() => void openStory(topic.clusterKey, topic.primaryArticle.id)}
-                  >
-                    <S.Badges>
-                      <S.Badge $variant="hot">{topic.sourceCount} источника</S.Badge>
-                      <S.Badge>{topic.articleCount} материала</S.Badge>
-                    </S.Badges>
-                    <S.CardTitle>{topic.headline}</S.CardTitle>
-                    <S.CardMeta>
-                      Источники: {formatSources(topic.sourceNames)}
-                      <br />
-                      Лучший материал: <NewsMeta item={topic.primaryArticle} />
-                    </S.CardMeta>
-                    {topic.relatedArticles.length > 0 && (
-                      <S.RelatedList>
-                        {topic.relatedArticles.map((item) => (
-                          <li key={item.id}>
-                            {item.sourceName}: {item.title}
-                          </li>
-                        ))}
-                      </S.RelatedList>
-                    )}
-                  </S.Card>
-                )}
-              />
-            </S.TabPanel>
-
-            <S.TabPanel
-              role="tabpanel"
-              id="dashboard-panel-entities"
-              aria-labelledby="dashboard-tab-entities"
-              hidden={activeTab !== 'entities'}
-            >
-              <TopicSection
-                hint="Частые упоминания персон/компаний vs предыдущий период"
-                empty="Нет заметных всплесков. Нужны извлечённые сущности (entity-extractor)."
-                items={dashboard.entitySpikes}
-                renderItem={(spike) => {
-                  const firstArticle = spike.recentArticles[0];
-                  return (
+            {activeTab === 'topics' ? (
+              <div role="tabpanel" id="dashboard-panel-topics" aria-labelledby="dashboard-tab-topics">
+                <TopicSection
+                  hint="3+ источника за выбранное окно, связаны по заголовку/смыслу"
+                  empty="Пока нет тем с тремя и более источниками. Topic-linker связывает материалы автоматически."
+                  items={dashboard.developingTopics}
+                  renderItem={(topic) => (
                     <S.Card
-                      key={spike.entityId}
+                      key={topic.clusterKey}
                       type="button"
-                      disabled={!firstArticle}
-                      onClick={() => firstArticle && openNews(firstArticle.id)}
+                      onClick={() => void openStory(topic.clusterKey, topic.primaryArticle.id)}
                     >
                       <S.Badges>
-                        <S.Badge $variant="entity">{spike.entityType}</S.Badge>
-                        <S.Badge $variant="hot">×{spike.spikeRatio.toFixed(1)}</S.Badge>
-                        <S.Badge>{spike.mentionsInWindow} упоминаний</S.Badge>
+                        <S.Badge $variant="hot">{topic.sourceCount} источника</S.Badge>
+                        <S.Badge>{topic.articleCount} материала</S.Badge>
                       </S.Badges>
-                      <S.CardTitle>{spike.entityName}</S.CardTitle>
+                      <S.CardTitle>{topic.headline}</S.CardTitle>
                       <S.CardMeta>
-                        Было {spike.mentionsInPreviousWindow} → стало {spike.mentionsInWindow} за окно
+                        Источники: {formatSources(topic.sourceNames)}
+                        <br />
+                        Лучший материал: <NewsMeta item={topic.primaryArticle} />
                       </S.CardMeta>
-                      {spike.recentArticles.length > 0 && (
+                      {topic.relatedArticles.length > 0 && (
                         <S.RelatedList>
-                          {spike.recentArticles.map((item) => (
+                          {topic.relatedArticles.map((item) => (
                             <li key={item.id}>
                               {item.sourceName}: {item.title}
                             </li>
@@ -214,15 +168,53 @@ export function EditorialDashboardView({
                         </S.RelatedList>
                       )}
                     </S.Card>
-                  );
-                }}
-              />
-            </S.TabPanel>
-          </S.TabbedBlock>
+                  )}
+                />
+              </div>
+            ) : (
+              <div role="tabpanel" id="dashboard-panel-entities" aria-labelledby="dashboard-tab-entities">
+                <TopicSection
+                  hint="Частые упоминания персон/компаний vs предыдущий период"
+                  empty="Нет заметных всплесков. Нужны извлечённые сущности (entity-extractor)."
+                  items={dashboard.entitySpikes}
+                  renderItem={(spike) => {
+                    const firstArticle = spike.recentArticles[0];
+                    return (
+                      <S.Card
+                        key={spike.entityId}
+                        type="button"
+                        disabled={!firstArticle}
+                        onClick={() => firstArticle && openNews(firstArticle.id)}
+                      >
+                        <S.Badges>
+                          <S.Badge $variant="entity">{spike.entityType}</S.Badge>
+                          <S.Badge $variant="hot">×{spike.spikeRatio.toFixed(1)}</S.Badge>
+                          <S.Badge>{spike.mentionsInWindow} упоминаний</S.Badge>
+                        </S.Badges>
+                        <S.CardTitle>{spike.entityName}</S.CardTitle>
+                        <S.CardMeta>
+                          Было {spike.mentionsInPreviousWindow} → стало {spike.mentionsInWindow} за окно
+                        </S.CardMeta>
+                        {spike.recentArticles.length > 0 && (
+                          <S.RelatedList>
+                            {spike.recentArticles.map((item) => (
+                              <li key={item.id}>
+                                {item.sourceName}: {item.title}
+                              </li>
+                            ))}
+                          </S.RelatedList>
+                        )}
+                      </S.Card>
+                    );
+                  }}
+                />
+              </div>
+            )}
+          </S.TabbedSection>
 
-          <S.Grid>
-          <TopicSection
-            title="Дубликаты и перекрёстные публикации"
+          <S.Section>
+            <TopicSection
+              title="Дубликаты и перекрёстные публикации"
             hint="Связанные материалы (2+), лучший — с полным текстом и раньше по времени"
             empty="Нет сгруппированных дубликатов вне «развивающихся тем»."
             items={dashboard.duplicateGroups}
@@ -241,10 +233,12 @@ export function EditorialDashboardView({
                 </S.CardMeta>
               </S.Card>
             )}
-          />
+            />
+          </S.Section>
 
-          <TopicSection
-            title="Эмоциональные поводы"
+          <S.Section>
+            <TopicSection
+              title="Эмоциональные поводы"
             hint="Материалы с сильной тональностью (|тон| ≥ 0.55)"
             empty="Нет ярко окрашенных материалов. Запустите news-tone-analyzer."
             items={dashboard.toneHighlights}
@@ -260,9 +254,9 @@ export function EditorialDashboardView({
                 </S.CardMeta>
               </S.Card>
             )}
-          />
-          </S.Grid>
-        </>
+            />
+          </S.Section>
+        </S.Grid>
       )}
     </S.Page>
   );
@@ -282,7 +276,7 @@ function TopicSection<T>({
   renderItem: (item: T) => ReactNode;
 }) {
   return (
-    <S.Section>
+    <>
       {title ? <S.SectionTitle>{title}</S.SectionTitle> : null}
       <S.SectionHint>{hint}</S.SectionHint>
       {items.length === 0 ? (
@@ -290,6 +284,6 @@ function TopicSection<T>({
       ) : (
         <S.CardList>{items.map((item) => renderItem(item))}</S.CardList>
       )}
-    </S.Section>
+    </>
   );
 }
