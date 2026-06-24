@@ -15,7 +15,12 @@ RUN dotnet publish "NewsCollector.Api.csproj" -c Release -o /app/publish /p:UseA
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends docker.io \
+    && rm -rf /var/lib/apt/lists/* \
+    && adduser --disabled-password --gecos "" appuser \
+    && chown -R appuser /app
+
 USER appuser
 
 ENV ASPNETCORE_URLS=http://+:8080

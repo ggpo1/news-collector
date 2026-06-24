@@ -25,9 +25,19 @@
 ## Деплой
 
 ```bash
+# образ воркера бота (один раз)
 docker compose --profile telegram-build build telegram-bot
+
+# пересборка API (в образе должен быть docker CLI)
 docker compose up -d --build api frontend
 ```
+
+На хосте в `.env` укажите GID группы docker:
+```bash
+getent group docker | cut -d: -f3   # → DOCKER_GID=...
+```
+
+Имя сети: `docker network ls` → `DOCKER_NETWORK=..._default`
 
 Проверить `DOCKER_NETWORK` (по умолчанию `news-collector_default` — имя сети compose-проекта).
 

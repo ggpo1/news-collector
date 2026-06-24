@@ -80,9 +80,10 @@ public sealed class DockerCliTelegramBotOrchestrator : ITelegramBotOrchestrator
 
     private async Task<string> RunDockerAsync(string arguments, CancellationToken cancellationToken)
     {
+        var dockerBinary = ResolveDockerBinary();
         var psi = new ProcessStartInfo
         {
-            FileName = "docker",
+            FileName = dockerBinary,
             Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -104,6 +105,20 @@ public sealed class DockerCliTelegramBotOrchestrator : ITelegramBotOrchestrator
         }
 
         return stdout;
+    }
+
+    private static string ResolveDockerBinary()
+    {
+        foreach (var candidate in new[] { "/usr/bin/docker", "/usr/local/bin/docker", "docker" })
+        {
+            if (candidate == "docker" || File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        throw new InvalidOperationException(
+            "Docker CLI not found in the API container. Rebuild the api image (Dockerfile.api installs docker.io).");
     }
 
     private static string Quote(string value) => $"\"{value.Replace("\"", "\\\"")}\"";
