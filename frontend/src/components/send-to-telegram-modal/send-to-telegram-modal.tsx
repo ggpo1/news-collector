@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { getTelegramChannels, sendNewsToTelegram, sendRewriteToTelegram } from '../../api/client';
+import {
+  getTelegramChannels,
+  getTelegramDelivery,
+  sendNewsToTelegram,
+  sendRewriteToTelegram,
+} from '../../api/client';
 import type { TelegramChannel } from '../../api/types';
 import { LoadingState } from '../ui/loading-state';
 import * as S from './send-to-telegram-modal.styles';
@@ -26,6 +31,27 @@ export function SendToTelegramModal({
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const waitForDelivery = async (deliveryId: string) => {
+    const deadline = Date.now() + 30_000;
+
+    while (Date.now() < deadline) {
+      const delivery = await getTelegramDelivery(deliveryId);
+
+      if (delivery.status === 'Sent') {
+        setSuccess(`Сообщение отправлено в «${delivery.channelName}»`);
+        return;
+      }
+
+      if (delivery.status === 'Failed') {
+        throw new Error(delivery.errorMessage ?? 'Telegram отклонил сообщение');
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+
+    setSuccess('Сообщение в очереди. Проверьте канал через несколько секунд.');
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -72,7 +98,7 @@ export function SendToTelegramModal({
           ? await sendNewsToTelegram(targetId, channel.id)
           : await sendRewriteToTelegram(targetId, channel.id);
 
-      setSuccess(result.message);
+      await waitForDelivery(result.deliveryId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось отправить');
     } finally {

@@ -40,4 +40,13 @@ public sealed class TelegramSendController : ControllerBase
         var result = await _deliveryService.QueueRewriteAsync(rewriteId, request.ChannelId, cancellationToken);
         return result is null ? NotFound() : Ok(result);
     }
+
+    [HttpGet("deliveries/{deliveryId:guid}")]
+    [ProducesResponseType(typeof(TelegramDeliveryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetDelivery(Guid deliveryId, CancellationToken cancellationToken)
+    {
+        var delivery = await _deliveryService.GetDeliveryAsync(deliveryId, cancellationToken);
+        return delivery is null ? NotFound() : Ok(delivery);
+    }
 }

@@ -1,10 +1,11 @@
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using NewsCollector.Domain.Entities;
 
 namespace NewsCollector.Infrastructure.Telegram;
 
-public static class TelegramMessageFormatter
+public static partial class TelegramMessageFormatter
 {
     private const int MaxLength = 3900;
 
@@ -50,6 +51,18 @@ public static class TelegramMessageFormatter
         return builder.ToString();
     }
 
+    public static string ToPlainText(string html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+        {
+            return string.Empty;
+        }
+
+        var withLinks = HtmlLinkRegex().Replace(html, "$1");
+        var withoutTags = HtmlTagRegex().Replace(withLinks, string.Empty);
+        return WebUtility.HtmlDecode(withoutTags).Trim();
+    }
+
     public static string MaskToken(string token)
     {
         var trimmed = token.Trim();
@@ -78,4 +91,10 @@ public static class TelegramMessageFormatter
 
     private static string EscapeAttribute(string value) =>
         WebUtility.HtmlEncode(value).Replace("\"", "&quot;");
+
+    [GeneratedRegex(@"<a\s+href=""([^""]+)"">.*?</a>", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex HtmlLinkRegex();
+
+    [GeneratedRegex("<[^>]+>", RegexOptions.CultureInvariant)]
+    private static partial Regex HtmlTagRegex();
 }

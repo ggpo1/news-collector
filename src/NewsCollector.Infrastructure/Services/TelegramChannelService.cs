@@ -9,10 +9,12 @@ namespace NewsCollector.Infrastructure.Services;
 public sealed class TelegramChannelService : ITelegramChannelService
 {
     private readonly NewsCollectorDbContext _db;
+    private readonly ITelegramApiClient _telegramApi;
 
-    public TelegramChannelService(NewsCollectorDbContext db)
+    public TelegramChannelService(NewsCollectorDbContext db, ITelegramApiClient telegramApi)
     {
         _db = db;
+        _telegramApi = telegramApi;
     }
 
     public async Task<IReadOnlyList<TelegramChannelDto>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -74,6 +76,21 @@ public sealed class TelegramChannelService : ITelegramChannelService
             return null;
         }
 
+        var bot = await _db.TelegramBots.FirstOrDefaultAsync(item => item.Id == request.TelegramBotId, cancellationToken);
+        if (bot is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            await _telegramApi.EnsureChatAccessibleAsync(bot.BotToken, chatId, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new InvalidOperationException($"Telegram не видит канал {chatId}: {ex.Message}", ex);
+        }
+
         var now = DateTimeOffset.UtcNow;
         var channel = new TelegramChannel
         {
@@ -126,6 +143,21 @@ public sealed class TelegramChannelService : ITelegramChannelService
                 cancellationToken))
         {
             return null;
+        }
+
+        var bot = await _db.TelegramBots.FirstOrDefaultAsync(item => item.Id == request.TelegramBotId, cancellationToken);
+        if (bot is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            await _telegramApi.EnsureChatAccessibleAsync(bot.BotToken, chatId, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new InvalidOperationException($"Telegram не видит канал {chatId}: {ex.Message}", ex);
         }
 
         channel.TelegramBotId = request.TelegramBotId;

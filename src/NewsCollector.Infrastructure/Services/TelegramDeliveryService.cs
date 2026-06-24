@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Dtos;
@@ -15,15 +16,18 @@ public sealed class TelegramDeliveryService : ITelegramDeliveryService
     private readonly NewsCollectorDbContext _db;
     private readonly ITelegramApiClient _telegramApi;
     private readonly TelegramBotWorkerOptions _options;
+    private readonly ILogger<TelegramDeliveryService> _logger;
 
     public TelegramDeliveryService(
         NewsCollectorDbContext db,
         ITelegramApiClient telegramApi,
-        IOptions<TelegramBotWorkerOptions> options)
+        IOptions<TelegramBotWorkerOptions> options,
+        ILogger<TelegramDeliveryService> logger)
     {
         _db = db;
         _telegramApi = telegramApi;
         _options = options.Value;
+        _logger = logger;
     }
 
     public async Task<TelegramSendResultDto?> QueueNewsAsync(
@@ -117,11 +121,42 @@ public sealed class TelegramDeliveryService : ITelegramDeliveryService
             {
                 delivery.Status = TelegramDeliveryStatus.Failed;
                 delivery.ErrorMessage = ex.Message.Length > 2000 ? ex.Message[..2000] : ex.Message;
+                _logger.LogWarning(
+                    ex,
+                    "Telegram delivery {DeliveryId} failed for channel {ChannelId} (chat {ChatId}): {Error}",
+                    delivery.Id,
+                    delivery.TelegramChannelId,
+                    delivery.Channel.ChatId,
+                    delivery.ErrorMessage);
             }
         }
 
         await _db.SaveChangesAsync(cancellationToken);
         return pending.Count;
+    }
+
+    public async Task<TelegramDeliveryDto?> GetDeliveryAsync(
+        Guid deliveryId,
+        CancellationToken cancellationToken = default)
+    {
+        var delivery = await _db.TelegramDeliveries
+            .AsNoTracking()
+            .Include(item => item.Channel)
+            .FirstOrDefaultAsync(item => item.Id == deliveryId, cancellationToken);
+
+        if (delivery is null)
+        {
+            return null;
+        }
+
+        return new TelegramDeliveryDto(
+            delivery.Id,
+            delivery.TelegramChannelId,
+            delivery.Channel.Name,
+            delivery.Status.ToString(),
+            delivery.ErrorMessage,
+            delivery.CreatedAt,
+            delivery.SentAt);
     }
 
     private async Task<TelegramChannel?> LoadActiveChannelAsync(Guid channelId, CancellationToken cancellationToken) =>

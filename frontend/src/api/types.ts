@@ -304,3 +304,13 @@ export interface TelegramSendResult {
   status: string;
   message: string;
 }
+
+export interface TelegramDelivery {
+  id: string;
+  channelId: string;
+  channelName: string;
+  status: string;
+  errorMessage: string | null;
+  createdAt: string;
+  sentAt: string | null;
+}

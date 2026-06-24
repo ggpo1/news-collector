@@ -9,4 +9,6 @@ public interface ITelegramDeliveryService
     Task<TelegramSendResultDto?> QueueRewriteAsync(Guid rewriteId, Guid channelId, CancellationToken cancellationToken = default);
 
     Task<int> ProcessPendingForBotAsync(Guid botId, CancellationToken cancellationToken = default);
+
+    Task<TelegramDeliveryDto?> GetDeliveryAsync(Guid deliveryId, CancellationToken cancellationToken = default);
 }

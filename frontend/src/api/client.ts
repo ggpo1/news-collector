@@ -26,6 +26,7 @@ import type {
   TelegramBot,
   TelegramChannel,
   TelegramSendResult,
+  TelegramDelivery,
   UpdateNewsRewritePayload,
   UpdateSourcePayload,
   UpdateTelegramBotPayload,
@@ -470,4 +471,8 @@ export function sendRewriteToTelegram(rewriteId: string, channelId: string): Pro
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ channelId }),
   });
+}
+
+export function getTelegramDelivery(deliveryId: string): Promise<TelegramDelivery> {
+  return request<TelegramDelivery>(`/api/telegram/deliveries/${deliveryId}`);
 }

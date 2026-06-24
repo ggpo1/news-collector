@@ -54,10 +54,17 @@ public sealed class TelegramChannelsController : ControllerBase
             return BadRequest(new { error = "Name and ChatId are required" });
         }
 
-        var channel = await _channelService.CreateAsync(request, cancellationToken);
-        return channel is null
-            ? BadRequest(new { error = "Failed to create channel. Check bot id and chat id uniqueness." })
-            : CreatedAtAction(nameof(GetById), new { id = channel.Id }, channel);
+        try
+        {
+            var channel = await _channelService.CreateAsync(request, cancellationToken);
+            return channel is null
+                ? BadRequest(new { error = "Failed to create channel. Check bot id and chat id uniqueness." })
+                : CreatedAtAction(nameof(GetById), new { id = channel.Id }, channel);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -69,8 +76,15 @@ public sealed class TelegramChannelsController : ControllerBase
         [FromBody] UpdateTelegramChannelRequest request,
         CancellationToken cancellationToken)
     {
-        var channel = await _channelService.UpdateAsync(id, request, cancellationToken);
-        return channel is null ? NotFound() : Ok(channel);
+        try
+        {
+            var channel = await _channelService.UpdateAsync(id, request, cancellationToken);
+            return channel is null ? NotFound() : Ok(channel);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpDelete("{id:guid}")]
