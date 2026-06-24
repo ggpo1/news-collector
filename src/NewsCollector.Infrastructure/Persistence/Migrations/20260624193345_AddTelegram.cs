@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -184,11 +184,20 @@ namespace NewsCollector.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(name: "telegram_channel_categories");
-            migrationBuilder.DropTable(name: "telegram_channel_sources");
-            migrationBuilder.DropTable(name: "telegram_deliveries");
-            migrationBuilder.DropTable(name: "telegram_channels");
-            migrationBuilder.DropTable(name: "telegram_bots");
+            migrationBuilder.DropTable(
+                name: "telegram_channel_categories");
+
+            migrationBuilder.DropTable(
+                name: "telegram_channel_sources");
+
+            migrationBuilder.DropTable(
+                name: "telegram_deliveries");
+
+            migrationBuilder.DropTable(
+                name: "telegram_channels");
+
+            migrationBuilder.DropTable(
+                name: "telegram_bots");
         }
     }
 }
