@@ -90,7 +90,7 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-      RunMigrations: ${RUN_MIGRATIONS:-true}
+      RunMigrations: ${RUN_MIGRATIONS:-false}
       ConnectionStrings__DefaultConnection: >-
         Host=postgres;
         Port=5432;
@@ -139,7 +139,7 @@ services:
         condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-      RunMigrations: ${RUN_MIGRATIONS:-true}
+      RunMigrations: ${RUN_MIGRATIONS:-false}
       ConnectionStrings__DefaultConnection: >-
         Host=postgres;
         Port=5432;
@@ -170,7 +170,7 @@ services:
         condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-      RunMigrations: ${RUN_MIGRATIONS:-true}
+      RunMigrations: ${RUN_MIGRATIONS:-false}
       ConnectionStrings__DefaultConnection: >-
         Host=postgres;
         Port=5432;
@@ -201,7 +201,7 @@ services:
         condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-      RunMigrations: ${RUN_MIGRATIONS:-true}
+      RunMigrations: ${RUN_MIGRATIONS:-false}
       ConnectionStrings__DefaultConnection: >-
         Host=postgres;
         Port=5432;

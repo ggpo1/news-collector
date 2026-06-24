@@ -102,7 +102,7 @@ if (runMigrations)
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<NewsCollectorDbContext>();
-    await db.Database.MigrateAsync();
+    await db.Database.MigrateWithAdvisoryLockAsync();
 }
 
 using (var scope = app.Services.CreateScope())

@@ -21,7 +21,7 @@ if (runMigrations)
 {
     using var scope = host.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<NewsCollectorDbContext>();
-    await db.Database.MigrateAsync();
+    await db.Database.MigrateWithAdvisoryLockAsync();
 }
 
 await host.RunAsync();

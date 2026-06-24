@@ -25,8 +25,25 @@ docker compose up -d --build api frontend
 
 При `RunMigrations=true` (по умолчанию в compose) таблицы создадутся при старте API/worker.
 
-Ручная проверка:
+## Исправление (2026-06-24, гонка миграций)
+
+Ошибка `23505 pg_type_typname_nsp_index` при `CREATE TABLE telegram_bots`:
+- несколько контейнеров одновременно вызывали `MigrateAsync` (api + worker + categorizer + …)
+- после сбоя оставались «осиротевшие» типы в `pg_type` без таблиц
+
+**Фикс:**
+1. Миграция `AddTelegram` переведена на `CREATE TABLE IF NOT EXISTS` + очистка orphan types
+2. `DatabaseMigrationExtensions.MigrateWithAdvisoryLockAsync()` — advisory lock на всех сервисах
+3. В `docker-compose.yml` миграции по умолчанию только у **api** (`RunMigrations=true`), у воркеров — `false`
+
+Деплой:
 ```bash
-docker compose exec api dotnet ef database update  # если нужно
-# или SQL: SELECT * FROM "__EFMigrationsHistory" WHERE "MigrationId" LIKE '%AddTelegram%';
+docker compose up -d --build api
+```
+
+Если миграция всё ещё падает вручную в psql:
+```sql
+DROP TYPE IF EXISTS telegram_bots CASCADE;
+DROP TYPE IF EXISTS telegram_channels CASCADE;
+-- затем перезапуск api
 ```

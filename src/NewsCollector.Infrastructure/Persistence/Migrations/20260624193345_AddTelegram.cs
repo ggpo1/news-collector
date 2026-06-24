@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -11,174 +10,122 @@ namespace NewsCollector.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "telegram_bots",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    BotToken = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    ContainerName = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
-                    ContainerStatus = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
-                    ContainerError = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_telegram_bots", x => x.Id);
-                });
+            migrationBuilder.Sql("""
+                DO $migration$
+                DECLARE
+                    table_name text;
+                BEGIN
+                    FOREACH table_name IN ARRAY ARRAY[
+                        'telegram_deliveries',
+                        'telegram_channel_sources',
+                        'telegram_channel_categories',
+                        'telegram_channels',
+                        'telegram_bots'
+                    ] LOOP
+                        IF NOT EXISTS (
+                            SELECT 1 FROM pg_tables
+                            WHERE schemaname = 'public' AND tablename = table_name
+                        ) AND EXISTS (
+                            SELECT 1 FROM pg_type ty
+                            JOIN pg_namespace n ON n.oid = ty.typnamespace
+                            WHERE n.nspname = 'public' AND ty.typname = table_name
+                        ) THEN
+                            EXECUTE format('DROP TYPE %I', table_name);
+                        END IF;
+                    END LOOP;
+                END
+                $migration$;
 
-            migrationBuilder.CreateTable(
-                name: "telegram_channels",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TelegramBotId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    ChatId = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_telegram_channels", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_telegram_channels_telegram_bots_TelegramBotId",
-                        column: x => x.TelegramBotId,
-                        principalTable: "telegram_bots",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                CREATE TABLE IF NOT EXISTS telegram_bots (
+                    "Id" uuid NOT NULL,
+                    "Name" character varying(200) NOT NULL,
+                    "BotToken" character varying(256) NOT NULL,
+                    "IsActive" boolean NOT NULL,
+                    "ContainerName" character varying(128),
+                    "ContainerStatus" character varying(32) NOT NULL,
+                    "ContainerError" character varying(2000),
+                    "CreatedAt" timestamp with time zone NOT NULL,
+                    "UpdatedAt" timestamp with time zone NOT NULL,
+                    CONSTRAINT "PK_telegram_bots" PRIMARY KEY ("Id")
+                );
 
-            migrationBuilder.CreateTable(
-                name: "telegram_channel_categories",
-                columns: table => new
-                {
-                    TelegramChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CategoryId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_telegram_channel_categories", x => new { x.TelegramChannelId, x.CategoryId });
-                    table.ForeignKey(
-                        name: "FK_telegram_channel_categories_categories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_telegram_channel_categories_telegram_channels_TelegramChann~",
-                        column: x => x.TelegramChannelId,
-                        principalTable: "telegram_channels",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                CREATE TABLE IF NOT EXISTS telegram_channels (
+                    "Id" uuid NOT NULL,
+                    "TelegramBotId" uuid NOT NULL,
+                    "Name" character varying(200) NOT NULL,
+                    "ChatId" character varying(128) NOT NULL,
+                    "IsActive" boolean NOT NULL,
+                    "CreatedAt" timestamp with time zone NOT NULL,
+                    "UpdatedAt" timestamp with time zone NOT NULL,
+                    CONSTRAINT "PK_telegram_channels" PRIMARY KEY ("Id"),
+                    CONSTRAINT "FK_telegram_channels_telegram_bots_TelegramBotId"
+                        FOREIGN KEY ("TelegramBotId") REFERENCES telegram_bots ("Id") ON DELETE CASCADE
+                );
 
-            migrationBuilder.CreateTable(
-                name: "telegram_channel_sources",
-                columns: table => new
-                {
-                    TelegramChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    SourceId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_telegram_channel_sources", x => new { x.TelegramChannelId, x.SourceId });
-                    table.ForeignKey(
-                        name: "FK_telegram_channel_sources_sources_SourceId",
-                        column: x => x.SourceId,
-                        principalTable: "sources",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_telegram_channel_sources_telegram_channels_TelegramChannelId",
-                        column: x => x.TelegramChannelId,
-                        principalTable: "telegram_channels",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                CREATE TABLE IF NOT EXISTS telegram_channel_categories (
+                    "TelegramChannelId" uuid NOT NULL,
+                    "CategoryId" uuid NOT NULL,
+                    CONSTRAINT "PK_telegram_channel_categories" PRIMARY KEY ("TelegramChannelId", "CategoryId"),
+                    CONSTRAINT "FK_telegram_channel_categories_categories_CategoryId"
+                        FOREIGN KEY ("CategoryId") REFERENCES categories ("Id") ON DELETE CASCADE,
+                    CONSTRAINT "FK_telegram_channel_categories_telegram_channels_TelegramChann~"
+                        FOREIGN KEY ("TelegramChannelId") REFERENCES telegram_channels ("Id") ON DELETE CASCADE
+                );
 
-            migrationBuilder.CreateTable(
-                name: "telegram_deliveries",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TelegramChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    NewsItemId = table.Column<Guid>(type: "uuid", nullable: true),
-                    NewsRewriteId = table.Column<Guid>(type: "uuid", nullable: true),
-                    MessageText = table.Column<string>(type: "text", nullable: false),
-                    Status = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
-                    ErrorMessage = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    TelegramMessageId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    SentAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_telegram_deliveries", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_telegram_deliveries_news_NewsItemId",
-                        column: x => x.NewsItemId,
-                        principalTable: "news",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_telegram_deliveries_news_rewrites_NewsRewriteId",
-                        column: x => x.NewsRewriteId,
-                        principalTable: "news_rewrites",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_telegram_deliveries_telegram_channels_TelegramChannelId",
-                        column: x => x.TelegramChannelId,
-                        principalTable: "telegram_channels",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                CREATE TABLE IF NOT EXISTS telegram_channel_sources (
+                    "TelegramChannelId" uuid NOT NULL,
+                    "SourceId" uuid NOT NULL,
+                    CONSTRAINT "PK_telegram_channel_sources" PRIMARY KEY ("TelegramChannelId", "SourceId"),
+                    CONSTRAINT "FK_telegram_channel_sources_sources_SourceId"
+                        FOREIGN KEY ("SourceId") REFERENCES sources ("Id") ON DELETE CASCADE,
+                    CONSTRAINT "FK_telegram_channel_sources_telegram_channels_TelegramChannelId"
+                        FOREIGN KEY ("TelegramChannelId") REFERENCES telegram_channels ("Id") ON DELETE CASCADE
+                );
 
-            migrationBuilder.CreateIndex(
-                name: "IX_telegram_bots_Name",
-                table: "telegram_bots",
-                column: "Name");
+                CREATE TABLE IF NOT EXISTS telegram_deliveries (
+                    "Id" uuid NOT NULL,
+                    "TelegramChannelId" uuid NOT NULL,
+                    "NewsItemId" uuid,
+                    "NewsRewriteId" uuid,
+                    "MessageText" text NOT NULL,
+                    "Status" character varying(32) NOT NULL,
+                    "ErrorMessage" character varying(2000),
+                    "TelegramMessageId" bigint,
+                    "CreatedAt" timestamp with time zone NOT NULL,
+                    "SentAt" timestamp with time zone,
+                    CONSTRAINT "PK_telegram_deliveries" PRIMARY KEY ("Id"),
+                    CONSTRAINT "FK_telegram_deliveries_news_NewsItemId"
+                        FOREIGN KEY ("NewsItemId") REFERENCES news ("Id") ON DELETE SET NULL,
+                    CONSTRAINT "FK_telegram_deliveries_news_rewrites_NewsRewriteId"
+                        FOREIGN KEY ("NewsRewriteId") REFERENCES news_rewrites ("Id") ON DELETE SET NULL,
+                    CONSTRAINT "FK_telegram_deliveries_telegram_channels_TelegramChannelId"
+                        FOREIGN KEY ("TelegramChannelId") REFERENCES telegram_channels ("Id") ON DELETE CASCADE
+                );
 
-            migrationBuilder.CreateIndex(
-                name: "IX_telegram_channel_categories_CategoryId",
-                table: "telegram_channel_categories",
-                column: "CategoryId");
+                CREATE INDEX IF NOT EXISTS "IX_telegram_bots_Name"
+                ON telegram_bots ("Name");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_telegram_channel_sources_SourceId",
-                table: "telegram_channel_sources",
-                column: "SourceId");
+                CREATE INDEX IF NOT EXISTS "IX_telegram_channel_categories_CategoryId"
+                ON telegram_channel_categories ("CategoryId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_telegram_channels_TelegramBotId_ChatId",
-                table: "telegram_channels",
-                columns: new[] { "TelegramBotId", "ChatId" },
-                unique: true);
+                CREATE INDEX IF NOT EXISTS "IX_telegram_channel_sources_SourceId"
+                ON telegram_channel_sources ("SourceId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_telegram_deliveries_NewsItemId",
-                table: "telegram_deliveries",
-                column: "NewsItemId");
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_telegram_channels_TelegramBotId_ChatId"
+                ON telegram_channels ("TelegramBotId", "ChatId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_telegram_deliveries_NewsRewriteId",
-                table: "telegram_deliveries",
-                column: "NewsRewriteId");
+                CREATE INDEX IF NOT EXISTS "IX_telegram_deliveries_NewsItemId"
+                ON telegram_deliveries ("NewsItemId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_telegram_deliveries_Status_CreatedAt",
-                table: "telegram_deliveries",
-                columns: new[] { "Status", "CreatedAt" });
+                CREATE INDEX IF NOT EXISTS "IX_telegram_deliveries_NewsRewriteId"
+                ON telegram_deliveries ("NewsRewriteId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_telegram_deliveries_TelegramChannelId",
-                table: "telegram_deliveries",
-                column: "TelegramChannelId");
+                CREATE INDEX IF NOT EXISTS "IX_telegram_deliveries_Status_CreatedAt"
+                ON telegram_deliveries ("Status", "CreatedAt");
+
+                CREATE INDEX IF NOT EXISTS "IX_telegram_deliveries_TelegramChannelId"
+                ON telegram_deliveries ("TelegramChannelId");
+                """);
         }
 
         /// <inheritdoc />
