@@ -79,9 +79,9 @@ export const Badge = styled.span<{ $variant?: 'ok' | 'warn' | 'muted' }>`
   font-weight: 600;
   background: ${({ theme, $variant }) =>
     $variant === 'ok'
-      ? color-mix(in srgb, ${theme.colors.accent} 18%, ${theme.colors.surface})
+      ? `color-mix(in srgb, ${theme.colors.accent} 18%, ${theme.colors.surface})`
       : $variant === 'warn'
-        ? color-mix(in srgb, ${theme.colors.danger} 12%, ${theme.colors.surface})
+        ? `color-mix(in srgb, ${theme.colors.danger} 12%, ${theme.colors.surface})`
         : theme.colors.surfaceMuted};
   color: ${({ theme, $variant }) =>
     $variant === 'ok' ? theme.colors.accent : $variant === 'warn' ? theme.colors.danger : theme.colors.textMuted};
