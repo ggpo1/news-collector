@@ -7,6 +7,7 @@ import { UsersView } from '../components/users-view/users-view';
 import { DashboardPage } from '../pages/dashboard-page';
 import { EntityMapPage } from '../pages/entity-map-page';
 import { NewsPage } from '../pages/news-page';
+import { StoriesPage } from '../pages/stories-page';
 import { RewritesPage } from '../pages/rewrites-page';
 import { SourcesPage } from '../pages/sources-page';
 import { TelegramPage } from '../pages/telegram-page';
@@ -54,6 +55,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="stories" element={<StoriesPage />} />
         <Route path="news" element={<NewsPage />} />
         <Route path="links" element={<NewsLinksView />} />
         <Route path="rewrites" element={<RewritesPage />} />

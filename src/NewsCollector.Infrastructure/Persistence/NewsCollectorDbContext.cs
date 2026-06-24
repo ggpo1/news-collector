@@ -28,6 +28,14 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<NewsItemEmbedding> NewsItemEmbeddings => Set<NewsItemEmbedding>();
 
+    public DbSet<Story> Stories => Set<Story>();
+
+    public DbSet<StoryNewsItem> StoryNewsItems => Set<StoryNewsItem>();
+
+    public DbSet<EditorialTag> EditorialTags => Set<EditorialTag>();
+
+    public DbSet<NewsEditorialTag> NewsEditorialTags => Set<NewsEditorialTag>();
+
     public DbSet<User> Users => Set<User>();
 
     public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();

@@ -18,17 +18,20 @@ public sealed class NewsController : ControllerBase
     private readonly IArticleContentEnrichmentService _contentEnrichmentService;
     private readonly IAiNewsRewriteService _aiNewsRewriteService;
     private readonly ISecondDayAngleService _secondDayAngleService;
+    private readonly INewsEditorialService _newsEditorialService;
 
     public NewsController(
         INewsQueryService newsQueryService,
         IArticleContentEnrichmentService contentEnrichmentService,
         IAiNewsRewriteService aiNewsRewriteService,
-        ISecondDayAngleService secondDayAngleService)
+        ISecondDayAngleService secondDayAngleService,
+        INewsEditorialService newsEditorialService)
     {
         _newsQueryService = newsQueryService;
         _contentEnrichmentService = contentEnrichmentService;
         _aiNewsRewriteService = aiNewsRewriteService;
         _secondDayAngleService = secondDayAngleService;
+        _newsEditorialService = newsEditorialService;
     }
 
     [HttpGet]
@@ -42,6 +45,7 @@ public sealed class NewsController : ControllerBase
         [FromQuery] bool? uncategorized = null,
         [FromQuery] bool? hasContent = null,
         [FromQuery] string? toneFilter = null,
+        [FromQuery] Guid? editorialTagId = null,
         CancellationToken cancellationToken = default)
     {
         if (page < 1)
@@ -81,6 +85,7 @@ public sealed class NewsController : ControllerBase
             uncategorized,
             hasContent,
             parsedToneFilter,
+            editorialTagId,
             cancellationToken);
 
         return Ok(result);
@@ -93,6 +98,58 @@ public sealed class NewsController : ControllerBase
     {
         var news = await _newsQueryService.GetByIdAsync(id, cancellationToken);
         return news is null ? NotFound() : Ok(news);
+    }
+
+    [HttpPatch("{id:guid}/category")]
+    [ProducesResponseType(typeof(NewsItemDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateCategory(
+        Guid id,
+        [FromBody] UpdateNewsCategoryRequest request,
+        [FromServices] IUserContext userContext,
+        CancellationToken cancellationToken)
+    {
+        if (userContext.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var news = await _newsEditorialService.UpdateCategoryAsync(id, request.CategoryId, userId, cancellationToken);
+            return news is null ? NotFound() : Ok(news);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPut("{id:guid}/editorial-tags")]
+    [ProducesResponseType(typeof(NewsItemDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateEditorialTags(
+        Guid id,
+        [FromBody] UpdateNewsEditorialTagsRequest request,
+        [FromServices] IUserContext userContext,
+        CancellationToken cancellationToken)
+    {
+        if (userContext.UserId is not Guid userId)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var news = await _newsEditorialService.UpdateEditorialTagsAsync(id, request.TagIds, userId, cancellationToken);
+            return news is null ? NotFound() : Ok(news);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPost("{id:guid}/enrich-content")]

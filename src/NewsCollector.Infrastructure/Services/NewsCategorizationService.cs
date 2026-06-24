@@ -61,7 +61,7 @@ public sealed class NewsCategorizationService : INewsCategorizationService
         var fallbackCategoryId = slugToId.GetValueOrDefault("other", categories[0].Id);
 
         var pendingItems = await _db.NewsItems
-            .Where(n => n.CategoryId == null)
+            .Where(n => n.CategoryId == null && !n.IsCategoryManual)
             .OrderByDescending(n => n.PublishedAt ?? n.FetchedAt)
             .ThenByDescending(n => n.FetchedAt)
             .ThenByDescending(n => n.CreatedAt)

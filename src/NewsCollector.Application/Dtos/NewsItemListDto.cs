@@ -11,4 +11,5 @@ public sealed record NewsItemListDto(
     string Url,
     DateTimeOffset? PublishedAt,
     DateTimeOffset FetchedAt,
-    bool HasContent);
+    bool HasContent,
+    IReadOnlyList<EditorialTagDto> EditorialTags);

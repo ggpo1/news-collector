@@ -6,6 +6,7 @@ public sealed record NewsItemDetailDto(
     string SourceName,
     Guid? CategoryId,
     string? CategoryName,
+    bool IsCategoryManual,
     decimal? ToneCoefficient,
     DateTimeOffset? ToneAnalyzedAt,
     string ExternalId,
@@ -17,4 +18,6 @@ public sealed record NewsItemDetailDto(
     DateTimeOffset FetchedAt,
     DateTimeOffset? ContentFetchedAt,
     string? ContentHash,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    IReadOnlyList<EditorialTagDto> EditorialTags,
+    Guid? StoryId);

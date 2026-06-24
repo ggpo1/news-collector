@@ -70,6 +70,11 @@ export function NewsList({
                   <S.ToneBadge $muted>тон —</S.ToneBadge>
                 )}
                 {item.hasContent && <S.Badge>полный текст</S.Badge>}
+                {item.editorialTags.map((tag) => (
+                  <S.EditorialTag key={tag.id} $color={tag.color}>
+                    {tag.name}
+                  </S.EditorialTag>
+                ))}
               </S.Meta>
               <S.Chevron aria-hidden="true">›</S.Chevron>
             </S.CardTop>

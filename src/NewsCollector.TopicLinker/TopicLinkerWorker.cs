@@ -50,9 +50,15 @@ public sealed class TopicLinkerWorker : BackgroundService
             var linkingService = scope.ServiceProvider.GetRequiredService<ITopicLinkingService>();
             var created = await linkingService.LinkSameTopicNewsAsync(cancellationToken);
 
-            if (created > 0)
+            var storySync = scope.ServiceProvider.GetRequiredService<IStorySyncService>();
+            var synced = await storySync.SyncFromLinksAsync(cancellationToken);
+
+            if (created > 0 || synced > 0)
             {
-                _logger.LogInformation("Topic linking cycle completed: {CreatedCount} new links", created);
+                _logger.LogInformation(
+                    "Topic linking cycle completed: {CreatedCount} new links, {SyncedCount} stories synced",
+                    created,
+                    synced);
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

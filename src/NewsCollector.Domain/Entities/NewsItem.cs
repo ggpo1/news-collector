@@ -8,6 +8,12 @@ public class NewsItem
 
     public Guid? CategoryId { get; set; }
 
+    public bool IsCategoryManual { get; set; }
+
+    public DateTimeOffset? CategoryUpdatedAt { get; set; }
+
+    public Guid? CategoryUpdatedByUserId { get; set; }
+
     public required string ExternalId { get; set; }
 
     public required string Title { get; set; }
@@ -50,4 +56,8 @@ public class NewsItem
     public ICollection<NewsRewrite> Rewrites { get; set; } = [];
 
     public ICollection<NewsEntityMention> EntityMentions { get; set; } = [];
+
+    public ICollection<NewsEditorialTag> EditorialTags { get; set; } = [];
+
+    public ICollection<StoryNewsItem> Stories { get; set; } = [];
 }

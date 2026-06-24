@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getStoryByClusterKey } from '../../api/client';
 import type { EditorialBriefNews, EditorialDashboard } from '../../api/types';
 import { formatToneCoefficient } from '../../api/tone';
 import { PATHS } from '../../app/paths';
@@ -64,6 +65,15 @@ export function EditorialDashboardView({
     navigate(PATHS.news, { state: { newsId } });
   };
 
+  const openStory = async (clusterKey: string, fallbackNewsId: string) => {
+    try {
+      const story = await getStoryByClusterKey(clusterKey);
+      navigate(PATHS.stories, { state: { storyId: story.id } });
+    } catch {
+      openNews(fallbackNewsId);
+    }
+  };
+
   return (
     <S.Page>
       <S.Toolbar>
@@ -101,7 +111,11 @@ export function EditorialDashboardView({
             empty="Пока нет тем с тремя и более источниками. Topic-linker связывает материалы автоматически."
             items={dashboard.developingTopics}
             renderItem={(topic) => (
-              <S.Card key={topic.clusterKey} type="button" onClick={() => openNews(topic.primaryArticle.id)}>
+              <S.Card
+                key={topic.clusterKey}
+                type="button"
+                onClick={() => void openStory(topic.clusterKey, topic.primaryArticle.id)}
+              >
                 <S.Badges>
                   <S.Badge $variant="hot">{topic.sourceCount} источника</S.Badge>
                   <S.Badge>{topic.articleCount} материала</S.Badge>

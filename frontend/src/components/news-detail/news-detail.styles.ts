@@ -93,6 +93,17 @@ export const Title = styled.h2`
   }
 `;
 
+export const StoryLink = styled.button`
+  margin-top: 0.45rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: ${({ theme }) => theme.colors.accent};
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+`;
+
 export const Content = styled.div`
   font-size: 0.95rem;
   line-height: 1.7;

@@ -53,7 +53,8 @@ public sealed class NewsLinkQueryService : INewsLinkQueryService
                     l.NewsLow.Url,
                     l.NewsLow.PublishedAt,
                     l.NewsLow.FetchedAt,
-                    l.NewsLow.Content != null),
+                    l.NewsLow.Content != null,
+                    Array.Empty<EditorialTagDto>()),
                 new NewsItemListDto(
                     l.NewsHigh.Id,
                     l.NewsHigh.SourceId,
@@ -65,7 +66,8 @@ public sealed class NewsLinkQueryService : INewsLinkQueryService
                     l.NewsHigh.Url,
                     l.NewsHigh.PublishedAt,
                     l.NewsHigh.FetchedAt,
-                    l.NewsHigh.Content != null)))
+                    l.NewsHigh.Content != null,
+                    Array.Empty<EditorialTagDto>())))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<NewsLinkListDto>(items, page, pageSize, totalCount);

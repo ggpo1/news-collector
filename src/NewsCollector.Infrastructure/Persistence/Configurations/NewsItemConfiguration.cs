@@ -61,9 +61,12 @@ public class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
 
         builder.HasIndex(n => n.CategoryId);
 
+        builder.Property(n => n.IsCategoryManual)
+            .HasDefaultValue(false);
+
         builder.HasIndex(n => n.FetchedAt)
             .HasDatabaseName("IX_news_FetchedAt_CategoryPending")
-            .HasFilter("\"CategoryId\" IS NULL");
+            .HasFilter("\"CategoryId\" IS NULL AND \"IsCategoryManual\" = false");
 
         builder.HasIndex(n => n.FetchedAt)
             .HasDatabaseName("IX_news_FetchedAt_EntitiesPending")

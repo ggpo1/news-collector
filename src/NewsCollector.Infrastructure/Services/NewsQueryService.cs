@@ -9,10 +9,12 @@ namespace NewsCollector.Infrastructure.Services;
 public sealed class NewsQueryService : INewsQueryService
 {
     private readonly NewsCollectorDbContext _db;
+    private readonly IStoryQueryService _storyQueryService;
 
-    public NewsQueryService(NewsCollectorDbContext db)
+    public NewsQueryService(NewsCollectorDbContext db, IStoryQueryService storyQueryService)
     {
         _db = db;
+        _storyQueryService = storyQueryService;
     }
 
     public async Task<PagedResult<NewsItemListDto>> GetPagedAsync(
@@ -23,6 +25,7 @@ public sealed class NewsQueryService : INewsQueryService
         bool? uncategorized = null,
         bool? hasContent = null,
         NewsToneFilter? toneFilter = null,
+        Guid? editorialTagId = null,
         CancellationToken cancellationToken = default)
     {
         var query = _db.NewsItems
@@ -54,6 +57,13 @@ public sealed class NewsQueryService : INewsQueryService
 
         query = ApplyToneFilter(query, toneFilter);
 
+        if (editorialTagId.HasValue)
+        {
+            query = query.Where(news =>
+                _db.NewsEditorialTags.Any(tag =>
+                    tag.NewsItemId == news.Id && tag.EditorialTagId == editorialTagId.Value));
+        }
+
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await query
@@ -61,34 +71,57 @@ public sealed class NewsQueryService : INewsQueryService
             .ThenByDescending(n => n.FetchedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(n => new NewsItemListDto(
+            .Select(n => new
+            {
                 n.Id,
                 n.SourceId,
-                n.Source.Name,
-                n.Category != null ? n.Category.Name : null,
+                SourceName = n.Source.Name,
+                CategoryName = n.Category != null ? n.Category.Name : null,
                 n.ToneCoefficient,
                 n.Title,
                 n.Summary,
                 n.Url,
                 n.PublishedAt,
                 n.FetchedAt,
-                n.Content != null))
+                HasContent = n.Content != null
+            })
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<NewsItemListDto>(items, page, pageSize, totalCount);
+        var newsIds = items.Select(item => item.Id).ToList();
+        var tagsByNewsId = await NewsItemDtoMapper.LoadTagsByNewsIdsAsync(_db, newsIds, cancellationToken);
+
+        var mappedItems = items
+            .Select(item => new NewsItemListDto(
+                item.Id,
+                item.SourceId,
+                item.SourceName,
+                item.CategoryName,
+                item.ToneCoefficient,
+                item.Title,
+                item.Summary,
+                item.Url,
+                item.PublishedAt,
+                item.FetchedAt,
+                item.HasContent,
+                tagsByNewsId.GetValueOrDefault(item.Id, [])))
+            .ToList();
+
+        return new PagedResult<NewsItemListDto>(mappedItems, page, pageSize, totalCount);
     }
 
     public async Task<NewsItemDetailDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _db.NewsItems
+        var news = await _db.NewsItems
             .AsNoTracking()
             .Where(n => n.Id == id)
-            .Select(n => new NewsItemDetailDto(
+            .Select(n => new
+            {
                 n.Id,
                 n.SourceId,
-                n.Source.Name,
+                SourceName = n.Source.Name,
                 n.CategoryId,
-                n.Category != null ? n.Category.Name : null,
+                CategoryName = n.Category != null ? n.Category.Name : null,
+                n.IsCategoryManual,
                 n.ToneCoefficient,
                 n.ToneAnalyzedAt,
                 n.ExternalId,
@@ -100,8 +133,39 @@ public sealed class NewsQueryService : INewsQueryService
                 n.FetchedAt,
                 n.ContentFetchedAt,
                 n.ContentHash,
-                n.CreatedAt))
+                n.CreatedAt
+            })
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (news is null)
+        {
+            return null;
+        }
+
+        var tags = await NewsItemDtoMapper.LoadTagsByNewsIdsAsync(_db, [id], cancellationToken);
+        var storyId = await _storyQueryService.FindStoryIdForNewsAsync(id, cancellationToken);
+
+        return new NewsItemDetailDto(
+            news.Id,
+            news.SourceId,
+            news.SourceName,
+            news.CategoryId,
+            news.CategoryName,
+            news.IsCategoryManual,
+            news.ToneCoefficient,
+            news.ToneAnalyzedAt,
+            news.ExternalId,
+            news.Title,
+            news.Summary,
+            news.Content,
+            news.Url,
+            news.PublishedAt,
+            news.FetchedAt,
+            news.ContentFetchedAt,
+            news.ContentHash,
+            news.CreatedAt,
+            tags.GetValueOrDefault(id, []),
+            storyId);
     }
 
     public async Task<IReadOnlyList<RelatedNewsDto>> GetRelatedAsync(
@@ -137,7 +201,8 @@ public sealed class NewsQueryService : INewsQueryService
                         related.Url,
                         related.PublishedAt,
                         related.FetchedAt,
-                        related.Content != null));
+                        related.Content != null,
+                        []));
             })
             .ToList();
     }

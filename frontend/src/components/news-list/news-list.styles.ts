@@ -126,6 +126,15 @@ export const ToneBadge = styled.span<{ $value?: number | null; $muted?: boolean 
   font-variant-numeric: tabular-nums;
 `;
 
+export const EditorialTag = styled.span<{ $color?: string | null }>`
+  padding: 0.12rem 0.5rem;
+  border-radius: ${({ theme }) => theme.radii.pill};
+  background: ${({ theme }) => theme.colors.surfaceMuted};
+  color: ${({ $color, theme }) => $color ?? theme.colors.text};
+  font-size: 0.7rem;
+  font-weight: 600;
+`;
+
 export const Title = styled.h2`
   margin: 0.45rem 0 0;
   font-size: 1rem;

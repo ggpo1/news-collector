@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { enrichNewsContent, generateSecondDayAngles, getNewsById, getRelatedNews } from '../../api/client';
 import { formatConfidence, LINK_METHOD_LABELS, LINK_TYPE_LABELS } from '../../api/link-labels';
 import { formatToneCoefficient } from '../../api/tone';
 import type { NewsItemDetail, RelatedNews, SecondDayAngles } from '../../api/types';
+import { PATHS } from '../../app/paths';
+import { useCategories } from '../../hooks/use-categories/use-categories';
+import { useEditorialTags } from '../../hooks/use-editorial-tags/use-editorial-tags';
+import { NewsEditorialPanel } from '../news-editorial-panel/news-editorial-panel';
 import { NewsRewriteEditor } from '../news-rewrite-editor/news-rewrite-editor';
 import { SecondDayAnglesPanel } from '../second-day-angles/second-day-angles-panel';
 import { SendToTelegramModal } from '../send-to-telegram-modal/send-to-telegram-modal';
@@ -39,6 +44,9 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
   const [anglesError, setAnglesError] = useState<string | null>(null);
   const [angles, setAngles] = useState<SecondDayAngles | null>(null);
   const [telegramOpen, setTelegramOpen] = useState(false);
+  const { categories } = useCategories();
+  const { tags: editorialTags } = useEditorialTags();
+  const navigate = useNavigate();
 
   const loadItem = useCallback(async (id: string) => {
     setLoading(true);
@@ -202,7 +210,19 @@ export function NewsDetail({ newsId, onContentLoaded }: NewsDetailProps) {
           <time dateTime={item.publishedAt ?? undefined}>{formatDate(item.publishedAt)}</time>
         </S.Meta>
         <S.Title>{item.title}</S.Title>
+        {item.storyId && (
+          <S.StoryLink type="button" onClick={() => navigate(PATHS.stories, { state: { storyId: item.storyId } })}>
+            Открыть карточку темы →
+          </S.StoryLink>
+        )}
       </S.Header>
+
+      <NewsEditorialPanel
+        item={item}
+        categories={categories}
+        tags={editorialTags}
+        onUpdated={setItem}
+      />
 
       {item.content ? (
         <S.Content>{item.content}</S.Content>

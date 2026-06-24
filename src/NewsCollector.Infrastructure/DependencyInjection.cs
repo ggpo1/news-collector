@@ -32,6 +32,10 @@ public static class DependencyInjection
         services.AddScoped<ICategoryQueryService, CategoryQueryService>();
         services.AddScoped<INewsEntityGraphQueryService, NewsEntityGraphQueryService>();
         services.AddScoped<IEditorialDashboardService, EditorialDashboardService>();
+        services.AddScoped<IStoryQueryService, StoryQueryService>();
+        services.AddScoped<IStoryCommandService, StoryCommandService>();
+        services.AddScoped<IStorySyncService, StorySyncService>();
+        services.AddScoped<INewsEditorialService, NewsEditorialService>();
         services.AddScoped<IApiVisitWriter, ApiVisitWriter>();
 
         services.AddSingleton<PasswordHasherService>();
@@ -135,6 +139,7 @@ public static class DependencyInjection
 
         services.AddScoped<IOllamaEmbeddingService, OllamaEmbeddingService>();
         services.AddScoped<INewsEmbeddingStore, NewsEmbeddingStore>();
+        services.AddScoped<IStorySyncService, StorySyncService>();
         services.AddScoped<ITopicLinkingService, TopicLinkingService>();
         return services;
     }

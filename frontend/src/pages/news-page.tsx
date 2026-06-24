@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { EditorialTagSelect } from '../components/editorial-tag-select/editorial-tag-select';
 import {
   CategorySelect,
   UNCATEGORIZED_FILTER,
@@ -12,6 +13,7 @@ import { SourceSelect } from '../components/source-select/source-select';
 import { ToneSelect, type NewsToneFilterValue } from '../components/tone-select/tone-select';
 import * as SectionS from '../components/section-page/section-page.styles';
 import { useCategories } from '../hooks/use-categories/use-categories';
+import { useEditorialTags } from '../hooks/use-editorial-tags/use-editorial-tags';
 import { useNews } from '../hooks/use-news/use-news';
 import { useSources } from '../hooks/use-sources/use-sources';
 import * as S from './news-page.styles';
@@ -26,12 +28,14 @@ export function NewsPage() {
   const locationState = (location.state as NewsLocationState | null) ?? null;
   const { sources, loading: sourcesLoading, error: sourcesError } = useSources();
   const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
+  const { tags: editorialTags, loading: tagsLoading } = useEditorialTags();
   const activeSources = sources.filter((source) => source.isActive);
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(
     locationState?.sourceId ?? null,
   );
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [toneFilter, setToneFilter] = useState<NewsToneFilterValue | null>(null);
+  const [editorialTagFilter, setEditorialTagFilter] = useState<string | null>(null);
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(
     locationState?.newsId ?? null,
   );
@@ -45,11 +49,12 @@ export function NewsPage() {
     categoryId: selectedCategoryId,
     uncategorized,
     toneFilter,
+    editorialTagId: editorialTagFilter,
   });
 
   useEffect(() => {
     setSelectedNewsId(null);
-  }, [selectedSourceId, categoryFilter, toneFilter, page]);
+  }, [selectedSourceId, categoryFilter, toneFilter, editorialTagFilter, page]);
 
   const filterError = sourcesError ?? categoriesError;
 
@@ -76,6 +81,12 @@ export function NewsPage() {
                 onChange={setCategoryFilter}
               />
               <ToneSelect value={toneFilter} onChange={setToneFilter} />
+              <EditorialTagSelect
+                tags={editorialTags}
+                value={editorialTagFilter}
+                loading={tagsLoading}
+                onChange={setEditorialTagFilter}
+              />
             </S.FiltersRow>
             {filterError && <S.ErrorBanner role="alert">{filterError}</S.ErrorBanner>}
           </>

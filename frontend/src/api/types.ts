@@ -33,6 +33,13 @@ export interface CreateSourcePayload {
 
 export interface UpdateSourcePayload extends CreateSourcePayload {}
 
+export interface EditorialTag {
+  id: string;
+  slug: string;
+  name: string;
+  color: string | null;
+}
+
 export interface NewsItemList {
   id: string;
   sourceId: string;
@@ -45,6 +52,7 @@ export interface NewsItemList {
   publishedAt: string | null;
   fetchedAt: string;
   hasContent: boolean;
+  editorialTags: EditorialTag[];
 }
 
 export interface NewsItemDetail {
@@ -53,6 +61,7 @@ export interface NewsItemDetail {
   sourceName: string;
   categoryId: string | null;
   categoryName: string | null;
+  isCategoryManual: boolean;
   toneCoefficient: number | null;
   toneAnalyzedAt: string | null;
   externalId: string;
@@ -65,6 +74,80 @@ export interface NewsItemDetail {
   contentFetchedAt: string | null;
   contentHash: string | null;
   createdAt: string;
+  editorialTags: EditorialTag[];
+  storyId: string | null;
+}
+
+export type StoryStatus = 'Monitoring' | 'InWork' | 'Published' | 'Closed';
+
+export interface StoryListItem {
+  id: string;
+  clusterKey: string;
+  title: string;
+  status: StoryStatus;
+  articleCount: number;
+  sourceCount: number;
+  firstSeenAt: string | null;
+  lastActivityAt: string | null;
+  updatedAt: string;
+  sourceNames: string[];
+}
+
+export interface StoryTimelineItem {
+  id: string;
+  title: string;
+  sourceName: string;
+  categoryName: string | null;
+  toneCoefficient: number | null;
+  publishedAt: string | null;
+  fetchedAt: string;
+  hasContent: boolean;
+  url: string;
+  isPrimary: boolean;
+}
+
+export interface StoryEntity {
+  id: string;
+  name: string;
+  type: string;
+  mentionCount: number;
+}
+
+export interface StoryRewrite {
+  id: string;
+  sourceNewsId: string;
+  sourceNewsTitle: string;
+  title: string;
+  authorName: string;
+  updatedAt: string;
+}
+
+export interface StoryTelegramDelivery {
+  id: string;
+  channelName: string;
+  status: string;
+  createdAt: string;
+  sentAt: string | null;
+  newsItemId: string | null;
+  newsRewriteId: string | null;
+}
+
+export interface StoryDetail {
+  id: string;
+  clusterKey: string;
+  title: string;
+  status: StoryStatus;
+  articleCount: number;
+  sourceCount: number;
+  firstSeenAt: string | null;
+  lastActivityAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  primaryNewsItemId: string | null;
+  timeline: StoryTimelineItem[];
+  keyEntities: StoryEntity[];
+  rewrites: StoryRewrite[];
+  telegramDeliveries: StoryTelegramDelivery[];
 }
 
 export interface PagedResult<T> {

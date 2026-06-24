@@ -28,6 +28,10 @@ import type {
   TelegramSendResult,
   TelegramDelivery,
   EditorialDashboard,
+  EditorialTag,
+  StoryDetail,
+  StoryListItem,
+  StoryStatus,
   UpdateNewsRewritePayload,
   UpdateSourcePayload,
   UpdateTelegramBotPayload,
@@ -237,6 +241,7 @@ export function getNews(params: {
   uncategorized?: boolean;
   hasContent?: boolean;
   toneFilter?: string;
+  editorialTagId?: string;
 }): Promise<PagedResult<NewsItemList>> {
   const search = new URLSearchParams({
     page: String(params.page),
@@ -263,7 +268,64 @@ export function getNews(params: {
     search.set('toneFilter', params.toneFilter);
   }
 
+  if (params.editorialTagId) {
+    search.set('editorialTagId', params.editorialTagId);
+  }
+
   return request<PagedResult<NewsItemList>>(`/api/news?${search}`);
+}
+
+export function updateNewsCategory(id: string, categoryId: string | null): Promise<NewsItemDetail> {
+  return request<NewsItemDetail>(`/api/news/${id}/category`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ categoryId }),
+  });
+}
+
+export function updateNewsEditorialTags(id: string, tagIds: string[]): Promise<NewsItemDetail> {
+  return request<NewsItemDetail>(`/api/news/${id}/editorial-tags`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tagIds }),
+  });
+}
+
+export function getEditorialTags(): Promise<EditorialTag[]> {
+  return request<EditorialTag[]>('/api/editorial-tags');
+}
+
+export function getStories(params: {
+  page: number;
+  pageSize: number;
+  status?: StoryStatus;
+}): Promise<PagedResult<StoryListItem>> {
+  const search = new URLSearchParams({
+    page: String(params.page),
+    pageSize: String(params.pageSize),
+  });
+
+  if (params.status) {
+    search.set('status', params.status);
+  }
+
+  return request<PagedResult<StoryListItem>>(`/api/stories?${search}`);
+}
+
+export function getStoryById(id: string): Promise<StoryDetail> {
+  return request<StoryDetail>(`/api/stories/${id}`);
+}
+
+export function getStoryByClusterKey(clusterKey: string): Promise<StoryDetail> {
+  return request<StoryDetail>(`/api/stories/by-cluster/${clusterKey}`);
+}
+
+export function updateStoryStatus(id: string, status: StoryStatus): Promise<StoryDetail> {
+  return request<StoryDetail>(`/api/stories/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
 }
 
 export function getNewsById(id: string): Promise<NewsItemDetail> {
