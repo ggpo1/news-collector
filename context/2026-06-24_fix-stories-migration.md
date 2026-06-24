@@ -16,6 +16,7 @@ EF Core не регистрировал их в `dotnet ef migrations list`, `Mi
 
 ## Статус
 - `dotnet build` — OK
+- Миграция переведена на идемпотентный SQL (`IF NOT EXISTS`) — для случая, когда колонки уже созданы старой ручной миграцией, но запись в `__EFMigrationsHistory` отсутствует
 
 ## Деплой
 ```bash

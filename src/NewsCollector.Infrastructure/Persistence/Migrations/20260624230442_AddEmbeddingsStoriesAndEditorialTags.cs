@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -11,205 +10,136 @@ namespace NewsCollector.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<DateTimeOffset>(
-                name: "CategoryUpdatedAt",
-                table: "news",
-                type: "timestamp with time zone",
-                nullable: true);
-
-            migrationBuilder.AddColumn<Guid>(
-                name: "CategoryUpdatedByUserId",
-                table: "news",
-                type: "uuid",
-                nullable: true);
-
-            migrationBuilder.AddColumn<bool>(
-                name: "IsCategoryManual",
-                table: "news",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
-
-            migrationBuilder.CreateTable(
-                name: "editorial_tags",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Slug = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    Color = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_editorial_tags", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "news_item_embeddings",
-                columns: table => new
-                {
-                    NewsItemId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Model = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    Vector = table.Column<string>(type: "jsonb", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_news_item_embeddings", x => x.NewsItemId);
-                    table.ForeignKey(
-                        name: "FK_news_item_embeddings_news_NewsItemId",
-                        column: x => x.NewsItemId,
-                        principalTable: "news",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "stories",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ClusterKey = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    Title = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: false),
-                    Status = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
-                    PrimaryNewsItemId = table.Column<Guid>(type: "uuid", nullable: true),
-                    ArticleCount = table.Column<int>(type: "integer", nullable: false),
-                    SourceCount = table.Column<int>(type: "integer", nullable: false),
-                    FirstSeenAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    LastActivityAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    StatusUpdatedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    StatusUpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_stories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_stories_news_PrimaryNewsItemId",
-                        column: x => x.PrimaryNewsItemId,
-                        principalTable: "news",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_stories_users_StatusUpdatedByUserId",
-                        column: x => x.StatusUpdatedByUserId,
-                        principalTable: "users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "news_editorial_tags",
-                columns: table => new
-                {
-                    NewsItemId = table.Column<Guid>(type: "uuid", nullable: false),
-                    EditorialTagId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AddedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_news_editorial_tags", x => new { x.NewsItemId, x.EditorialTagId });
-                    table.ForeignKey(
-                        name: "FK_news_editorial_tags_editorial_tags_EditorialTagId",
-                        column: x => x.EditorialTagId,
-                        principalTable: "editorial_tags",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_news_editorial_tags_news_NewsItemId",
-                        column: x => x.NewsItemId,
-                        principalTable: "news",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_news_editorial_tags_users_AddedByUserId",
-                        column: x => x.AddedByUserId,
-                        principalTable: "users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "story_news_items",
-                columns: table => new
-                {
-                    StoryId = table.Column<Guid>(type: "uuid", nullable: false),
-                    NewsItemId = table.Column<Guid>(type: "uuid", nullable: false),
-                    LinkedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_story_news_items", x => new { x.StoryId, x.NewsItemId });
-                    table.ForeignKey(
-                        name: "FK_story_news_items_news_NewsItemId",
-                        column: x => x.NewsItemId,
-                        principalTable: "news",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_story_news_items_stories_StoryId",
-                        column: x => x.StoryId,
-                        principalTable: "stories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_editorial_tags_Slug",
-                table: "editorial_tags",
-                column: "Slug",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_news_editorial_tags_AddedByUserId",
-                table: "news_editorial_tags",
-                column: "AddedByUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_news_editorial_tags_EditorialTagId",
-                table: "news_editorial_tags",
-                column: "EditorialTagId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_news_item_embeddings_Model",
-                table: "news_item_embeddings",
-                column: "Model");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_stories_ClusterKey",
-                table: "stories",
-                column: "ClusterKey",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_stories_LastActivityAt",
-                table: "stories",
-                column: "LastActivityAt");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_stories_PrimaryNewsItemId",
-                table: "stories",
-                column: "PrimaryNewsItemId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_stories_Status",
-                table: "stories",
-                column: "Status");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_stories_StatusUpdatedByUserId",
-                table: "stories",
-                column: "StatusUpdatedByUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_story_news_items_NewsItemId",
-                table: "story_news_items",
-                column: "NewsItemId");
-
             migrationBuilder.Sql("""
+                DO $migration$
+                DECLARE
+                    table_name text;
+                BEGIN
+                    FOREACH table_name IN ARRAY ARRAY[
+                        'story_news_items',
+                        'news_editorial_tags',
+                        'news_item_embeddings',
+                        'stories',
+                        'editorial_tags'
+                    ] LOOP
+                        IF NOT EXISTS (
+                            SELECT 1 FROM pg_tables
+                            WHERE schemaname = 'public' AND tablename = table_name
+                        ) AND EXISTS (
+                            SELECT 1 FROM pg_type ty
+                            JOIN pg_namespace n ON n.oid = ty.typnamespace
+                            WHERE n.nspname = 'public' AND ty.typname = table_name
+                        ) THEN
+                            EXECUTE format('DROP TYPE %I', table_name);
+                        END IF;
+                    END LOOP;
+                END
+                $migration$;
+
+                ALTER TABLE news
+                ADD COLUMN IF NOT EXISTS "CategoryUpdatedAt" timestamp with time zone;
+
+                ALTER TABLE news
+                ADD COLUMN IF NOT EXISTS "CategoryUpdatedByUserId" uuid;
+
+                ALTER TABLE news
+                ADD COLUMN IF NOT EXISTS "IsCategoryManual" boolean NOT NULL DEFAULT false;
+
+                CREATE TABLE IF NOT EXISTS editorial_tags (
+                    "Id" uuid NOT NULL,
+                    "Slug" character varying(64) NOT NULL,
+                    "Name" character varying(128) NOT NULL,
+                    "Color" character varying(16),
+                    "CreatedAt" timestamp with time zone NOT NULL,
+                    CONSTRAINT "PK_editorial_tags" PRIMARY KEY ("Id")
+                );
+
+                CREATE TABLE IF NOT EXISTS news_item_embeddings (
+                    "NewsItemId" uuid NOT NULL,
+                    "Model" character varying(128) NOT NULL,
+                    "Vector" jsonb NOT NULL,
+                    "CreatedAt" timestamp with time zone NOT NULL,
+                    CONSTRAINT "PK_news_item_embeddings" PRIMARY KEY ("NewsItemId"),
+                    CONSTRAINT "FK_news_item_embeddings_news_NewsItemId"
+                        FOREIGN KEY ("NewsItemId") REFERENCES news ("Id") ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS stories (
+                    "Id" uuid NOT NULL,
+                    "ClusterKey" character varying(64) NOT NULL,
+                    "Title" character varying(1024) NOT NULL,
+                    "Status" character varying(32) NOT NULL,
+                    "PrimaryNewsItemId" uuid,
+                    "ArticleCount" integer NOT NULL,
+                    "SourceCount" integer NOT NULL,
+                    "FirstSeenAt" timestamp with time zone,
+                    "LastActivityAt" timestamp with time zone,
+                    "CreatedAt" timestamp with time zone NOT NULL,
+                    "UpdatedAt" timestamp with time zone NOT NULL,
+                    "StatusUpdatedByUserId" uuid,
+                    "StatusUpdatedAt" timestamp with time zone,
+                    CONSTRAINT "PK_stories" PRIMARY KEY ("Id"),
+                    CONSTRAINT "FK_stories_news_PrimaryNewsItemId"
+                        FOREIGN KEY ("PrimaryNewsItemId") REFERENCES news ("Id") ON DELETE SET NULL,
+                    CONSTRAINT "FK_stories_users_StatusUpdatedByUserId"
+                        FOREIGN KEY ("StatusUpdatedByUserId") REFERENCES users ("Id") ON DELETE SET NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS news_editorial_tags (
+                    "NewsItemId" uuid NOT NULL,
+                    "EditorialTagId" uuid NOT NULL,
+                    "AddedByUserId" uuid,
+                    "CreatedAt" timestamp with time zone NOT NULL,
+                    CONSTRAINT "PK_news_editorial_tags" PRIMARY KEY ("NewsItemId", "EditorialTagId"),
+                    CONSTRAINT "FK_news_editorial_tags_editorial_tags_EditorialTagId"
+                        FOREIGN KEY ("EditorialTagId") REFERENCES editorial_tags ("Id") ON DELETE CASCADE,
+                    CONSTRAINT "FK_news_editorial_tags_news_NewsItemId"
+                        FOREIGN KEY ("NewsItemId") REFERENCES news ("Id") ON DELETE CASCADE,
+                    CONSTRAINT "FK_news_editorial_tags_users_AddedByUserId"
+                        FOREIGN KEY ("AddedByUserId") REFERENCES users ("Id") ON DELETE SET NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS story_news_items (
+                    "StoryId" uuid NOT NULL,
+                    "NewsItemId" uuid NOT NULL,
+                    "LinkedAt" timestamp with time zone NOT NULL,
+                    CONSTRAINT "PK_story_news_items" PRIMARY KEY ("StoryId", "NewsItemId"),
+                    CONSTRAINT "FK_story_news_items_news_NewsItemId"
+                        FOREIGN KEY ("NewsItemId") REFERENCES news ("Id") ON DELETE CASCADE,
+                    CONSTRAINT "FK_story_news_items_stories_StoryId"
+                        FOREIGN KEY ("StoryId") REFERENCES stories ("Id") ON DELETE CASCADE
+                );
+
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_editorial_tags_Slug"
+                ON editorial_tags ("Slug");
+
+                CREATE INDEX IF NOT EXISTS "IX_news_editorial_tags_AddedByUserId"
+                ON news_editorial_tags ("AddedByUserId");
+
+                CREATE INDEX IF NOT EXISTS "IX_news_editorial_tags_EditorialTagId"
+                ON news_editorial_tags ("EditorialTagId");
+
+                CREATE INDEX IF NOT EXISTS "IX_news_item_embeddings_Model"
+                ON news_item_embeddings ("Model");
+
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_stories_ClusterKey"
+                ON stories ("ClusterKey");
+
+                CREATE INDEX IF NOT EXISTS "IX_stories_LastActivityAt"
+                ON stories ("LastActivityAt");
+
+                CREATE INDEX IF NOT EXISTS "IX_stories_PrimaryNewsItemId"
+                ON stories ("PrimaryNewsItemId");
+
+                CREATE INDEX IF NOT EXISTS "IX_stories_Status"
+                ON stories ("Status");
+
+                CREATE INDEX IF NOT EXISTS "IX_stories_StatusUpdatedByUserId"
+                ON stories ("StatusUpdatedByUserId");
+
+                CREATE INDEX IF NOT EXISTS "IX_story_news_items_NewsItemId"
+                ON story_news_items ("NewsItemId");
+
                 DROP INDEX IF EXISTS "IX_news_FetchedAt_CategoryPending";
 
                 CREATE INDEX IF NOT EXISTS "IX_news_FetchedAt_CategoryPending"
