@@ -57,6 +57,82 @@ export const MetaLine = styled.p`
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
+export const TabbedBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  background: ${({ theme }) => theme.colors.surface};
+  overflow: hidden;
+`;
+
+export const TabList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surfaceMuted};
+`;
+
+export const TabButton = styled.button<{ $active?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: ${({ theme, $active }) => ($active ? theme.colors.text : theme.colors.textMuted)};
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: ${({ $active }) => ($active ? 700 : 500)};
+  cursor: pointer;
+  transition:
+    color ${({ theme }) => theme.transitions.fast},
+    border-color ${({ theme }) => theme.transitions.fast},
+    background ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.text};
+    background: color-mix(in srgb, ${({ theme }) => theme.colors.accent} 6%, transparent);
+  }
+
+  ${({ theme, $active }) =>
+    $active &&
+    `
+    border-bottom-color: ${theme.colors.accent};
+    background: ${theme.colors.surface};
+  `}
+`;
+
+export const TabCount = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: ${({ theme }) => theme.colors.surfaceMuted};
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+export const TabPanel = styled.div`
+  padding: 1rem;
+
+  ${mediaUp('md')} {
+    padding: 1.1rem 1.15rem;
+  }
+
+  &[hidden] {
+    display: none;
+  }
+`;
+
 export const Grid = styled.div`
   display: grid;
   gap: 1.25rem;

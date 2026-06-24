@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NewsCollector.Domain.Entities;
 
@@ -17,12 +18,18 @@ public class NewsItemEmbeddingConfiguration : IEntityTypeConfiguration<NewsItemE
             .HasMaxLength(128)
             .IsRequired();
 
-        builder.Property(item => item.Vector)
+        var vectorProperty = builder.Property(item => item.Vector)
             .HasColumnType("jsonb")
             .HasConversion(
                 vector => JsonSerializer.Serialize(vector, (JsonSerializerOptions?)null),
-                json => DeserializeVector(json))
-            .IsRequired();
+                json => DeserializeVector(json));
+
+        vectorProperty.Metadata.SetValueComparer(new ValueComparer<float[]>(
+            (left, right) => left != null && right != null && left.SequenceEqual(right),
+            vector => vector.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode())),
+            vector => vector.ToArray()));
+
+        vectorProperty.IsRequired();
 
         builder.Property(item => item.CreatedAt)
             .IsRequired();
