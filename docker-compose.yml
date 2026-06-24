@@ -72,8 +72,8 @@ services:
         Password=${POSTGRES_PASSWORD:-news}
       TelegramBotOrchestrator__WorkerHttpProxy: ${TELEGRAM_PROXY:-${TELEGRAM_WORKER_HTTP_PROXY:-}}
       TelegramBotOrchestrator__WorkerHttpsProxy: ${TELEGRAM_PROXY:-${TELEGRAM_WORKER_HTTPS_PROXY:-}}
-      Telegram__HttpProxy: ${TELEGRAM_PROXY:-${TELEGRAM_WORKER_HTTP_PROXY:-}}
-      Telegram__HttpsProxy: ${TELEGRAM_PROXY:-${TELEGRAM_WORKER_HTTPS_PROXY:-}}
+      Telegram__HttpProxy: ${TELEGRAM_PROXY:-${OUTBOUND_PROXY:-}}
+      Telegram__HttpsProxy: ${TELEGRAM_PROXY:-${OUTBOUND_PROXY:-}}
       Telegram__NoProxy: postgres,localhost,127.0.0.1,::1,ollama
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -116,6 +116,11 @@ services:
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
       Collector__RssFetchTimeoutSeconds: ${RSS_FETCH_TIMEOUT_SECONDS:-120}
+      OutboundProxy__HttpProxy: ${OUTBOUND_PROXY:-${TELEGRAM_PROXY:-}}
+      OutboundProxy__HttpsProxy: ${OUTBOUND_PROXY:-${TELEGRAM_PROXY:-}}
+      OutboundProxy__NoProxy: postgres,localhost,127.0.0.1,::1,ollama
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     logging:
       driver: json-file
       options:

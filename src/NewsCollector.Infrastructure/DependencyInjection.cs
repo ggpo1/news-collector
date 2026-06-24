@@ -8,6 +8,7 @@ using NewsCollector.Infrastructure.Auth;
 using NewsCollector.Infrastructure.Ai;
 using NewsCollector.Infrastructure.Docker;
 using NewsCollector.Infrastructure.Feeds;
+using NewsCollector.Infrastructure.Http;
 using NewsCollector.Infrastructure.Persistence;
 using NewsCollector.Infrastructure.Scraping;
 using NewsCollector.Infrastructure.Services;
@@ -56,13 +57,14 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(60);
         })
-        .ConfigureTelegramProxy(configuration);
+        .ConfigureOutboundProxy(configuration);
 
         services.AddSingleton<ITelegramBotOrchestrator, DockerCliTelegramBotOrchestrator>();
         services.AddScoped<ITelegramApiClient, TelegramApiClient>();
         services.AddScoped<ITelegramBotService, TelegramBotService>();
         services.AddScoped<ITelegramChannelService, TelegramChannelService>();
         services.AddScoped<ITelegramDeliveryService, TelegramDeliveryService>();
+        services.AddSingleton<TelegramProxyDiagnosticsService>();
 
         return services;
     }
@@ -79,15 +81,15 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(60);
         })
-        .ConfigureTelegramProxy(configuration);
+        .ConfigureOutboundProxy(configuration);
         services.AddScoped<ITelegramApiClient, TelegramApiClient>();
         services.AddScoped<ITelegramDeliveryService, TelegramDeliveryService>();
         return services;
     }
 
-    public static IServiceCollection AddContentEnrichment(this IServiceCollection services)
+    public static IServiceCollection AddContentEnrichment(this IServiceCollection services, IConfiguration configuration)
     {
-        ConfigureArticleHttpClient(services.AddHttpClient("ArticleFetcher"));
+        ConfigureArticleHttpClient(services.AddHttpClient("ArticleFetcher"), configuration);
 
         services.AddSingleton<IHtmlContentExtractor, HtmlContentExtractor>();
         services.AddScoped<IArticleContentEnrichmentService, ArticleContentEnrichmentService>();
@@ -95,8 +97,13 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddCollectorServices(this IServiceCollection services)
+    public static IServiceCollection AddCollectorServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
+        services.Configure<OutboundProxyOptions>(
+            configuration.GetSection(OutboundProxyOptions.SectionName));
+
         services.AddHttpClient<IRssFeedReader, RssFeedReader>((serviceProvider, client) =>
         {
             var options = serviceProvider.GetRequiredService<IOptions<CollectorOptions>>().Value;
@@ -105,9 +112,10 @@ public static class DependencyInjection
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
             client.DefaultRequestHeaders.Accept.ParseAdd("application/rss+xml, application/xml, text/xml, */*");
             client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("ru-RU,ru;q=0.9,en;q=0.8");
-        });
+        })
+        .ConfigureOutboundProxy(configuration);
 
-        services.AddContentEnrichment();
+        services.AddContentEnrichment(configuration);
         services.AddScoped<INewsIngestionService, NewsIngestionService>();
 
         return services;
@@ -168,14 +176,15 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        string connectionString)
+        string connectionString,
+        IConfiguration configuration)
     {
         services.AddPersistence(connectionString);
-        services.AddCollectorServices();
+        services.AddCollectorServices(configuration);
         return services;
     }
 
-    private static void ConfigureArticleHttpClient(IHttpClientBuilder builder)
+    private static void ConfigureArticleHttpClient(IHttpClientBuilder builder, IConfiguration configuration)
     {
         builder.ConfigureHttpClient(client =>
         {
@@ -185,6 +194,7 @@ public static class DependencyInjection
             client.DefaultRequestHeaders.Accept.ParseAdd(
                 "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
             client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("ru-RU,ru;q=0.9,en;q=0.8");
-        });
+        })
+        .ConfigureOutboundProxy(configuration);
     }
 }

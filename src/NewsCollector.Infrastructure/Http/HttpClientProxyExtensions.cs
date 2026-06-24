@@ -3,19 +3,24 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NewsCollector.Application.Options;
 
-namespace NewsCollector.Infrastructure.Telegram;
+namespace NewsCollector.Infrastructure.Http;
 
-internal static class TelegramHttpClientExtensions
+public static class HttpClientProxyExtensions
 {
-    public static IHttpClientBuilder ConfigureTelegramProxy(
+    public static IHttpClientBuilder ConfigureOutboundProxy(
         this IHttpClientBuilder builder,
         IConfiguration configuration)
     {
-        var options = configuration.GetSection(TelegramOptions.SectionName).Get<TelegramOptions>() ?? new TelegramOptions();
+        var outbound = configuration.GetSection(OutboundProxyOptions.SectionName).Get<OutboundProxyOptions>()
+            ?? new OutboundProxyOptions();
+        var telegram = configuration.GetSection(TelegramOptions.SectionName).Get<TelegramOptions>()
+            ?? new TelegramOptions();
 
         var httpsProxy = FirstNonEmpty(
-            options.HttpsProxy,
-            options.HttpProxy,
+            outbound.HttpsProxy,
+            outbound.HttpProxy,
+            telegram.HttpsProxy,
+            telegram.HttpProxy,
             configuration["HTTPS_PROXY"],
             configuration["HTTP_PROXY"]);
 
@@ -28,15 +33,16 @@ internal static class TelegramHttpClientExtensions
             || httpsProxy.StartsWith("socks4://", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                "Telegram proxy must be an HTTP proxy URL (e.g. http://host.docker.internal:10809). " +
+                "Outbound proxy must be an HTTP proxy URL (e.g. http://host.docker.internal:10809). " +
                 ".NET HttpClient does not support SOCKS5 without extra packages. " +
                 "Use Xray HTTP inbound on port 10809.");
         }
 
         var noProxy = FirstNonEmpty(
-            options.NoProxy,
+            outbound.NoProxy,
+            telegram.NoProxy,
             configuration["NO_PROXY"],
-            "postgres,localhost,127.0.0.1,::1") ?? "postgres,localhost,127.0.0.1,::1";
+            "postgres,localhost,127.0.0.1,::1,ollama") ?? "postgres,localhost,127.0.0.1,::1,ollama";
 
         var bypassList = noProxy
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -54,9 +60,26 @@ internal static class TelegramHttpClientExtensions
             return new SocketsHttpHandler
             {
                 Proxy = proxy,
-                UseProxy = true
+                UseProxy = true,
+                ConnectTimeout = TimeSpan.FromSeconds(15)
             };
         });
+    }
+
+    public static string? ResolveProxyUrl(IConfiguration configuration)
+    {
+        var outbound = configuration.GetSection(OutboundProxyOptions.SectionName).Get<OutboundProxyOptions>()
+            ?? new OutboundProxyOptions();
+        var telegram = configuration.GetSection(TelegramOptions.SectionName).Get<TelegramOptions>()
+            ?? new TelegramOptions();
+
+        return FirstNonEmpty(
+            outbound.HttpsProxy,
+            outbound.HttpProxy,
+            telegram.HttpsProxy,
+            telegram.HttpProxy,
+            configuration["HTTPS_PROXY"],
+            configuration["HTTP_PROXY"]);
     }
 
     private static string? FirstNonEmpty(params string?[] values)

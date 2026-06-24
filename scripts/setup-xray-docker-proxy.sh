@@ -47,8 +47,9 @@ patch_listen() {
   if command -v jq >/dev/null 2>&1; then
     jq '
       .inbounds |= map(
-        if (.protocol == "socks" or .protocol == "http") and (.listen == "127.0.0.1" or .listen == "localhost")
-        then .listen = "0.0.0.0"
+        if (.port == 10808 or .port == 10809)
+           or (.protocol == "socks" or .protocol == "http" or .protocol == "mixed")
+        then . + {"listen": "0.0.0.0"}
         else .
         end
       )
@@ -89,7 +90,13 @@ echo "  docker0 (bridge):     ${DEFAULT_BRIDGE_IP}"
 echo "  host.docker.internal: используйте в docker run / compose (рекомендуется)"
 
 echo ""
-echo "==> Проверка с хоста"
+echo "==> Проверка: Xray слушает на всех интерфейсах"
+if command -v ss >/dev/null 2>&1; then
+  ss -tlnp | grep -E ':1080[89]' || echo "  Порты 10808/10809 не найдены в ss -tlnp"
+elif command -v netstat >/dev/null 2>&1; then
+  netstat -tlnp | grep -E ':1080[89]' || true
+fi
+echo "  Ожидается: 0.0.0.0:10809 (не 127.0.0.1:10809)"
 if curl -fsS --max-time 10 -x "http://127.0.0.1:10809" "https://api.telegram.org" >/dev/null 2>&1; then
   echo "  HTTP proxy 127.0.0.1:10809 → api.telegram.org: OK"
 else
@@ -102,23 +109,60 @@ else
   echo "  SOCKS5 127.0.0.1:10808: FAIL"
 fi
 
+echo "==> Firewall (ufw): разрешить Docker → Xray"
+if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
+  ufw allow from 172.16.0.0/12 to any port 10809 comment 'Docker to Xray HTTP' || true
+  ufw allow from 172.16.0.0/12 to any port 10808 comment 'Docker to Xray SOCKS' || true
+  ufw reload || true
+  echo "  ufw: правила для 172.16.0.0/12 → 10808/10809 добавлены"
+else
+  echo "  ufw не активен — если Docker всё равно не достучится, проверьте iptables INPUT"
+fi
+
 echo ""
 echo "==> Проверка из Docker-сети (как контейнер)"
-docker run --rm --add-host=host.docker.internal:host-gateway curlimages/curl:8.5.0 \
-  curl -fsS --max-time 15 -x "http://host.docker.internal:10809" "https://api.telegram.org" \
-  && echo "  Контейнер → host.docker.internal:10809 → Telegram: OK" \
-  || echo "  Контейнер → proxy: FAIL (firewall? ufw allow from 172.17.0.0/16?)"
+COMPOSE_NETWORK="${DOCKER_NETWORK:-news-collector_default}"
+NETWORK_ARG=""
+if docker network inspect "$COMPOSE_NETWORK" >/dev/null 2>&1; then
+  NETWORK_ARG="--network ${COMPOSE_NETWORK}"
+  echo "  Используем сеть: ${COMPOSE_NETWORK}"
+else
+  echo "  Сеть ${COMPOSE_NETWORK} не найдена — default bridge"
+fi
+
+test_from_docker() {
+  local label="$1"
+  local proxy_url="$2"
+  if docker run --rm ${NETWORK_ARG} --add-host=host.docker.internal:host-gateway curlimages/curl:8.5.0 \
+    curl -fsS --max-time 15 -x "${proxy_url}" "https://api.telegram.org" >/dev/null 2>&1; then
+    echo "  ${label}: OK"
+    return 0
+  else
+    echo "  ${label}: FAIL"
+    return 1
+  fi
+}
+
+DOCKER_OK=false
+test_from_docker "host.docker.internal:10809" "http://host.docker.internal:10809" && DOCKER_OK=true
+test_from_docker "172.17.0.1:10809 (docker0)" "http://${DEFAULT_BRIDGE_IP}:10809" && DOCKER_OK=true
+
+if [[ "$DOCKER_OK" == false ]]; then
+  echo ""
+  echo "  TCP probe (busybox nc):"
+  docker run --rm ${NETWORK_ARG} --add-host=host.docker.internal:host-gateway busybox:1.36 \
+    sh -c "nc -zv -w 5 host.docker.internal 10809 && nc -zv -w 5 ${DEFAULT_BRIDGE_IP} 10809" \
+    || echo "  TCP to proxy port failed — Xray still on 127.0.0.1 or firewall DROP"
+fi
 
 echo ""
 echo "================================================================"
 echo "Переменные для .env (HTTP proxy — для .NET HttpClient):"
 echo ""
-echo "  TELEGRAM_WORKER_HTTP_PROXY=http://host.docker.internal:10809"
-echo "  TELEGRAM_WORKER_HTTPS_PROXY=http://host.docker.internal:10809"
+echo "  TELEGRAM_PROXY=http://host.docker.internal:10809"
 echo ""
 echo "Альтернатива через IP bridge:"
-echo "  TELEGRAM_WORKER_HTTP_PROXY=http://${DEFAULT_BRIDGE_IP}:10809"
-echo "  TELEGRAM_WORKER_HTTPS_PROXY=http://${DEFAULT_BRIDGE_IP}:10809"
+echo "  TELEGRAM_PROXY=http://${DEFAULT_BRIDGE_IP}:10809"
 echo ""
 echo "После обновления .env:"
 echo "  docker compose up -d --build api telegram-bot"

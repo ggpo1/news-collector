@@ -12,6 +12,7 @@ using NewsCollector.Application.Options;
 using NewsCollector.Infrastructure;
 using NewsCollector.Infrastructure.Auth;
 using NewsCollector.Infrastructure.Persistence;
+using NewsCollector.Infrastructure.Telegram;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,7 @@ builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOpt
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, HttpUserContext>();
 builder.Services.AddPersistence(connectionString);
-builder.Services.AddContentEnrichment();
+builder.Services.AddContentEnrichment(builder.Configuration);
 builder.Services.AddAiRewrite(builder.Configuration);
 builder.Services.AddTelegram(builder.Configuration);
 
@@ -136,6 +137,27 @@ using (var scope = app.Services.CreateScope())
     else
     {
         startupLogger.LogInformation("Telegram HTTP proxy configured: {ProxyUrl}", telegramProxy);
+    }
+
+    var proxyDiagnostics = scope.ServiceProvider.GetRequiredService<TelegramProxyDiagnosticsService>();
+    var proxyCheck = await proxyDiagnostics.RunAsync();
+    if (proxyCheck.TelegramApiReachable)
+    {
+        startupLogger.LogInformation(
+            "Telegram proxy check OK ({LatencyMs}ms, HTTP {StatusCode})",
+            proxyCheck.TelegramApiLatencyMs,
+            proxyCheck.TelegramHttpStatusCode);
+    }
+    else if (!string.IsNullOrWhiteSpace(telegramProxy))
+    {
+        startupLogger.LogError(
+            "Telegram proxy check FAILED: {Summary}. TCP={TcpOk} ({TcpError}). HTTP={HttpError}. " +
+            "On host: ss -tlnp | grep 10809 (must be 0.0.0.0:10809). " +
+            "Try: sudo ufw allow from 172.16.0.0/12 to any port 10809",
+            proxyCheck.Summary,
+            proxyCheck.ProxyTcpReachable,
+            proxyCheck.ProxyTcpError,
+            proxyCheck.TelegramApiError);
     }
 }
 
