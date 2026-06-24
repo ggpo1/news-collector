@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
 using System.ServiceModel.Syndication;
@@ -18,13 +19,29 @@ public sealed class RssFeedReader : IRssFeedReader
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
+    private static int _encodingProviderRegistered;
+
     private readonly HttpClient _httpClient;
     private readonly ILogger<RssFeedReader> _logger;
 
+    static RssFeedReader()
+    {
+        EnsureLegacyEncodingsRegistered();
+    }
+
     public RssFeedReader(HttpClient httpClient, ILogger<RssFeedReader> logger)
     {
+        EnsureLegacyEncodingsRegistered();
         _httpClient = httpClient;
         _logger = logger;
+    }
+
+    public static void EnsureLegacyEncodingsRegistered()
+    {
+        if (Interlocked.Exchange(ref _encodingProviderRegistered, 1) == 0)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
     }
 
     public async Task<IReadOnlyList<ParsedFeedItem>> ReadAsync(
@@ -40,9 +57,28 @@ public sealed class RssFeedReader : IRssFeedReader
         response.EnsureSuccessStatusCode();
 
         await using var networkStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        await using var feedStream = await ReadLimitedStreamAsync(networkStream, MaxFeedBytes, cancellationToken);
+        await using var rawFeedStream = await ReadLimitedStreamAsync(networkStream, MaxFeedBytes, cancellationToken);
 
-        // SyndicationFeed.Load is synchronous; async XmlReader on a live network stream can hang indefinitely.
+        if (rawFeedStream.Length == 0)
+        {
+            throw new InvalidOperationException(
+                $"RSS feed returned empty body (HTTP {(int)response.StatusCode}). " +
+                "The site may require cookies or block automated access.");
+        }
+
+        if (IsGzipPayload(rawFeedStream))
+        {
+            await using var decodedStream = DecompressGzip(rawFeedStream);
+            return ParseFeed(decodedStream, feedUrl);
+        }
+
+        return ParseFeed(rawFeedStream, feedUrl);
+    }
+
+    private IReadOnlyList<ParsedFeedItem> ParseFeed(MemoryStream feedStream, string feedUrl)
+    {
+        feedStream.Position = 0;
+
         using var reader = XmlReader.Create(feedStream, new XmlReaderSettings
         {
             Async = false,
@@ -68,6 +104,33 @@ public sealed class RssFeedReader : IRssFeedReader
             feedStream.Length);
 
         return items;
+    }
+
+    private static bool IsGzipPayload(MemoryStream stream)
+    {
+        if (stream.Length < 2)
+        {
+            return false;
+        }
+
+        stream.Position = 0;
+        var header = stream.ReadByte();
+        var second = stream.ReadByte();
+        stream.Position = 0;
+        return header == 0x1F && second == 0x8B;
+    }
+
+    private static MemoryStream DecompressGzip(MemoryStream raw)
+    {
+        raw.Position = 0;
+        var decompressed = new MemoryStream();
+        using (var gzip = new GZipStream(raw, CompressionMode.Decompress, leaveOpen: true))
+        {
+            gzip.CopyTo(decompressed);
+        }
+
+        decompressed.Position = 0;
+        return decompressed;
     }
 
     private static async Task<MemoryStream> ReadLimitedStreamAsync(

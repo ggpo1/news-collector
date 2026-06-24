@@ -3,9 +3,10 @@ import { useAuth } from '../../contexts/auth-context';
 import { NavIcon } from './nav-icon';
 import * as S from './app-nav.styles';
 
-export type AppSection = 'news' | 'links' | 'rewrites' | 'map' | 'sources' | 'telegram' | 'users';
+export type AppSection = 'dashboard' | 'news' | 'links' | 'rewrites' | 'map' | 'sources' | 'telegram' | 'users';
 
 const NAV_ITEMS: { id: AppSection; label: string; chiefOnly?: boolean }[] = [
+  { id: 'dashboard', label: 'Обзор' },
   { id: 'news', label: 'Новости' },
   { id: 'links', label: 'Связи' },
   { id: 'rewrites', label: 'Переписи' },

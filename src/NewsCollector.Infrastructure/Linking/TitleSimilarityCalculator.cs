@@ -38,6 +38,9 @@ public static partial class TitleSimilarityCalculator
         return leftTokens.Intersect(rightTokens).Count();
     }
 
+    public static string CombineTextForEmbedding(string title, string? summary) =>
+        CombineText(title, summary);
+
     private static string CombineText(string title, string? summary)
     {
         if (string.IsNullOrWhiteSpace(summary))

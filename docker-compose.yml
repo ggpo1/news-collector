@@ -135,6 +135,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      ollama:
+        condition: service_started
+      ollama-embed-pull:
+        condition: service_completed_successfully
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ConnectionStrings__DefaultConnection: >-
@@ -143,7 +147,11 @@ services:
         Database=${POSTGRES_DB:-news_collector};
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
+      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
       TopicLinker__PollingIntervalSeconds: ${TOPIC_LINKER_INTERVAL_SECONDS:-60}
+      TopicLinker__EmbeddingModel: ${TOPIC_LINKER_EMBED_MODEL:-nomic-embed-text}
+      TopicLinker__UseEmbeddings: ${TOPIC_LINKER_USE_EMBEDDINGS:-true}
+      TopicLinker__UseEntityOverlap: ${TOPIC_LINKER_USE_ENTITIES:-true}
     logging:
       driver: json-file
       options:
@@ -259,6 +267,24 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  ollama-embed-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_started
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_EMBED_MODEL: ${TOPIC_LINKER_EMBED_MODEL:-nomic-embed-text}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        until ollama pull "$${OLLAMA_EMBED_MODEL:-nomic-embed-text}"; do
+          echo "Waiting for ollama, pulling $${OLLAMA_EMBED_MODEL:-nomic-embed-text}..."
+          sleep 5
+        done
+    restart: "no"
 
   ollama-ner:
     image: ollama/ollama:latest

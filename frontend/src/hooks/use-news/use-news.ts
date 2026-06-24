@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getNews } from '../../api/client';
 import type { NewsItemList } from '../../api/types';
+import type { NewsToneFilterValue } from '../../components/tone-select/tone-select';
 
 const PAGE_SIZE = 20;
 
@@ -8,9 +9,10 @@ export interface NewsFilters {
   sourceId: string | null;
   categoryId: string | null;
   uncategorized: boolean;
+  toneFilter: NewsToneFilterValue | null;
 }
 
-export function useNews({ sourceId, categoryId, uncategorized }: NewsFilters) {
+export function useNews({ sourceId, categoryId, uncategorized, toneFilter }: NewsFilters) {
   const [items, setItems] = useState<NewsItemList[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -28,6 +30,7 @@ export function useNews({ sourceId, categoryId, uncategorized }: NewsFilters) {
         sourceId: sourceId ?? undefined,
         categoryId: uncategorized ? undefined : (categoryId ?? undefined),
         uncategorized: uncategorized || undefined,
+        toneFilter: toneFilter ?? undefined,
       });
       setItems(result.items);
       setTotalPages(result.totalPages);
@@ -38,11 +41,11 @@ export function useNews({ sourceId, categoryId, uncategorized }: NewsFilters) {
     } finally {
       setLoading(false);
     }
-  }, [page, sourceId, categoryId, uncategorized]);
+  }, [page, sourceId, categoryId, uncategorized, toneFilter]);
 
   useEffect(() => {
     setPage(1);
-  }, [sourceId, categoryId, uncategorized]);
+  }, [sourceId, categoryId, uncategorized, toneFilter]);
 
   useEffect(() => {
     void load();

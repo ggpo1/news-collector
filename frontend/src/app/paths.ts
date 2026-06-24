@@ -4,6 +4,7 @@ export const PATHS = {
   login: '/login',
   register: '/register',
   registerDetails: '/register/details',
+  dashboard: '/dashboard',
   news: '/news',
   links: '/links',
   rewrites: '/rewrites',
@@ -14,6 +15,7 @@ export const PATHS = {
 } as const;
 
 export const SECTION_PATHS: Record<AppSection, string> = {
+  dashboard: PATHS.dashboard,
   news: PATHS.news,
   links: PATHS.links,
   rewrites: PATHS.rewrites,
@@ -32,5 +34,5 @@ const PATH_TO_SECTION = Object.entries(SECTION_PATHS).reduce(
 );
 
 export function sectionFromPathname(pathname: string): AppSection {
-  return PATH_TO_SECTION[pathname] ?? 'news';
+  return PATH_TO_SECTION[pathname] ?? 'dashboard';
 }

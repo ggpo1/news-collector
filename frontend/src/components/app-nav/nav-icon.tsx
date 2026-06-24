@@ -6,6 +6,35 @@ interface NavIconProps {
 
 export function NavIcon({ section }: NavIconProps) {
   switch (section) {
+    case 'dashboard':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M4 4.5A1.5 1.5 0 0 1 5.5 3h4A1.5 1.5 0 0 1 11 4.5V11A1.5 1.5 0 0 1 9.5 12.5h-4A1.5 1.5 0 0 1 4 11V4.5Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+          />
+          <path
+            d="M13 4.5A1.5 1.5 0 0 1 14.5 3h4A1.5 1.5 0 0 1 20 4.5v6A1.5 1.5 0 0 1 18.5 12h-4A1.5 1.5 0 0 1 13 10.5v-6Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+          />
+          <path
+            d="M4 14.5A1.5 1.5 0 0 1 5.5 13h4A1.5 1.5 0 0 1 11 14.5V19A1.5 1.5 0 0 1 9.5 20.5h-4A1.5 1.5 0 0 1 4 19v-4.5Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+          />
+          <path
+            d="M13 16.5A1.5 1.5 0 0 1 14.5 15h4A1.5 1.5 0 0 1 20 16.5V19A1.5 1.5 0 0 1 18.5 20.5h-4A1.5 1.5 0 0 1 13 19v-2.5Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+          />
+        </svg>
+      );
     case 'news':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">

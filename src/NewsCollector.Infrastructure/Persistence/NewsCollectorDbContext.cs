@@ -26,6 +26,8 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<NewsEntityMention> NewsEntityMentions => Set<NewsEntityMention>();
 
+    public DbSet<NewsItemEmbedding> NewsItemEmbeddings => Set<NewsItemEmbedding>();
+
     public DbSet<User> Users => Set<User>();
 
     public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();

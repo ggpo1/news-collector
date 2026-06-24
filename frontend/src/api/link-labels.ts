@@ -10,6 +10,8 @@ export const LINK_METHOD_LABELS: Record<LinkMethod, string> = {
   Manual: 'Вручную',
   TitleSimilarity: 'Схожесть заголовков',
   Embedding: 'Эмбеддинги',
+  EntityOverlap: 'Общие сущности',
+  Hybrid: 'Комбинированный',
 };
 
 export function formatConfidence(value: number): string {

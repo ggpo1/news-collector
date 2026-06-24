@@ -9,6 +9,7 @@ import { NewsDetail } from '../components/news-detail/news-detail';
 import { NewsList } from '../components/news-list/news-list';
 import { Pagination } from '../components/pagination/pagination';
 import { SourceSelect } from '../components/source-select/source-select';
+import { ToneSelect, type NewsToneFilterValue } from '../components/tone-select/tone-select';
 import * as SectionS from '../components/section-page/section-page.styles';
 import { useCategories } from '../hooks/use-categories/use-categories';
 import { useNews } from '../hooks/use-news/use-news';
@@ -30,6 +31,7 @@ export function NewsPage() {
     locationState?.sourceId ?? null,
   );
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [toneFilter, setToneFilter] = useState<NewsToneFilterValue | null>(null);
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(
     locationState?.newsId ?? null,
   );
@@ -42,11 +44,12 @@ export function NewsPage() {
     sourceId: selectedSourceId,
     categoryId: selectedCategoryId,
     uncategorized,
+    toneFilter,
   });
 
   useEffect(() => {
     setSelectedNewsId(null);
-  }, [selectedSourceId, categoryFilter, page]);
+  }, [selectedSourceId, categoryFilter, toneFilter, page]);
 
   const filterError = sourcesError ?? categoriesError;
 
@@ -72,6 +75,7 @@ export function NewsPage() {
                 loading={categoriesLoading}
                 onChange={setCategoryFilter}
               />
+              <ToneSelect value={toneFilter} onChange={setToneFilter} />
             </S.FiltersRow>
             {filterError && <S.ErrorBanner role="alert">{filterError}</S.ErrorBanner>}
           </>

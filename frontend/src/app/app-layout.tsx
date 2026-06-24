@@ -3,6 +3,10 @@ import { AppShell } from '../components/app-shell/app-shell';
 import { sectionFromPathname } from './paths';
 
 const SECTION_META = {
+  dashboard: {
+    title: 'Редакционный обзор',
+    subtitle: 'Что важно сейчас: темы, дубликаты, всплески сущностей',
+  },
   news: {
     title: 'Новости',
     subtitle: 'Лента по выбранному источнику',

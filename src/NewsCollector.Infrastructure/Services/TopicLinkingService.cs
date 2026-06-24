@@ -15,15 +15,18 @@ public sealed class TopicLinkingService : ITopicLinkingService
 {
     private readonly NewsCollectorDbContext _db;
     private readonly TopicLinkerOptions _options;
+    private readonly INewsEmbeddingStore _embeddingStore;
     private readonly ILogger<TopicLinkingService> _logger;
 
     public TopicLinkingService(
         NewsCollectorDbContext db,
         IOptions<TopicLinkerOptions> options,
+        INewsEmbeddingStore embeddingStore,
         ILogger<TopicLinkingService> logger)
     {
         _db = db;
         _options = options.Value;
+        _embeddingStore = embeddingStore;
         _logger = logger;
     }
 
@@ -46,6 +49,23 @@ public sealed class TopicLinkingService : ITopicLinkingService
 
         var candidateIds = candidates.Select(c => c.Id).ToHashSet();
         var existingPairs = await LoadExistingPairsAsync(candidateIds, cancellationToken);
+
+        IReadOnlyDictionary<Guid, float[]> embeddings = new Dictionary<Guid, float[]>();
+        if (_options.UseEmbeddings)
+        {
+            embeddings = await _embeddingStore.EnsureEmbeddingsAsync(
+                candidates.Select(c => new NewsEmbeddingCandidate(c.Id, c.Title, c.Summary)).ToList(),
+                _options.EmbeddingModel,
+                _options.MaxEmbeddingsPerCycle,
+                cancellationToken);
+        }
+
+        IReadOnlyDictionary<Guid, HashSet<Guid>> entitySets = new Dictionary<Guid, HashSet<Guid>>();
+        if (_options.UseEntityOverlap)
+        {
+            entitySets = await LoadEntitySetsAsync(candidateIds, cancellationToken);
+        }
+
         var linksToCreate = new List<NewsLink>();
 
         for (var i = 0; i < candidates.Count; i++)
@@ -61,16 +81,11 @@ public sealed class TopicLinkingService : ITopicLinkingService
                     continue;
                 }
 
-                var similarity = TitleSimilarityCalculator.ComputeSimilarity(
+                var titleJaccard = TitleSimilarityCalculator.ComputeSimilarity(
                     left.Title,
                     left.Summary,
                     right.Title,
                     right.Summary);
-
-                if (similarity < _options.MinSimilarity)
-                {
-                    continue;
-                }
 
                 var sharedTokens = TitleSimilarityCalculator.CountSharedTokens(
                     left.Title,
@@ -78,23 +93,44 @@ public sealed class TopicLinkingService : ITopicLinkingService
                     right.Title,
                     right.Summary);
 
-                if (sharedTokens < _options.MinSharedTokens)
+                var embeddingCosine = 0m;
+                if (_options.UseEmbeddings
+                    && embeddings.TryGetValue(left.Id, out var leftVector)
+                    && embeddings.TryGetValue(right.Id, out var rightVector))
+                {
+                    embeddingCosine = EmbeddingSimilarityCalculator.CosineSimilarity(leftVector, rightVector);
+                }
+
+                var leftEntities = entitySets.GetValueOrDefault(left.Id) ?? [];
+                var rightEntities = entitySets.GetValueOrDefault(right.Id) ?? [];
+                var entityOverlap = EntityOverlapCalculator.Compute(leftEntities, rightEntities);
+
+                if (ShouldSkipPair(titleJaccard, sharedTokens, embeddingCosine, entityOverlap))
                 {
                     continue;
                 }
 
-                var linkType = similarity >= _options.DuplicateSimilarity
-                    ? LinkType.Duplicate
-                    : LinkType.SameTopic;
+                var signals = new TopicLinkSignals(
+                    titleJaccard,
+                    sharedTokens,
+                    embeddingCosine,
+                    entityOverlap.SharedCount,
+                    entityOverlap.Jaccard);
+
+                var decision = TopicLinkClassifier.Classify(signals, _options);
+                if (decision is null)
+                {
+                    continue;
+                }
 
                 linksToCreate.Add(new NewsLink
                 {
                     Id = Guid.NewGuid(),
                     NewsIdLow = lowId,
                     NewsIdHigh = highId,
-                    LinkType = linkType,
-                    LinkMethod = LinkMethod.TitleSimilarity,
-                    Confidence = similarity,
+                    LinkType = decision.Value.LinkType,
+                    LinkMethod = decision.Value.LinkMethod,
+                    Confidence = decision.Value.Confidence,
                     CreatedAt = DateTimeOffset.UtcNow
                 });
 
@@ -108,6 +144,49 @@ public sealed class TopicLinkingService : ITopicLinkingService
         }
 
         return await PersistLinksAsync(linksToCreate, cancellationToken);
+    }
+
+    private bool ShouldSkipPair(
+        decimal titleJaccard,
+        int sharedTokens,
+        decimal embeddingCosine,
+        EntityOverlapResult entityOverlap)
+    {
+        if (titleJaccard >= _options.MinRelatedTitleSimilarity && sharedTokens >= 1)
+        {
+            return false;
+        }
+
+        if (embeddingCosine >= _options.MinEmbeddingSimilarityForRelated)
+        {
+            return false;
+        }
+
+        if (entityOverlap.SharedCount >= _options.MinSharedEntitiesForRelated)
+        {
+            return false;
+        }
+
+        return titleJaccard < _options.MinRelatedTitleSimilarity;
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, HashSet<Guid>>> LoadEntitySetsAsync(
+        HashSet<Guid> candidateIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = candidateIds.ToList();
+
+        var rows = await _db.NewsEntityMentions
+            .AsNoTracking()
+            .Where(mention => ids.Contains(mention.NewsItemId))
+            .Select(mention => new { mention.NewsItemId, mention.NamedEntityId })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .GroupBy(row => row.NewsItemId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(row => row.NamedEntityId).ToHashSet());
     }
 
     private async Task<HashSet<(Guid Low, Guid High)>> LoadExistingPairsAsync(

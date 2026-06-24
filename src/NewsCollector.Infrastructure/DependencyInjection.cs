@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<INewsRewriteService, NewsRewriteService>();
         services.AddScoped<ICategoryQueryService, CategoryQueryService>();
         services.AddScoped<INewsEntityGraphQueryService, NewsEntityGraphQueryService>();
+        services.AddScoped<IEditorialDashboardService, EditorialDashboardService>();
         services.AddScoped<IApiVisitWriter, ApiVisitWriter>();
 
         services.AddSingleton<PasswordHasherService>();
@@ -121,8 +122,19 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddTopicLinking(this IServiceCollection services)
+    public static IServiceCollection AddTopicLinking(this IServiceCollection services, IConfiguration configuration)
     {
+        services.Configure<OllamaOptions>(configuration.GetSection(OllamaOptions.SectionName));
+
+        services.AddHttpClient("Ollama", (serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<OllamaOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+            client.Timeout = Timeout.InfiniteTimeSpan;
+        });
+
+        services.AddScoped<IOllamaEmbeddingService, OllamaEmbeddingService>();
+        services.AddScoped<INewsEmbeddingStore, NewsEmbeddingStore>();
         services.AddScoped<ITopicLinkingService, TopicLinkingService>();
         return services;
     }

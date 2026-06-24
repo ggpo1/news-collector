@@ -24,13 +24,9 @@ public static class HttpClientProxyExtensions
             configuration["HTTPS_PROXY"],
             configuration["HTTP_PROXY"]);
 
-        if (string.IsNullOrWhiteSpace(httpsProxy))
-        {
-            return builder;
-        }
-
-        if (httpsProxy.StartsWith("socks5://", StringComparison.OrdinalIgnoreCase)
-            || httpsProxy.StartsWith("socks4://", StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(httpsProxy)
+            && (httpsProxy.StartsWith("socks5://", StringComparison.OrdinalIgnoreCase)
+                || httpsProxy.StartsWith("socks4://", StringComparison.OrdinalIgnoreCase)))
         {
             throw new InvalidOperationException(
                 "Outbound proxy must be an HTTP proxy URL (e.g. http://host.docker.internal:10809). " +
@@ -50,20 +46,28 @@ public static class HttpClientProxyExtensions
             .Where(host => host.Length > 0)
             .ToArray();
 
-        return builder.ConfigurePrimaryHttpMessageHandler(() =>
-        {
-            var proxy = new WebProxy(new Uri(httpsProxy), false)
-            {
-                BypassList = bypassList
-            };
+        return builder.ConfigurePrimaryHttpMessageHandler(() => CreateHandler(httpsProxy, bypassList));
+    }
 
-            return new SocketsHttpHandler
-            {
-                Proxy = proxy,
-                UseProxy = true,
-                ConnectTimeout = TimeSpan.FromSeconds(15)
-            };
-        });
+    internal static SocketsHttpHandler CreateHandler(string? httpsProxy, string[]? bypassList = null)
+    {
+        var handler = new SocketsHttpHandler
+        {
+            AutomaticDecompression = DecompressionMethods.All,
+            ConnectTimeout = TimeSpan.FromSeconds(15)
+        };
+
+        if (string.IsNullOrWhiteSpace(httpsProxy))
+        {
+            return handler;
+        }
+
+        handler.Proxy = new WebProxy(new Uri(httpsProxy), false)
+        {
+            BypassList = bypassList ?? []
+        };
+        handler.UseProxy = true;
+        return handler;
     }
 
     public static string? ResolveProxyUrl(IConfiguration configuration)

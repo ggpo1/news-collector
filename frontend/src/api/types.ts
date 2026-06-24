@@ -85,7 +85,7 @@ export interface ArticleEnrichmentResult {
 
 export type LinkType = 'SameTopic' | 'Duplicate' | 'Related';
 
-export type LinkMethod = 'Manual' | 'TitleSimilarity' | 'Embedding';
+export type LinkMethod = 'Manual' | 'TitleSimilarity' | 'Embedding' | 'EntityOverlap' | 'Hybrid';
 
 export interface RelatedNews {
   linkId: string;
@@ -313,4 +313,68 @@ export interface TelegramDelivery {
   errorMessage: string | null;
   createdAt: string;
   sentAt: string | null;
+}
+
+export interface EditorialBriefNews {
+  id: string;
+  title: string;
+  sourceName: string;
+  categoryName: string | null;
+  toneCoefficient: number | null;
+  publishedAt: string | null;
+  fetchedAt: string;
+  hasContent: boolean;
+  url: string;
+}
+
+export interface DevelopingTopic {
+  clusterKey: string;
+  headline: string;
+  sourceCount: number;
+  articleCount: number;
+  sourceNames: string[];
+  primaryArticle: EditorialBriefNews;
+  relatedArticles: EditorialBriefNews[];
+}
+
+export interface DuplicateGroup {
+  clusterKey: string;
+  headline: string;
+  sourceCount: number;
+  articleCount: number;
+  hasDuplicateLink: boolean;
+  sourceNames: string[];
+  primaryArticle: EditorialBriefNews;
+  relatedArticles: EditorialBriefNews[];
+}
+
+export interface EntitySpike {
+  entityId: string;
+  entityName: string;
+  entityType: string;
+  mentionsInWindow: number;
+  mentionsInPreviousWindow: number;
+  spikeRatio: number;
+  recentArticles: EditorialBriefNews[];
+}
+
+export interface ToneHighlight {
+  news: EditorialBriefNews;
+  toneCoefficient: number;
+  toneLabel: string;
+}
+
+export interface EditorialDashboardMeta {
+  windowHours: number;
+  windowStart: string;
+  generatedAt: string;
+  newsInWindow: number;
+}
+
+export interface EditorialDashboard {
+  developingTopics: DevelopingTopic[];
+  duplicateGroups: DuplicateGroup[];
+  entitySpikes: EntitySpike[];
+  toneHighlights: ToneHighlight[];
+  meta: EditorialDashboardMeta;
 }

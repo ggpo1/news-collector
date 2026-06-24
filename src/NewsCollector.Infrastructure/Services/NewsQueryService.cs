@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Dtos;
+using NewsCollector.Application.Enums;
 using NewsCollector.Infrastructure.Persistence;
 
 namespace NewsCollector.Infrastructure.Services;
@@ -21,6 +22,7 @@ public sealed class NewsQueryService : INewsQueryService
         Guid? categoryId = null,
         bool? uncategorized = null,
         bool? hasContent = null,
+        NewsToneFilter? toneFilter = null,
         CancellationToken cancellationToken = default)
     {
         var query = _db.NewsItems
@@ -49,6 +51,8 @@ public sealed class NewsQueryService : INewsQueryService
         {
             query = query.Where(n => n.Content == null);
         }
+
+        query = ApplyToneFilter(query, toneFilter);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -136,5 +140,30 @@ public sealed class NewsQueryService : INewsQueryService
                         related.Content != null));
             })
             .ToList();
+    }
+
+    private static IQueryable<Domain.Entities.NewsItem> ApplyToneFilter(
+        IQueryable<Domain.Entities.NewsItem> query,
+        NewsToneFilter? toneFilter)
+    {
+        if (toneFilter is null)
+        {
+            return query;
+        }
+
+        return toneFilter switch
+        {
+            NewsToneFilter.Positive => query.Where(n => n.ToneCoefficient >= 0.3m),
+            NewsToneFilter.Negative => query.Where(n => n.ToneCoefficient <= -0.3m),
+            NewsToneFilter.Neutral => query.Where(n =>
+                n.ToneCoefficient != null
+                && n.ToneCoefficient > -0.3m
+                && n.ToneCoefficient < 0.3m),
+            NewsToneFilter.Strong => query.Where(n =>
+                n.ToneCoefficient != null
+                && (n.ToneCoefficient >= 0.55m || n.ToneCoefficient <= -0.55m)),
+            NewsToneFilter.Unanalyzed => query.Where(n => n.ToneCoefficient == null),
+            _ => query
+        };
     }
 }

@@ -27,6 +27,7 @@ import type {
   TelegramChannel,
   TelegramSendResult,
   TelegramDelivery,
+  EditorialDashboard,
   UpdateNewsRewritePayload,
   UpdateSourcePayload,
   UpdateTelegramBotPayload,
@@ -235,6 +236,7 @@ export function getNews(params: {
   categoryId?: string;
   uncategorized?: boolean;
   hasContent?: boolean;
+  toneFilter?: string;
 }): Promise<PagedResult<NewsItemList>> {
   const search = new URLSearchParams({
     page: String(params.page),
@@ -255,6 +257,10 @@ export function getNews(params: {
 
   if (params.hasContent !== undefined) {
     search.set('hasContent', String(params.hasContent));
+  }
+
+  if (params.toneFilter) {
+    search.set('toneFilter', params.toneFilter);
   }
 
   return request<PagedResult<NewsItemList>>(`/api/news?${search}`);
@@ -475,4 +481,14 @@ export function sendRewriteToTelegram(rewriteId: string, channelId: string): Pro
 
 export function getTelegramDelivery(deliveryId: string): Promise<TelegramDelivery> {
   return request<TelegramDelivery>(`/api/telegram/deliveries/${deliveryId}`);
+}
+
+export function getEditorialDashboard(windowHours?: number): Promise<EditorialDashboard> {
+  const params = new URLSearchParams();
+  if (windowHours !== undefined) {
+    params.set('windowHours', String(windowHours));
+  }
+
+  const query = params.toString();
+  return request<EditorialDashboard>(`/api/editorial/dashboard${query ? `?${query}` : ''}`);
 }

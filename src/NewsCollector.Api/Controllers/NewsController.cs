@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Dtos;
+using NewsCollector.Application.Enums;
 
 namespace NewsCollector.Api.Controllers;
 
@@ -40,6 +41,7 @@ public sealed class NewsController : ControllerBase
         [FromQuery] Guid? categoryId = null,
         [FromQuery] bool? uncategorized = null,
         [FromQuery] bool? hasContent = null,
+        [FromQuery] string? toneFilter = null,
         CancellationToken cancellationToken = default)
     {
         if (page < 1)
@@ -57,6 +59,20 @@ public sealed class NewsController : ControllerBase
             return BadRequest(new { error = "Use either categoryId or uncategorized, not both" });
         }
 
+        NewsToneFilter? parsedToneFilter = null;
+        if (!string.IsNullOrWhiteSpace(toneFilter))
+        {
+            if (!Enum.TryParse<NewsToneFilter>(toneFilter, ignoreCase: true, out var parsed))
+            {
+                return BadRequest(new
+                {
+                    error = "Invalid toneFilter. Allowed: positive, negative, neutral, strong, unanalyzed"
+                });
+            }
+
+            parsedToneFilter = parsed;
+        }
+
         var result = await _newsQueryService.GetPagedAsync(
             page,
             pageSize,
@@ -64,6 +80,7 @@ public sealed class NewsController : ControllerBase
             categoryId,
             uncategorized,
             hasContent,
+            parsedToneFilter,
             cancellationToken);
 
         return Ok(result);

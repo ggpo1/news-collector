@@ -20,4 +20,28 @@ public sealed class TopicLinkerOptions
 
     /// <summary>Similarity at or above which the link is classified as Duplicate.</summary>
     public decimal DuplicateSimilarity { get; set; } = 0.92m;
+
+    public bool UseEmbeddings { get; set; } = true;
+
+    public bool UseEntityOverlap { get; set; } = true;
+
+    public string EmbeddingModel { get; set; } = "nomic-embed-text";
+
+    public int MaxEmbeddingsPerCycle { get; set; } = 40;
+
+    public decimal DuplicateEmbeddingSimilarity { get; set; } = 0.93m;
+
+    public decimal MinEmbeddingSimilarityForSameTopic { get; set; } = 0.78m;
+
+    public decimal MinEmbeddingSimilarityForRelated { get; set; } = 0.65m;
+
+    public decimal MinEmbeddingSimilarityWithEntities { get; set; } = 0.70m;
+
+    public int MinSharedEntitiesForSameTopic { get; set; } = 2;
+
+    public int MinSharedEntitiesForRelated { get; set; } = 2;
+
+    public decimal MinEntityJaccardForRelated { get; set; } = 0.30m;
+
+    public decimal MinRelatedTitleSimilarity { get; set; } = 0.25m;
 }

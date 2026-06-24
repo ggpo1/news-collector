@@ -4,5 +4,7 @@ public enum LinkMethod
 {
     Manual,
     TitleSimilarity,
-    Embedding
+    Embedding,
+    EntityOverlap,
+    Hybrid
 }

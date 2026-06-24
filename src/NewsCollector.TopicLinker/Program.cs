@@ -9,7 +9,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.Configure<TopicLinkerOptions>(builder.Configuration.GetSection(TopicLinkerOptions.SectionName));
 builder.Services.AddPersistence(connectionString);
-builder.Services.AddTopicLinking();
+builder.Services.AddTopicLinking(builder.Configuration);
 builder.Services.AddHostedService<TopicLinkerWorker>();
 
 await builder.Build().RunAsync();
