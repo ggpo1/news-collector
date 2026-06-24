@@ -15,8 +15,21 @@ RUN dotnet publish "NewsCollector.Api.csproj" -c Release -o /app/publish /p:UseA
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
+ARG DOCKER_CLI_VERSION=27.4.1
+ARG TARGETARCH
+
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends docker.io \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && case "${TARGETARCH}" in \
+        amd64) DOCKER_ARCH=x86_64 ;; \
+        arm64) DOCKER_ARCH=aarch64 ;; \
+        *) echo "Unsupported TARGETARCH=${TARGETARCH}" && exit 1 ;; \
+       esac \
+    && curl -fsSL "https://download.docker.com/linux/static/stable/${DOCKER_ARCH}/docker-${DOCKER_CLI_VERSION}.tgz" \
+    | tar -xzf - -C /usr/local/bin --strip-components=1 docker/docker \
+    && chmod +x /usr/local/bin/docker \
+    && apt-get purge -y curl \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && adduser --disabled-password --gecos "" appuser \
     && chown -R appuser /app

@@ -109,7 +109,7 @@ public sealed class DockerCliTelegramBotOrchestrator : ITelegramBotOrchestrator
 
     private static string ResolveDockerBinary()
     {
-        foreach (var candidate in new[] { "/usr/bin/docker", "/usr/local/bin/docker", "docker" })
+        foreach (var candidate in new[] { "/usr/local/bin/docker", "/usr/bin/docker", "docker" })
         {
             if (candidate == "docker" || File.Exists(candidate))
             {
@@ -118,7 +118,7 @@ public sealed class DockerCliTelegramBotOrchestrator : ITelegramBotOrchestrator
         }
 
         throw new InvalidOperationException(
-            "Docker CLI not found in the API container. Rebuild the api image (Dockerfile.api installs docker.io).");
+            "Docker CLI not found in the API container. Rebuild the api image (Dockerfile.api installs docker static binary).");
     }
 
     private static string Quote(string value) => $"\"{value.Replace("\"", "\\\"")}\"";
