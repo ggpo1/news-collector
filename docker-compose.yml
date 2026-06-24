@@ -31,8 +31,8 @@ services:
         condition: service_started
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    group_add:
-      - "${DOCKER_GID:-999}"
+    # root (0:0) — доступ к docker.sock (владелец root на хосте). Альтернатива: appuser + group_add с верным DOCKER_GID.
+    user: "${API_CONTAINER_USER:-0:0}"
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       RunMigrations: ${RUN_MIGRATIONS:-true}
