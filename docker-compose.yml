@@ -17,6 +17,15 @@ services:
       retries: 10
       start_period: 10s
 
+  # Сборка образа воркера Telegram (не запускается как сервис — только image для orchestrator).
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.telegram-bot
+    image: news-collector-telegram-bot:latest
+    entrypoint: ["/bin/true"]
+    restart: "no"
+
   api:
     build:
       context: .
@@ -29,6 +38,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+      telegram-bot:
+        condition: service_completed_successfully
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     # root (0:0) — доступ к docker.sock (владелец root на хосте). Альтернатива: appuser + group_add с верным DOCKER_GID.
@@ -340,14 +351,6 @@ services:
           sleep 5
         done
     restart: "no"
-
-  telegram-bot:
-    build:
-      context: .
-      dockerfile: Dockerfile.telegram-bot
-    image: news-collector-telegram-bot:latest
-    profiles:
-      - telegram-build
 
 volumes:
   postgres_data:

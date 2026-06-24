@@ -35,10 +35,12 @@ public sealed class DockerCliTelegramBotOrchestrator : ITelegramBotOrchestrator
 
         try
         {
+            await EnsureImageExistsAsync(cancellationToken);
+
             await RunDockerAsync($"rm -f {containerName}", cancellationToken);
 
             var runArgs =
-                $"run -d --name {containerName} --restart unless-stopped " +
+                $"run -d --pull never --name {containerName} --restart unless-stopped " +
                 $"--network {_options.DockerNetwork} " +
                 $"-e TelegramBot__BotId={botId} " +
                 $"-e TelegramBot__PollingIntervalSeconds=5 " +
@@ -77,6 +79,21 @@ public sealed class DockerCliTelegramBotOrchestrator : ITelegramBotOrchestrator
     }
 
     public static string BuildContainerName(Guid botId) => $"nc-telegram-bot-{botId:N}";
+
+    private async Task EnsureImageExistsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await RunDockerAsync($"image inspect {_options.DockerImage}", cancellationToken);
+        }
+        catch (Exception)
+        {
+            throw new InvalidOperationException(
+                $"Docker-образ '{_options.DockerImage}' не найден на хосте. " +
+                "Соберите его: docker compose build telegram-bot " +
+                "(или docker compose up -d --build api).");
+        }
+    }
 
     private async Task<string> RunDockerAsync(string arguments, CancellationToken cancellationToken)
     {
