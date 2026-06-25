@@ -29,7 +29,8 @@ public static class TopicLinkClassifier
         var embeddingSameTopic = signals.EmbeddingCosine >= options.MinEmbeddingSimilarityForSameTopic;
 
         var entitySameTopic = signals.SharedEntityCount >= options.MinSharedEntitiesForSameTopic
-            && signals.EmbeddingCosine >= options.MinEmbeddingSimilarityWithEntities;
+            && (signals.EntityJaccard >= options.MinEntityJaccardForSameTopic
+                || signals.EmbeddingCosine >= options.MinEmbeddingSimilarityWithEntities);
 
         if (titleMatch || embeddingSameTopic || entitySameTopic)
         {

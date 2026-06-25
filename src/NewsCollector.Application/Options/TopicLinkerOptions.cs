@@ -39,6 +39,8 @@ public sealed class TopicLinkerOptions
 
     public int MinSharedEntitiesForSameTopic { get; set; } = 2;
 
+    public decimal MinEntityJaccardForSameTopic { get; set; } = 0.45m;
+
     public int MinSharedEntitiesForRelated { get; set; } = 2;
 
     public decimal MinEntityJaccardForRelated { get; set; } = 0.30m;

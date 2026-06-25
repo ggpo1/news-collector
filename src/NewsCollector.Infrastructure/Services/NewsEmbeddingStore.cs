@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NewsCollector.Application.Abstractions;
@@ -47,22 +46,28 @@ public sealed class NewsEmbeddingStore : INewsEmbeddingStore
             return result;
         }
 
-        var created = 0;
-        foreach (var candidate in candidates)
+        var pending = candidates
+            .Where(candidate => !result.ContainsKey(candidate.Id))
+            .Take(maxNewEmbeddings)
+            .ToList();
+
+        if (pending.Count == 0)
         {
-            if (result.ContainsKey(candidate.Id))
-            {
-                continue;
-            }
+            return result;
+        }
 
-            if (created >= maxNewEmbeddings)
-            {
-                break;
-            }
+        var texts = pending
+            .Select(candidate => TitleSimilarityCalculator.CombineTextForEmbedding(candidate.Title, candidate.Summary))
+            .ToList();
 
-            var text = TitleSimilarityCalculator.CombineTextForEmbedding(candidate.Title, candidate.Summary);
-            var vector = await _embeddingService.EmbedTextAsync(text, model, cancellationToken);
-            if (vector is null)
+        var vectors = await _embeddingService.EmbedTextsAsync(texts, model, cancellationToken);
+        var created = 0;
+
+        for (var index = 0; index < pending.Count; index++)
+        {
+            var candidate = pending[index];
+            var vector = index < vectors.Count ? vectors[index] : null;
+            if (vector is null or { Length: 0 })
             {
                 continue;
             }

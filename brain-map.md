@@ -95,13 +95,15 @@ ChiefEditor — approve, Editor — draft.
 
 Без автоматического «правда/ложь» — только чеклист для редактора.
 
-### 8. Улучшить topic linking
+### 8. Улучшить topic linking ✅
 
-Jaccard по заголовку — baseline. Следующий шаг:
+Jaccard по заголовку — baseline. Реализовано:
 
-- embeddings (семантика, не только слова)
-- учитывать сущности (одни и те же персоны/компании)
-- тип Related — «рядом по теме», не только duplicate/same-topic
+- **embeddings** — Ollama `nomic-embed-text`, cosine similarity, хранение в `news_item_embeddings`
+- **сущности** — пересечение `NamedEntityId` из `news_entity_mentions`
+- **Related** — «рядом по теме» (embedding ≥ 0.65 или 2+ общих сущности)
+
+Типы: `Duplicate` / `SameTopic` / `Related`. Методы: `TitleSimilarity`, `Embedding`, `EntityOverlap`, `Hybrid`.
 
 ---
 
