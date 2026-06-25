@@ -38,6 +38,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+      ollama-chat-pull:
+        condition: service_completed_successfully
       telegram-bot:
         condition: service_completed_successfully
     volumes:
@@ -54,7 +56,7 @@ services:
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
       Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      Ollama__Model: ${OLLAMA_MODEL:-llama3.2}
+      Ollama__Model: ${OLLAMA_MODEL:-qwen3.5:27b}
       Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-1800}
       Auth__JwtSecret: ${AUTH_JWT_SECRET:-change-this-secret-in-production-min-32-characters-long}
       Auth__JwtExpirationMinutes: ${AUTH_JWT_EXPIRATION_MINUTES:-480}
@@ -199,6 +201,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+      ollama-chat-pull:
+        condition: service_completed_successfully
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       RunMigrations: ${RUN_MIGRATIONS:-false}
@@ -209,7 +213,7 @@ services:
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
       Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      Ollama__Model: ${OLLAMA_MODEL:-deepseek-r1:14b}
+      Ollama__Model: ${OLLAMA_MODEL:-qwen3.5:27b}
       Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-1800}
       EditorialBrief__PollingIntervalSeconds: ${EDITORIAL_BRIEF_INTERVAL_SECONDS:-3600}
       EditorialBrief__ScheduleHoursUtc__0: ${EDITORIAL_BRIEF_MORNING_UTC:-6}
@@ -299,6 +303,24 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  ollama-chat-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_started
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_CHAT_MODEL: ${OLLAMA_MODEL:-qwen3.5:27b}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        until ollama pull "$${OLLAMA_CHAT_MODEL:-qwen3.5:27b}"; do
+          echo "Waiting for ollama, pulling $${OLLAMA_CHAT_MODEL:-qwen3.5:27b}..."
+          sleep 5
+        done
+    restart: "no"
 
   ollama-embed-pull:
     image: ollama/ollama:latest

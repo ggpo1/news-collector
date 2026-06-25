@@ -127,7 +127,7 @@ using (var scope = app.Services.CreateScope())
     if (ollamaOptions.TimeoutSeconds < 1800)
     {
         startupLogger.LogWarning(
-            "Ollama TimeoutSeconds={TimeoutSeconds} is below 1800. Large CPU models (e.g. deepseek-r1:14b) often need 30+ minutes.",
+            "Ollama TimeoutSeconds={TimeoutSeconds} is below 1800. Large models (e.g. qwen3.5:27b) on CPU often need 30+ minutes.",
             ollamaOptions.TimeoutSeconds);
     }
 

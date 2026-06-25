@@ -4,7 +4,7 @@
 
 | Сервис Docker | Воркер / клиент | Порт хоста | Модель по умолчанию |
 |---------------|-----------------|------------|---------------------|
-| `ollama` | API (AI rewrite) | 11435 | `deepseek-r1:14b` |
+| `ollama` | API (rewrite, second-day), editorial-brief | 11435 | `qwen3.5:27b` |
 | `ollama-ner` | `news-entity-extractor` | 11436 | `llama3.2:3b` |
 | `ollama-categorizer` | `news-categorizer` | 11437 | `llama3.2:3b` |
 | `ollama-tone` | `news-tone-analyzer` | 11438 | `llama3.2:3b` |
