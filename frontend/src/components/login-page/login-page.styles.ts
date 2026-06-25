@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 
 export const Page = styled.div`
   min-height: 100dvh;
@@ -111,11 +112,18 @@ export const LinkButton = styled.button`
   }
 `;
 
-export const PromoLink = styled(LinkButton)`
+export const PromoLink = styled(Link)`
+  display: inline-flex;
+  justify-content: center;
   margin-top: 0.35rem;
+  border: none;
+  background: none;
+  padding: 0;
+  color: ${({ theme }) => theme.colors.accent};
   font-size: 0.82rem;
   font-weight: 500;
   text-decoration: none;
+  cursor: pointer;
 
   &:hover {
     text-decoration: underline;

@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { NewsLinksView } from '../components/news-links-view/news-links-view';
 import { LoginPage } from '../components/login-page/login-page';
 import { RegisterDetailsPage } from '../components/login-page/register-details-page';
@@ -17,6 +17,7 @@ import { AppLayout } from './app-layout';
 import { ChiefEditorRoute } from './chief-editor-route';
 import { GuestRoute } from './guest-route';
 import { PATHS } from './paths';
+import { NotFoundRedirect, RootRedirect } from './root-redirect';
 import { RequireAuth } from './require-auth';
 
 export default function App() {
@@ -49,23 +50,21 @@ export default function App() {
       />
 
       <Route
-        path="/"
         element={
           <RequireAuth>
             <AppLayout />
           </RequireAuth>
         }
       >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="brief" element={<BriefPage />} />
-        <Route path="stories" element={<StoriesPage />} />
-        <Route path="news" element={<NewsPage />} />
-        <Route path="links" element={<NewsLinksView />} />
-        <Route path="rewrites" element={<RewritesPage />} />
-        <Route path="map" element={<EntityMapPage />} />
+        <Route path={PATHS.dashboard} element={<DashboardPage />} />
+        <Route path={PATHS.brief} element={<BriefPage />} />
+        <Route path={PATHS.stories} element={<StoriesPage />} />
+        <Route path={PATHS.news} element={<NewsPage />} />
+        <Route path={PATHS.links} element={<NewsLinksView />} />
+        <Route path={PATHS.rewrites} element={<RewritesPage />} />
+        <Route path={PATHS.map} element={<EntityMapPage />} />
         <Route
-          path="sources"
+          path={PATHS.sources}
           element={
             <ChiefEditorRoute>
               <SourcesPage />
@@ -73,7 +72,7 @@ export default function App() {
           }
         />
         <Route
-          path="telegram"
+          path={PATHS.telegram}
           element={
             <ChiefEditorRoute>
               <TelegramPage />
@@ -81,7 +80,7 @@ export default function App() {
           }
         />
         <Route
-          path="users"
+          path={PATHS.users}
           element={
             <ChiefEditorRoute>
               <UsersView />
@@ -90,7 +89,8 @@ export default function App() {
         />
       </Route>
 
-      <Route path="*" element={<Navigate to={PATHS.news} replace />} />
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="*" element={<NotFoundRedirect />} />
     </Routes>
   );
 }
