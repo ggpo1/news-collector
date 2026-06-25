@@ -110,3 +110,14 @@ export const LinkButton = styled.button`
     cursor: wait;
   }
 `;
+
+export const PromoLink = styled(LinkButton)`
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;

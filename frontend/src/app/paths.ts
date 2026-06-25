@@ -2,6 +2,7 @@ import type { AppSection } from '../components/app-nav/app-nav';
 
 export const PATHS = {
   login: '/login',
+  promo: '/promo',
   register: '/register',
   registerDetails: '/register/details',
   dashboard: '/dashboard',

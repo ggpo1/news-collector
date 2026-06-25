@@ -4,6 +4,7 @@ import { LoginPage } from '../components/login-page/login-page';
 import { RegisterDetailsPage } from '../components/login-page/register-details-page';
 import { RegisterPage } from '../components/login-page/register-page';
 import { UsersView } from '../components/users-view/users-view';
+import { PromoPageRoute } from '../pages/promo-page';
 import { BriefPage } from '../pages/brief-page';
 import { DashboardPage } from '../pages/dashboard-page';
 import { EntityMapPage } from '../pages/entity-map-page';
@@ -21,6 +22,7 @@ import { RequireAuth } from './require-auth';
 export default function App() {
   return (
     <Routes>
+      <Route path={PATHS.promo} element={<PromoPageRoute />} />
       <Route
         path={PATHS.login}
         element={
