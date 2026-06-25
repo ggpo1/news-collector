@@ -4,6 +4,7 @@ import { LoginPage } from '../components/login-page/login-page';
 import { RegisterDetailsPage } from '../components/login-page/register-details-page';
 import { RegisterPage } from '../components/login-page/register-page';
 import { UsersView } from '../components/users-view/users-view';
+import { BriefPage } from '../pages/brief-page';
 import { DashboardPage } from '../pages/dashboard-page';
 import { EntityMapPage } from '../pages/entity-map-page';
 import { NewsPage } from '../pages/news-page';
@@ -55,6 +56,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="brief" element={<BriefPage />} />
         <Route path="stories" element={<StoriesPage />} />
         <Route path="news" element={<NewsPage />} />
         <Route path="links" element={<NewsLinksView />} />

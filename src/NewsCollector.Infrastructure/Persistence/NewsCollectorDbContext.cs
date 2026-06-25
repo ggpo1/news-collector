@@ -50,6 +50,8 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<TelegramDelivery> TelegramDeliveries => Set<TelegramDelivery>();
 
+    public DbSet<EditorialBriefReport> EditorialBriefReports => Set<EditorialBriefReport>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NewsCollectorDbContext).Assembly);

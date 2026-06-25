@@ -23,12 +23,15 @@ builder.Services.Configure<CollectorOptions>(builder.Configuration.GetSection(Co
 builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
 builder.Services.Configure<EditorialDashboardOptions>(
     builder.Configuration.GetSection(EditorialDashboardOptions.SectionName));
+builder.Services.Configure<EditorialBriefOptions>(
+    builder.Configuration.GetSection(EditorialBriefOptions.SectionName));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, HttpUserContext>();
 builder.Services.AddPersistence(connectionString);
 builder.Services.AddContentEnrichment(builder.Configuration);
 builder.Services.AddAiRewrite(builder.Configuration);
+builder.Services.AddEditorialBrief(builder.Configuration);
 builder.Services.AddTelegram(builder.Configuration);
 
 var telegramOrchestrator = builder.Configuration.GetSection(TelegramBotOrchestratorOptions.SectionName);

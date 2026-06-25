@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-NewsCollector.EditorialBrief-a1b2c3d4-e5f6-7890-abcd-ef1234567890</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NewsCollector.Infrastructure\NewsCollector.Infrastructure.csproj" />
+    <ProjectReference Include="..\NewsCollector.Application\NewsCollector.Application.csproj" />
+  </ItemGroup>
+
+</Project>

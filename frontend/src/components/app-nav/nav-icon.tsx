@@ -35,6 +35,18 @@ export function NavIcon({ section }: NavIconProps) {
           />
         </svg>
       );
+    case 'brief':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5v15A1.5 1.5 0 0 1 16.5 21h-9A1.5 1.5 0 0 1 6 19.5v-15Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+          />
+          <path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
     case 'stories':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">

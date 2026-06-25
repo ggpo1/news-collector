@@ -461,3 +461,13 @@ export interface EditorialDashboard {
   toneHighlights: ToneHighlight[];
   meta: EditorialDashboardMeta;
 }
+
+export interface EditorialBriefReport {
+  id: string;
+  period: string;
+  markdown: string;
+  generatedAt: string;
+  windowStart: string;
+  windowEnd: string;
+  model: string | null;
+}

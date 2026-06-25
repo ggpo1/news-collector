@@ -28,6 +28,7 @@ import type {
   TelegramSendResult,
   TelegramDelivery,
   EditorialDashboard,
+  EditorialBriefReport,
   EditorialTag,
   StoryDetail,
   StoryListItem,
@@ -553,4 +554,38 @@ export function getEditorialDashboard(windowHours?: number): Promise<EditorialDa
 
   const query = params.toString();
   return request<EditorialDashboard>(`/api/editorial/dashboard${query ? `?${query}` : ''}`);
+}
+
+export async function getEditorialBrief(period?: 'Morning' | 'Evening'): Promise<EditorialBriefReport | null> {
+  const params = new URLSearchParams();
+  if (period) {
+    params.set('period', period);
+  }
+
+  const query = params.toString();
+  const response = await fetch(`${API_BASE}/api/editorial/brief${query ? `?${query}` : ''}`, {
+    headers: buildHeaders(),
+  });
+
+  if (response.status === 401) {
+    unauthorizedHandler?.();
+    throw new Error('Требуется авторизация');
+  }
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(await readApiError(response));
+  }
+
+  return response.json() as Promise<EditorialBriefReport>;
+}
+
+export function generateEditorialBrief(period: 'Morning' | 'Evening'): Promise<EditorialBriefReport> {
+  const params = new URLSearchParams({ period });
+  return request<EditorialBriefReport>(`/api/editorial/brief/generate?${params.toString()}`, {
+    method: 'POST',
+  });
 }

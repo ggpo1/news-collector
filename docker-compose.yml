@@ -189,6 +189,38 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  editorial-brief:
+    build:
+      context: .
+      dockerfile: Dockerfile.editorial-brief
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      RunMigrations: ${RUN_MIGRATIONS:-false}
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;
+        Port=5432;
+        Database=${POSTGRES_DB:-news_collector};
+        Username=${POSTGRES_USER:-news};
+        Password=${POSTGRES_PASSWORD:-news}
+      Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      Ollama__Model: ${OLLAMA_MODEL:-deepseek-r1:14b}
+      Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-1800}
+      EditorialBrief__PollingIntervalSeconds: ${EDITORIAL_BRIEF_INTERVAL_SECONDS:-3600}
+      EditorialBrief__ScheduleHoursUtc__0: ${EDITORIAL_BRIEF_MORNING_UTC:-6}
+      EditorialBrief__ScheduleHoursUtc__1: ${EDITORIAL_BRIEF_EVENING_UTC:-18}
+      EditorialBrief__WindowHours: ${EDITORIAL_BRIEF_WINDOW_HOURS:-12}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   news-tone-analyzer:
     build:
       context: .

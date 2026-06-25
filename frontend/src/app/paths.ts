@@ -5,6 +5,7 @@ export const PATHS = {
   register: '/register',
   registerDetails: '/register/details',
   dashboard: '/dashboard',
+  brief: '/brief',
   stories: '/stories',
   news: '/news',
   links: '/links',
@@ -17,6 +18,7 @@ export const PATHS = {
 
 export const SECTION_PATHS: Record<AppSection, string> = {
   dashboard: PATHS.dashboard,
+  brief: PATHS.brief,
   stories: PATHS.stories,
   news: PATHS.news,
   links: PATHS.links,

@@ -191,6 +191,15 @@ public static class DependencyInjection
         return services;
     }
 
+    public static IServiceCollection AddEditorialBrief(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<EditorialBriefOptions>(configuration.GetSection(EditorialBriefOptions.SectionName));
+        services.AddScoped<EditorialBriefContextBuilder>();
+        services.AddScoped<EditorialBriefGenerator>();
+        services.AddScoped<IEditorialBriefService, EditorialBriefService>();
+        return services;
+    }
+
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         string connectionString,
