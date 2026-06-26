@@ -29,6 +29,7 @@ builder.Services.Configure<EditorialBriefOptions>(
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, HttpUserContext>();
 builder.Services.AddPersistence(connectionString);
+builder.Services.AddNewsSearch(builder.Configuration);
 builder.Services.AddContentEnrichment(builder.Configuration);
 builder.Services.AddAiRewrite(builder.Configuration);
 builder.Services.AddEditorialBrief(builder.Configuration);

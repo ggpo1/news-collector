@@ -5,6 +5,7 @@ import { PATHS } from '../../app/paths';
 import { useAuth } from '../../contexts/auth-context';
 import { AppNav } from '../app-nav/app-nav';
 import type { AppSection } from '../app-nav/app-nav';
+import { GlobalSearch } from '../global-search/global-search';
 import * as S from './app-shell.styles';
 
 interface AppShellProps {
@@ -59,8 +60,11 @@ export function AppShell({ section, sectionTitle, sectionSubtitle, children }: A
 
         <S.Content>
           <S.PageHeader>
-            <S.PageTitle>{sectionTitle}</S.PageTitle>
-            <S.PageSubtitle>{sectionSubtitle}</S.PageSubtitle>
+            <S.PageHeaderText>
+              <S.PageTitle>{sectionTitle}</S.PageTitle>
+              <S.PageSubtitle>{sectionSubtitle}</S.PageSubtitle>
+            </S.PageHeaderText>
+            <GlobalSearch />
           </S.PageHeader>
 
           <S.PageBody>{children}</S.PageBody>

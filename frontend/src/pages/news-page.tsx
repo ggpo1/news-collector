@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { buildNewsPath, parseNewsPageParam, parseNewsRoute } from '../app/news-route';
 import { EditorialTagSelect } from '../components/editorial-tag-select/editorial-tag-select';
 import {
   CategorySelect,
@@ -18,43 +19,117 @@ import { useNews } from '../hooks/use-news/use-news';
 import { useSources } from '../hooks/use-sources/use-sources';
 import * as S from './news-page.styles';
 
-interface NewsLocationState {
-  sourceId?: string;
-  newsId?: string;
-}
-
 export function NewsPage() {
-  const location = useLocation();
-  const locationState = (location.state as NewsLocationState | null) ?? null;
+  const { pageNum } = useParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [editorialTagFilter, setEditorialTagFilter] = useState<string | null>(null);
+
+  const route = useMemo(
+    () => parseNewsRoute(pageNum, searchParams),
+    [pageNum, searchParams],
+  );
+
+  const parsedPage = parseNewsPageParam(pageNum);
+  const page = parsedPage ?? 1;
+
   const { sources, loading: sourcesLoading, error: sourcesError } = useSources();
   const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
   const { tags: editorialTags, loading: tagsLoading } = useEditorialTags();
   const activeSources = sources.filter((source) => source.isActive);
-  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(
-    locationState?.sourceId ?? null,
-  );
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [toneFilter, setToneFilter] = useState<NewsToneFilterValue | null>(null);
-  const [editorialTagFilter, setEditorialTagFilter] = useState<string | null>(null);
-  const [selectedNewsId, setSelectedNewsId] = useState<string | null>(
-    locationState?.newsId ?? null,
-  );
 
-  const uncategorized = categoryFilter === UNCATEGORIZED_FILTER;
-  const selectedCategoryId =
-    categoryFilter && !uncategorized ? categoryFilter : null;
+  const categoryFilter = route.uncategorized
+    ? UNCATEGORIZED_FILTER
+    : route.categoryId;
 
-  const { items, page, totalPages, totalCount, loading, error, setPage, reload } = useNews({
-    sourceId: selectedSourceId,
-    categoryId: selectedCategoryId,
-    uncategorized,
-    toneFilter,
+  const { items, totalPages, totalCount, loading, error, reload } = useNews({
+    page,
+    sourceId: route.sourceId,
+    categoryId: route.categoryId,
+    uncategorized: route.uncategorized,
+    toneFilter: route.tone,
     editorialTagId: editorialTagFilter,
   });
 
+  const navigateToRoute = useCallback(
+    (next: Parameters<typeof buildNewsPath>[0]) => {
+      navigate(buildNewsPath(next));
+    },
+    [navigate],
+  );
+
   useEffect(() => {
-    setSelectedNewsId(null);
-  }, [selectedSourceId, categoryFilter, toneFilter, editorialTagFilter, page]);
+    if (parsedPage !== null && totalPages > 0 && page > totalPages) {
+      navigateToRoute({ ...route, page: totalPages });
+    }
+  }, [navigateToRoute, page, parsedPage, route, totalPages]);
+
+  const updateFilters = useCallback(
+    (patch: {
+      sourceId?: string | null;
+      categoryId?: string | null;
+      uncategorized?: boolean;
+      tone?: NewsToneFilterValue | null;
+      newsId?: string | null;
+    }) => {
+      navigateToRoute({
+        page: 1,
+        sourceId: patch.sourceId !== undefined ? patch.sourceId : route.sourceId,
+        categoryId:
+          patch.uncategorized
+            ? null
+            : patch.categoryId !== undefined
+              ? patch.categoryId
+              : route.categoryId,
+        uncategorized:
+          patch.uncategorized !== undefined ? patch.uncategorized : route.uncategorized,
+        tone: patch.tone !== undefined ? patch.tone : route.tone,
+        newsId: patch.newsId !== undefined ? patch.newsId : null,
+      });
+    },
+    [navigateToRoute, route],
+  );
+
+  const handleSourceChange = (sourceId: string | null) => {
+    updateFilters({ sourceId });
+  };
+
+  const handleCategoryChange = (value: string | null) => {
+    if (value === UNCATEGORIZED_FILTER) {
+      updateFilters({ uncategorized: true, categoryId: null });
+      return;
+    }
+
+    updateFilters({
+      uncategorized: false,
+      categoryId: value,
+    });
+  };
+
+  const handleToneChange = (tone: NewsToneFilterValue | null) => {
+    updateFilters({ tone });
+  };
+
+  const handleEditorialTagChange = (tagId: string | null) => {
+    setEditorialTagFilter(tagId);
+    navigateToRoute({ ...route, page: 1, newsId: null });
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    navigateToRoute({ ...route, page: nextPage, newsId: null });
+  };
+
+  const handleSelectNews = (newsId: string) => {
+    navigateToRoute({ ...route, newsId });
+  };
+
+  const handleBackToList = () => {
+    navigateToRoute({ ...route, newsId: null });
+  };
+
+  if (parsedPage === null) {
+    return <Navigate to={buildNewsPath({ ...route, page: 1 })} replace />;
+  }
 
   const filterError = sourcesError ?? categoriesError;
 
@@ -62,30 +137,30 @@ export function NewsPage() {
     <SectionS.SectionPage>
       <MasterDetailLayout
         stickyList
-        detailOpen={Boolean(selectedNewsId)}
-        onBack={() => setSelectedNewsId(null)}
+        detailOpen={Boolean(route.newsId)}
+        onBack={handleBackToList}
         backLabel="К списку новостей"
         listHeader={
           <>
             <S.FiltersRow>
               <SourceSelect
                 sources={activeSources}
-                value={selectedSourceId}
+                value={route.sourceId}
                 loading={sourcesLoading}
-                onChange={setSelectedSourceId}
+                onChange={handleSourceChange}
               />
               <CategorySelect
                 categories={categories}
                 value={categoryFilter}
                 loading={categoriesLoading}
-                onChange={setCategoryFilter}
+                onChange={handleCategoryChange}
               />
-              <ToneSelect value={toneFilter} onChange={setToneFilter} />
+              <ToneSelect value={route.tone} onChange={handleToneChange} />
               <EditorialTagSelect
                 tags={editorialTags}
                 value={editorialTagFilter}
                 loading={tagsLoading}
-                onChange={setEditorialTagFilter}
+                onChange={handleEditorialTagChange}
               />
             </S.FiltersRow>
             {filterError && <S.ErrorBanner role="alert">{filterError}</S.ErrorBanner>}
@@ -96,9 +171,9 @@ export function NewsPage() {
             items={items}
             loading={loading}
             error={error}
-            selectedId={selectedNewsId}
-            showSource={!selectedSourceId}
-            onSelect={setSelectedNewsId}
+            selectedId={route.newsId}
+            showSource={!route.sourceId}
+            onSelect={handleSelectNews}
           />
         }
         listFooter={
@@ -107,10 +182,10 @@ export function NewsPage() {
             page={page}
             totalPages={totalPages}
             totalCount={totalCount}
-            onPageChange={setPage}
+            onPageChange={handlePageChange}
           />
         }
-        detail={<NewsDetail newsId={selectedNewsId} onContentLoaded={() => void reload()} />}
+        detail={<NewsDetail newsId={route.newsId} onContentLoaded={() => void reload()} />}
       />
     </SectionS.SectionPage>
   );

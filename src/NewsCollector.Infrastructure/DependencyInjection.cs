@@ -11,6 +11,7 @@ using NewsCollector.Infrastructure.Feeds;
 using NewsCollector.Infrastructure.Http;
 using NewsCollector.Infrastructure.Persistence;
 using NewsCollector.Infrastructure.Scraping;
+using NewsCollector.Infrastructure.Search;
 using NewsCollector.Infrastructure.Services;
 using NewsCollector.Infrastructure.Telegram;
 
@@ -44,6 +45,20 @@ public static class DependencyInjection
         services.AddScoped<IInvitationCodeService, InvitationCodeService>();
         services.AddScoped<AuthDataSeeder>();
 
+        return services;
+    }
+
+    public static IServiceCollection AddNewsSearch(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<NewsSearchIndexerOptions>(
+            configuration.GetSection(NewsSearchIndexerOptions.SectionName));
+        services.Configure<EditorialBriefOptions>(
+            configuration.GetSection(EditorialBriefOptions.SectionName));
+        services.AddScoped<IContentLanguageResolver, ContentLanguageResolver>();
+        services.AddScoped<INewsSearchIndexService, NewsSearchIndexService>();
+        services.AddScoped<ISearchQueryService, SearchQueryService>();
         return services;
     }
 

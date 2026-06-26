@@ -52,6 +52,8 @@ public class NewsCollectorDbContext : DbContext
 
     public DbSet<EditorialBriefReport> EditorialBriefReports => Set<EditorialBriefReport>();
 
+    public DbSet<SearchDocument> SearchDocuments => Set<SearchDocument>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NewsCollectorDbContext).Assembly);

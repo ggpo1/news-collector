@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getStoryByClusterKey } from '../../api/client';
 import type { EditorialBriefNews, EditorialDashboard } from '../../api/types';
 import { formatToneCoefficient } from '../../api/tone';
+import { buildNewsPath } from '../../app/news-route';
 import { PATHS } from '../../app/paths';
 import { LoadingState } from '../ui/loading-state';
 import * as S from './editorial-dashboard.styles';
@@ -65,7 +66,7 @@ export function EditorialDashboardView({
   const [activeTab, setActiveTab] = useState<DashboardTab>('topics');
 
   const openNews = (newsId: string) => {
-    navigate(PATHS.news, { state: { newsId } });
+    navigate(buildNewsPath({ page: 1, sourceId: null, categoryId: null, uncategorized: false, tone: null, newsId }));
   };
 
   const openStory = async (clusterKey: string, fallbackNewsId: string) => {

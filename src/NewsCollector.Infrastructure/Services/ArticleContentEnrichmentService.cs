@@ -151,6 +151,8 @@ public sealed class ArticleContentEnrichmentService : IArticleContentEnrichmentS
 
             item.Content = content;
             item.ContentFetchedAt = DateTimeOffset.UtcNow;
+            item.SearchIndexedAt = null;
+            item.Language = null;
 
             if (!string.IsNullOrWhiteSpace(content))
             {

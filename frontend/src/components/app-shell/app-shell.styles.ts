@@ -185,8 +185,15 @@ export const PageHeader = styled.header`
   margin-bottom: 1.25rem;
 
   ${mediaUp('lg')} {
-    display: block;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
   }
+`;
+
+export const PageHeaderText = styled.div`
+  min-width: 0;
 `;
 
 export const PageTitle = styled.h2`

@@ -1,3 +1,5 @@
+using NewsCollector.Domain.Enums;
+
 namespace NewsCollector.Domain.Entities;
 
 public class NewsItem
@@ -35,6 +37,10 @@ public class NewsItem
     public string? RawPayload { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    public ContentLanguage? Language { get; set; }
+
+    public DateTimeOffset? SearchIndexedAt { get; set; }
 
     /// <summary>
     /// Sentiment tone from -1 (negative) to +1 (positive). Null until analyzed.

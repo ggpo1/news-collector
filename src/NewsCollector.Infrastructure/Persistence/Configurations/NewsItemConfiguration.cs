@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NewsCollector.Domain.Entities;
+using NewsCollector.Domain.Enums;
 
 namespace NewsCollector.Infrastructure.Persistence.Configurations;
 
@@ -63,6 +64,16 @@ public class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
 
         builder.Property(n => n.IsCategoryManual)
             .HasDefaultValue(false);
+
+        builder.Property(n => n.Language)
+            .HasConversion<string>()
+            .HasMaxLength(8);
+
+        builder.Property(n => n.SearchIndexedAt);
+
+        builder.HasIndex(n => n.SearchIndexedAt)
+            .HasDatabaseName("IX_news_SearchIndexedAt_Pending")
+            .HasFilter("\"SearchIndexedAt\" IS NULL");
 
         builder.HasIndex(n => n.FetchedAt)
             .HasDatabaseName("IX_news_FetchedAt_CategoryPending")

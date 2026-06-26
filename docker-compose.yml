@@ -1,3 +1,12 @@
+# Без GPU / Ollama (UI, дизайн, фронт):
+#   docker compose up -d postgres api frontend
+#   docker compose up -d postgres api frontend worker   # + сбор RSS
+#
+# Полный стек с Ollama и AI-воркерами:
+#   docker compose --profile ollama up -d
+#
+# Или через .env: COMPOSE_PROFILES=ollama
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -36,10 +45,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      ollama:
-        condition: service_started
-      ollama-chat-pull:
-        condition: service_completed_successfully
       telegram-bot:
         condition: service_completed_successfully
     volumes:
@@ -129,7 +134,35 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  news-search-indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile.news-search-indexer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      RunMigrations: ${RUN_MIGRATIONS:-false}
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;
+        Port=5432;
+        Database=${POSTGRES_DB:-news_collector};
+        Username=${POSTGRES_USER:-news};
+        Password=${POSTGRES_PASSWORD:-news}
+      NewsSearchIndexer__PollingIntervalSeconds: ${NEWS_SEARCH_INDEXER_INTERVAL_SECONDS:-30}
+      NewsSearchIndexer__BatchSize: ${NEWS_SEARCH_INDEXER_BATCH_SIZE:-25}
+      NewsSearchIndexer__DelayBetweenItemsMs: ${NEWS_SEARCH_INDEXER_DELAY_MS:-0}
+      NewsSearchIndexer__MaxBodyCharacters: ${NEWS_SEARCH_INDEXER_MAX_BODY_CHARS:-8000}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   topic-linker:
+    profiles: [ollama]
     build:
       context: .
       dockerfile: Dockerfile.topic-linker
@@ -161,6 +194,7 @@ services:
         max-file: "3"
 
   news-categorizer:
+    profiles: [ollama]
     build:
       context: .
       dockerfile: Dockerfile.news-categorizer
@@ -192,6 +226,7 @@ services:
         max-file: "3"
 
   editorial-brief:
+    profiles: [ollama]
     build:
       context: .
       dockerfile: Dockerfile.editorial-brief
@@ -226,6 +261,7 @@ services:
         max-file: "3"
 
   news-tone-analyzer:
+    profiles: [ollama]
     build:
       context: .
       dockerfile: Dockerfile.news-tone-analyzer
@@ -257,6 +293,7 @@ services:
         max-file: "3"
 
   news-entity-extractor:
+    profiles: [ollama]
     build:
       context: .
       dockerfile: Dockerfile.news-entity-extractor
@@ -289,6 +326,7 @@ services:
         max-file: "3"
 
   ollama:
+    profiles: [ollama]
     image: ollama/ollama:latest
     restart: unless-stopped
     ports:
@@ -305,6 +343,7 @@ services:
         max-file: "3"
 
   ollama-chat-pull:
+    profiles: [ollama]
     image: ollama/ollama:latest
     depends_on:
       ollama:
@@ -323,6 +362,7 @@ services:
     restart: "no"
 
   ollama-embed-pull:
+    profiles: [ollama]
     image: ollama/ollama:latest
     depends_on:
       ollama:
@@ -341,6 +381,7 @@ services:
     restart: "no"
 
   ollama-ner:
+    profiles: [ollama]
     image: ollama/ollama:latest
     restart: unless-stopped
     ports:
@@ -357,6 +398,7 @@ services:
         max-file: "3"
 
   ollama-ner-pull:
+    profiles: [ollama]
     image: ollama/ollama:latest
     depends_on:
       ollama-ner:
@@ -375,6 +417,7 @@ services:
     restart: "no"
 
   ollama-categorizer:
+    profiles: [ollama]
     image: ollama/ollama:latest
     restart: unless-stopped
     ports:
@@ -391,6 +434,7 @@ services:
         max-file: "3"
 
   ollama-categorizer-pull:
+    profiles: [ollama]
     image: ollama/ollama:latest
     depends_on:
       ollama-categorizer:
@@ -409,6 +453,7 @@ services:
     restart: "no"
 
   ollama-tone:
+    profiles: [ollama]
     image: ollama/ollama:latest
     restart: unless-stopped
     ports:
@@ -425,6 +470,7 @@ services:
         max-file: "3"
 
   ollama-tone-pull:
+    profiles: [ollama]
     image: ollama/ollama:latest
     depends_on:
       ollama-tone:

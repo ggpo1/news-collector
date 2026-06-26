@@ -22,6 +22,7 @@ import type {
   PagedResult,
   RelatedNews,
   SecondDayAngles,
+  SearchResult,
   Source,
   TelegramBot,
   TelegramChannel,
@@ -588,4 +589,9 @@ export function generateEditorialBrief(period: 'Morning' | 'Evening'): Promise<E
   return request<EditorialBriefReport>(`/api/editorial/brief/generate?${params.toString()}`, {
     method: 'POST',
   });
+}
+
+export function searchDocuments(query: string, limit = 20): Promise<SearchResult[]> {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  return request<SearchResult[]>(`/api/search?${params.toString()}`);
 }

@@ -43,6 +43,10 @@ public class SourceConfiguration : IEntityTypeConfiguration<Source>
         builder.Property(s => s.UpdatedAt)
             .IsRequired();
 
+        builder.Property(s => s.DefaultLanguage)
+            .HasConversion<string>()
+            .HasMaxLength(8);
+
         builder.HasIndex(s => s.Url)
             .IsUnique();
 
@@ -59,6 +63,7 @@ public class SourceConfiguration : IEntityTypeConfiguration<Source>
                 IsActive = true,
                 FetchIntervalMinutes = 15,
                 Config = """{"contentFetchEnabled":true,"contentSelector":".article__text"}""",
+                DefaultLanguage = ContentLanguage.Ru,
                 CreatedAt = new DateTimeOffset(2026, 6, 18, 0, 0, 0, TimeSpan.Zero),
                 UpdatedAt = new DateTimeOffset(2026, 6, 18, 0, 0, 0, TimeSpan.Zero)
             });

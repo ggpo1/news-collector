@@ -39,5 +39,9 @@ const PATH_TO_SECTION = Object.entries(SECTION_PATHS).reduce(
 );
 
 export function sectionFromPathname(pathname: string): AppSection {
+  if (pathname === PATHS.news || pathname.startsWith(`${PATHS.news}/`)) {
+    return 'news';
+  }
+
   return PATH_TO_SECTION[pathname] ?? 'dashboard';
 }

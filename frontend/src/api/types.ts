@@ -471,3 +471,15 @@ export interface EditorialBriefReport {
   windowEnd: string;
   model: string | null;
 }
+
+export type SearchDocumentType = 'News' | 'Story' | 'Rewrite';
+
+export interface SearchResult {
+  documentType: SearchDocumentType;
+  entityId: string;
+  title: string;
+  snippet: string | null;
+  sourceName: string | null;
+  publishedAt: string | null;
+  score: number;
+}

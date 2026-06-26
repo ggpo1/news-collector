@@ -4,7 +4,7 @@ import { getStoryById, updateStoryStatus } from '../../api/client';
 import { STORY_STATUS_LABELS, STORY_STATUS_OPTIONS } from '../../api/story-labels';
 import { formatToneCoefficient } from '../../api/tone';
 import type { StoryDetail, StoryStatus } from '../../api/types';
-import { PATHS } from '../../app/paths';
+import { buildNewsPath } from '../../app/news-route';
 import { EmptyState } from '../ui/empty-state';
 import { LoadingState } from '../ui/loading-state';
 import * as S from './story-detail.styles';
@@ -134,7 +134,21 @@ export function StoryDetailView({ storyId }: StoryDetailViewProps) {
                 {' · '}
                 <time dateTime={item.publishedAt ?? undefined}>{formatDate(item.publishedAt ?? item.fetchedAt)}</time>
                 {' · '}
-                <button type="button" onClick={() => navigate(PATHS.news, { state: { newsId: item.id } })}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      buildNewsPath({
+                        page: 1,
+                        sourceId: null,
+                        categoryId: null,
+                        uncategorized: false,
+                        tone: null,
+                        newsId: item.id,
+                      }),
+                    )
+                  }
+                >
                   открыть
                 </button>
               </S.ItemMeta>

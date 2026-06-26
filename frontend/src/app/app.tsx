@@ -16,6 +16,7 @@ import { TelegramPage } from '../pages/telegram-page';
 import { AppLayout } from './app-layout';
 import { ChiefEditorRoute } from './chief-editor-route';
 import { GuestRoute } from './guest-route';
+import { NewsRootRedirect } from './news-root-redirect';
 import { PATHS } from './paths';
 import { NotFoundRedirect, RootRedirect } from './root-redirect';
 import { RequireAuth } from './require-auth';
@@ -59,7 +60,8 @@ export default function App() {
         <Route path={PATHS.dashboard} element={<DashboardPage />} />
         <Route path={PATHS.brief} element={<BriefPage />} />
         <Route path={PATHS.stories} element={<StoriesPage />} />
-        <Route path={PATHS.news} element={<NewsPage />} />
+        <Route path={PATHS.news} element={<NewsRootRedirect />} />
+        <Route path={`${PATHS.news}/:pageNum`} element={<NewsPage />} />
         <Route path={PATHS.links} element={<NewsLinksView />} />
         <Route path={PATHS.rewrites} element={<RewritesPage />} />
         <Route path={PATHS.map} element={<EntityMapPage />} />

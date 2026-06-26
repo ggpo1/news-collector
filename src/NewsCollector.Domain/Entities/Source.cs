@@ -24,5 +24,7 @@ public class Source
 
     public DateTimeOffset UpdatedAt { get; set; }
 
+    public ContentLanguage? DefaultLanguage { get; set; }
+
     public ICollection<NewsItem> NewsItems { get; set; } = [];
 }

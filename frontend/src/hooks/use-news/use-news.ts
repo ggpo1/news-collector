@@ -13,9 +13,15 @@ export interface NewsFilters {
   editorialTagId: string | null;
 }
 
-export function useNews({ sourceId, categoryId, uncategorized, toneFilter, editorialTagId }: NewsFilters) {
+export function useNews({
+  page,
+  sourceId,
+  categoryId,
+  uncategorized,
+  toneFilter,
+  editorialTagId,
+}: NewsFilters & { page: number }) {
   const [items, setItems] = useState<NewsItemList[]>([]);
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -46,21 +52,15 @@ export function useNews({ sourceId, categoryId, uncategorized, toneFilter, edito
   }, [page, sourceId, categoryId, uncategorized, toneFilter, editorialTagId]);
 
   useEffect(() => {
-    setPage(1);
-  }, [sourceId, categoryId, uncategorized, toneFilter, editorialTagId]);
-
-  useEffect(() => {
     void load();
   }, [load]);
 
   return {
     items,
-    page,
     totalPages,
     totalCount,
     loading,
     error,
-    setPage,
     reload: load,
   };
 }
