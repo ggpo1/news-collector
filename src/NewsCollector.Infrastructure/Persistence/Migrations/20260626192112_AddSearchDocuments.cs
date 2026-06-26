@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -72,6 +72,11 @@ public partial class AddSearchDocuments : Migration
                 ON search_documents
                 FOR EACH ROW
                 EXECUTE FUNCTION update_search_document_vector();
+
+            UPDATE sources
+            SET "DefaultLanguage" = 'Ru'
+            WHERE "Id" = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'::uuid
+              AND "DefaultLanguage" IS NULL;
 
             UPDATE sources
             SET "DefaultLanguage" = 'Ru'

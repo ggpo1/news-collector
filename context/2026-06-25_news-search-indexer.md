@@ -20,7 +20,7 @@
 docker compose up -d --build api news-search-indexer
 ```
 
-Миграция: `20260625140000_AddSearchDocuments`
+Миграция: `20260626192112_AddSearchDocuments` (ранее была ручная `20260625140000` без Designer — не применялась).
 
 ## UI
 Глобальный поиск в шапке (desktop).
