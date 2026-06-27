@@ -160,6 +160,15 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
 
         var payload = await response.Content.ReadFromJsonAsync<OllamaRewriteChatResponse>(timeoutCts.Token);
         var content = payload?.Message?.Content;
+        if (string.IsNullOrWhiteSpace(content)
+            && !string.IsNullOrWhiteSpace(payload?.Message?.Thinking))
+        {
+            _logger.LogWarning(
+                "Ollama rewrite content empty, falling back to thinking field (NewsId={NewsId})",
+                newsId);
+            content = payload!.Message!.Thinking;
+        }
+
         if (string.IsNullOrWhiteSpace(content))
         {
             _logger.LogWarning(
@@ -217,5 +226,9 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         string SourceName);
 
     private sealed record OllamaRewriteChatResponse(
-        [property: JsonPropertyName("message")] OllamaChatHelper.OllamaChatMessage? Message);
+        [property: JsonPropertyName("message")] OllamaRewriteChatMessage? Message);
+
+    private sealed record OllamaRewriteChatMessage(
+        [property: JsonPropertyName("content")] string? Content,
+        [property: JsonPropertyName("thinking")] string? Thinking);
 }

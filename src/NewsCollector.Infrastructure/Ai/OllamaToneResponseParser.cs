@@ -6,7 +6,7 @@ internal static class OllamaToneResponseParser
 {
     public static decimal ParseCoefficient(string rawResponse)
     {
-        var json = ExtractJson(rawResponse);
+        var json = OllamaJsonExtractor.ExtractFirstJsonObject(rawResponse);
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
 
@@ -30,18 +30,5 @@ internal static class OllamaToneResponseParser
         }
 
         return Math.Clamp(value, -1m, 1m);
-    }
-
-    private static string ExtractJson(string rawResponse)
-    {
-        var trimmed = rawResponse.Trim();
-        var start = trimmed.IndexOf('{');
-        var end = trimmed.LastIndexOf('}');
-        if (start >= 0 && end > start)
-        {
-            return trimmed[start..(end + 1)];
-        }
-
-        return trimmed;
     }
 }

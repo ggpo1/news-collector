@@ -1,12 +1,11 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using NewsCollector.Domain.Enums;
 
 namespace NewsCollector.Infrastructure.Ai;
 
 internal sealed record ExtractedEntity(string Name, NamedEntityType Type);
 
-internal static partial class OllamaEntityResponseParser
+internal static class OllamaEntityResponseParser
 {
     private static readonly Dictionary<string, NamedEntityType> TypeAliases = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -33,7 +32,7 @@ internal static partial class OllamaEntityResponseParser
 
     public static IReadOnlyList<ExtractedEntity> ParseEntities(string rawResponse, int maxEntities)
     {
-        var json = ExtractJson(rawResponse);
+        var json = OllamaJsonExtractor.ExtractFirstJsonObject(rawResponse);
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
 
@@ -102,27 +101,4 @@ internal static partial class OllamaEntityResponseParser
         entity = new ExtractedEntity(name, type);
         return true;
     }
-
-    private static string ExtractJson(string rawResponse)
-    {
-        var trimmed = rawResponse.Trim();
-
-        var fenced = CodeFenceRegex().Match(trimmed);
-        if (fenced.Success)
-        {
-            return fenced.Groups["json"].Value.Trim();
-        }
-
-        var start = trimmed.IndexOf('{');
-        var end = trimmed.LastIndexOf('}');
-        if (start >= 0 && end > start)
-        {
-            return trimmed[start..(end + 1)];
-        }
-
-        return trimmed;
-    }
-
-    [GeneratedRegex(@"```(?:json)?\s*(?<json>.*?)\s*```", RegexOptions.Singleline | RegexOptions.Compiled)]
-    private static partial Regex CodeFenceRegex();
 }
