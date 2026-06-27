@@ -1,12 +1,12 @@
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NewsCollector.Application.Abstractions;
 using NewsCollector.Application.Dtos;
 using NewsCollector.Application.Options;
 using NewsCollector.Domain.Enums;
+using NewsCollector.Infrastructure.Ai;
 
 namespace NewsCollector.Infrastructure.Services;
 
@@ -180,33 +180,18 @@ public sealed class EditorialBriefGenerator
     {
         var client = _httpClientFactory.CreateClient("Ollama");
 
-        var request = new OllamaChatRequest(
-            _ollamaOptions.Model,
+        var request = OllamaChatHelper.CreateRequest(
+            _ollamaOptions,
             [
-                new OllamaChatMessage("system", SystemPrompt),
-                new OllamaChatMessage("user", userMessage)
-            ],
-            Stream: false,
-            KeepAlive: "30m");
+                new OllamaChatHelper.OllamaChatMessage("system", SystemPrompt),
+                new OllamaChatHelper.OllamaChatMessage("user", userMessage),
+            ]);
 
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(_ollamaOptions.TimeoutSeconds));
 
         var response = await client.PostAsJsonAsync("/api/chat", request, timeoutCts.Token);
-        if (!response.IsSuccessStatusCode)
-        {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new InvalidOperationException($"Ollama returned {(int)response.StatusCode}: {body}");
-        }
-
-        var payload = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(cancellationToken);
-        var content = payload?.Message?.Content;
-        if (string.IsNullOrWhiteSpace(content))
-        {
-            throw new InvalidOperationException("Ollama returned an empty editorial brief.");
-        }
-
-        return content;
+        return await OllamaChatHelper.ReadChatContentAsync(response, _ollamaOptions, cancellationToken);
     }
 
     private static string Truncate(string text, int maxLength)
@@ -214,17 +199,4 @@ public sealed class EditorialBriefGenerator
         var trimmed = text.Trim();
         return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength] + "…";
     }
-
-    private sealed record OllamaChatRequest(
-        [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("messages")] OllamaChatMessage[] Messages,
-        [property: JsonPropertyName("stream")] bool Stream,
-        [property: JsonPropertyName("keep_alive")] string KeepAlive);
-
-    private sealed record OllamaChatMessage(
-        [property: JsonPropertyName("role")] string Role,
-        [property: JsonPropertyName("content")] string Content);
-
-    private sealed record OllamaChatResponse(
-        [property: JsonPropertyName("message")] OllamaChatMessage? Message);
 }

@@ -84,15 +84,13 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
     {
         var client = _httpClientFactory.CreateClient("Ollama");
 
-        var request = new OllamaChatRequest(
-            _options.Model,
+        var request = OllamaChatHelper.CreateRequest(
+            _options,
             [
-                new OllamaChatMessage("system", SystemPrompt),
-                new OllamaChatMessage("user", userMessage)
+                new OllamaChatHelper.OllamaChatMessage("system", SystemPrompt),
+                new OllamaChatHelper.OllamaChatMessage("user", userMessage),
             ],
-            Stream: false,
-            Format: "json",
-            KeepAlive: "30m");
+            format: "json");
 
         using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.TimeoutSeconds));
         var stopwatch = Stopwatch.StartNew();
@@ -157,15 +155,10 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
                 newsId,
                 body);
 
-            var timeoutHint = response.StatusCode == System.Net.HttpStatusCode.InternalServerError
-                ? " Часто это обрыв по таймауту API (OLLAMA_TIMEOUT_SECONDS, nginx proxy_read_timeout)."
-                : string.Empty;
-
-            throw new InvalidOperationException(
-                $"Ollama вернула ошибку {(int)response.StatusCode}.{timeoutHint} Модель: '{_options.Model}'.");
+            throw new InvalidOperationException(OllamaChatHelper.FormatFailure((int)response.StatusCode, body, _options));
         }
 
-        var payload = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(timeoutCts.Token);
+        var payload = await response.Content.ReadFromJsonAsync<OllamaRewriteChatResponse>(timeoutCts.Token);
         var content = payload?.Message?.Content;
         if (string.IsNullOrWhiteSpace(content))
         {
@@ -223,17 +216,6 @@ public sealed class OllamaAiNewsRewriteService : IAiNewsRewriteService
         string? Content,
         string SourceName);
 
-    private sealed record OllamaChatRequest(
-        [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("messages")] OllamaChatMessage[] Messages,
-        [property: JsonPropertyName("stream")] bool Stream,
-        [property: JsonPropertyName("format")] string Format,
-        [property: JsonPropertyName("keep_alive")] string KeepAlive);
-
-    private sealed record OllamaChatMessage(
-        [property: JsonPropertyName("role")] string Role,
-        [property: JsonPropertyName("content")] string Content);
-
-    private sealed record OllamaChatResponse(
-        [property: JsonPropertyName("message")] OllamaChatMessage? Message);
+    private sealed record OllamaRewriteChatResponse(
+        [property: JsonPropertyName("message")] OllamaChatHelper.OllamaChatMessage? Message);
 }

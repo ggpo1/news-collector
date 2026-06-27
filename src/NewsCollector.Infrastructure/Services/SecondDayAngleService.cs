@@ -202,49 +202,20 @@ public sealed class SecondDayAngleService : ISecondDayAngleService
     {
         var client = _httpClientFactory.CreateClient("Ollama");
 
-        var request = new OllamaChatRequest(
-            _ollamaOptions.Model,
+        var request = OllamaChatHelper.CreateRequest(
+            _ollamaOptions,
             [
-                new OllamaChatMessage("system", SystemPrompt),
-                new OllamaChatMessage("user", userMessage)
+                new OllamaChatHelper.OllamaChatMessage("system", SystemPrompt),
+                new OllamaChatHelper.OllamaChatMessage("user", userMessage),
             ],
-            Stream: false,
-            Format: "json",
-            KeepAlive: "30m");
+            format: "json");
 
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(_ollamaOptions.TimeoutSeconds));
 
         var response = await client.PostAsJsonAsync("/api/chat", request, timeoutCts.Token);
-        if (!response.IsSuccessStatusCode)
-        {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new InvalidOperationException(
-                $"Ollama returned {(int)response.StatusCode}: {body}");
-        }
-
-        var payload = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(cancellationToken);
-        var content = payload?.Message?.Content;
-        if (string.IsNullOrWhiteSpace(content))
-        {
-            throw new InvalidOperationException("Ollama returned an empty second-day angles response.");
-        }
-
+        var content = await OllamaChatHelper.ReadChatContentAsync(response, _ollamaOptions, cancellationToken);
         _logger.LogDebug("Ollama second-day angles for news {NewsId}: {Length} chars", newsId, content.Length);
         return content;
     }
-
-    private sealed record OllamaChatRequest(
-        [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("messages")] OllamaChatMessage[] Messages,
-        [property: JsonPropertyName("stream")] bool Stream,
-        [property: JsonPropertyName("format")] string Format,
-        [property: JsonPropertyName("keep_alive")] string KeepAlive);
-
-    private sealed record OllamaChatMessage(
-        [property: JsonPropertyName("role")] string Role,
-        [property: JsonPropertyName("content")] string Content);
-
-    private sealed record OllamaChatResponse(
-        [property: JsonPropertyName("message")] OllamaChatMessage? Message);
 }
