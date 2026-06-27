@@ -61,11 +61,10 @@ services:
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
       Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      Ollama__Model: ${OLLAMA_MODEL:-qwen3.5:27b}
+      Ollama__Model: ${OLLAMA_MODEL:-qwen3.5:9b}
       Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-1800}
       Ollama__NumCtx: ${OLLAMA_NUM_CTX:-8192}
       Ollama__KeepAlive: ${OLLAMA_KEEP_ALIVE:-5m}
-      Ollama__Think: ${OLLAMA_THINK:-false}
       Auth__JwtSecret: ${AUTH_JWT_SECRET:-change-this-secret-in-production-min-32-characters-long}
       Auth__JwtExpirationMinutes: ${AUTH_JWT_EXPIRATION_MINUTES:-480}
       Auth__SeedChiefEditorLogin: ${AUTH_SEED_CHIEF_LOGIN:-chief}
@@ -251,11 +250,10 @@ services:
         Username=${POSTGRES_USER:-news};
         Password=${POSTGRES_PASSWORD:-news}
       Ollama__BaseUrl: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      Ollama__Model: ${OLLAMA_MODEL:-qwen3.5:27b}
+      Ollama__Model: ${OLLAMA_MODEL:-qwen3.5:9b}
       Ollama__TimeoutSeconds: ${OLLAMA_TIMEOUT_SECONDS:-1800}
       Ollama__NumCtx: ${OLLAMA_NUM_CTX:-8192}
       Ollama__KeepAlive: ${OLLAMA_KEEP_ALIVE:-5m}
-      Ollama__Think: ${OLLAMA_THINK:-false}
       EditorialBrief__PollingIntervalSeconds: ${EDITORIAL_BRIEF_INTERVAL_SECONDS:-3600}
       EditorialBrief__ScheduleHoursUtc__0: ${EDITORIAL_BRIEF_MORNING_UTC:-6}
       EditorialBrief__ScheduleHoursUtc__1: ${EDITORIAL_BRIEF_EVENING_UTC:-18}
@@ -358,13 +356,13 @@ services:
         condition: service_started
     environment:
       OLLAMA_HOST: http://ollama:11434
-      OLLAMA_CHAT_MODEL: ${OLLAMA_MODEL:-qwen3.5:27b}
+      OLLAMA_CHAT_MODEL: ${OLLAMA_MODEL:-qwen3.5:9b}
     entrypoint:
       - /bin/sh
       - -ec
       - |
-        until ollama pull "$${OLLAMA_CHAT_MODEL:-qwen3.5:27b}"; do
-          echo "Waiting for ollama, pulling $${OLLAMA_CHAT_MODEL:-qwen3.5:27b}..."
+        until ollama pull "$${OLLAMA_CHAT_MODEL:-qwen3.5:9b}"; do
+          echo "Waiting for ollama, pulling $${OLLAMA_CHAT_MODEL:-qwen3.5:9b}..."
           sleep 5
         done
     restart: "no"

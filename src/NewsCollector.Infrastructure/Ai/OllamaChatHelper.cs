@@ -20,7 +20,7 @@ public static class OllamaChatHelper
             Stream = stream,
             Format = format,
             KeepAlive = options.KeepAlive,
-            Think = options.Think ? null : false,
+            Think = false,
             Options = new OllamaModelRuntimeOptions
             {
                 NumCtx = options.NumCtx,
@@ -56,8 +56,7 @@ public static class OllamaChatHelper
         {
             return
                 $"Ollama: процесс модели убит (нехватка RAM/VRAM, OOM). " +
-                $"Модель «{options.Model}» для 27B нужно ~16+ GB видеопамяти/оперативки. " +
-                $"Варианты: модель полегче (qwen2.5:14b, llama3.1:8b), больше памяти, " +
+                $"Модель «{options.Model}» — проверьте свободную память GPU/RAM, " +
                 $"OLLAMA_MAX_LOADED_MODELS=1, OLLAMA_NUM_CTX={options.NumCtx}. " +
                 $"Ответ Ollama: {body}";
         }
@@ -91,8 +90,7 @@ public static class OllamaChatHelper
         public required string KeepAlive { get; init; }
 
         [JsonPropertyName("think")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public bool? Think { get; init; }
+        public bool Think { get; init; }
 
         [JsonPropertyName("options")]
         public OllamaModelRuntimeOptions? Options { get; init; }

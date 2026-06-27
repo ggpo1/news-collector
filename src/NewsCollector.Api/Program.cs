@@ -120,18 +120,17 @@ using (var scope = app.Services.CreateScope())
     var ollamaOptions = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<OllamaOptions>>().Value;
     var startupLogger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
     startupLogger.LogInformation(
-        "Ollama configured: BaseUrl={BaseUrl}, Model={Model}, TimeoutSeconds={TimeoutSeconds}, NumCtx={NumCtx}, KeepAlive={KeepAlive}, Think={Think}",
+        "Ollama configured: BaseUrl={BaseUrl}, Model={Model}, TimeoutSeconds={TimeoutSeconds}, NumCtx={NumCtx}, KeepAlive={KeepAlive}, Think=false",
         ollamaOptions.BaseUrl,
         ollamaOptions.Model,
         ollamaOptions.TimeoutSeconds,
         ollamaOptions.NumCtx,
-        ollamaOptions.KeepAlive,
-        ollamaOptions.Think);
+        ollamaOptions.KeepAlive);
 
     if (ollamaOptions.TimeoutSeconds < 1800)
     {
         startupLogger.LogWarning(
-            "Ollama TimeoutSeconds={TimeoutSeconds} is below 1800. Large models (e.g. qwen3.5:27b) on CPU often need 30+ minutes.",
+            "Ollama TimeoutSeconds={TimeoutSeconds} is below 1800. Large models on CPU often need 30+ minutes.",
             ollamaOptions.TimeoutSeconds);
     }
 
